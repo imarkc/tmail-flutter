@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -20,22 +19,29 @@ import 'package:tmail_ui_user/main/utils/app_config.dart';
 import 'package:dio/dio.dart' show DioError;
 
 class OIDCHttpClient {
-
   final DioClient _dioClient;
 
   OIDCHttpClient(this._dioClient);
 
   Future<OIDCResponse> checkOIDCIsAvailable(OIDCRequest oidcRequest) async {
     try {
-      final result = await _dioClient.get(
-        Endpoint.webFinger
+      if (AppConfig.webOidcUrl.isNotEmpty) {
+        return OIDCResponse.fromJson({
+          "subject": AppConfig.baseUrl,
+          "links": [
+            {
+              "href": AppConfig.webOidcUrl,
+              "rel": OIDCRequest.relUrl,
+            }
+          ]
+        });
+      }
+      final result = await _dioClient.get(Endpoint.webFinger
           .usingBaseUrl(oidcRequest.baseUrl)
           .withQueryParameters([
-            StringQueryParameter('resource', oidcRequest.resourceUrl),
-            StringQueryParameter('rel', OIDCRequest.relUrl),
-          ])
-          .generateEndpointPath()
-      );
+        StringQueryParameter('resource', oidcRequest.resourceUrl),
+        StringQueryParameter('rel', OIDCRequest.relUrl),
+      ]).generateEndpointPath());
       log('OIDCHttpClient::checkOIDCIsAvailable(): RESULT: $result');
       if (result is Map<String, dynamic>) {
         return OIDCResponse.fromJson(result);
@@ -61,7 +67,8 @@ class OIDCHttpClient {
     }
   }
 
-  Future<OIDCConfiguration> getOIDCConfiguration(OIDCResponse oidcResponse) async {
+  Future<OIDCConfiguration> getOIDCConfiguration(
+      OIDCResponse oidcResponse) async {
     if (oidcResponse.links.isEmpty) {
       throw CanNotFoundOIDCAuthority();
     }
@@ -76,7 +83,8 @@ class OIDCHttpClient {
     );
   }
 
-  Future<OIDCDiscoveryResponse> discoverOIDC(OIDCConfiguration configuration) async {
+  Future<OIDCDiscoveryResponse> discoverOIDC(
+      OIDCConfiguration configuration) async {
     final result = await _dioClient.get(configuration.discoveryUrl);
     log('OIDCHttpClient::discoverOIDC(): RESULT: $result');
     if (result is Map<String, dynamic>) {
