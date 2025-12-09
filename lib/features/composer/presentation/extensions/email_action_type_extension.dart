@@ -1,7 +1,8 @@
 
+import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/extensions/html_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:model/email/email_action_type.dart';
 import 'package:model/email/presentation_email.dart';
 import 'package:model/extensions/list_email_address_extension.dart';
@@ -43,6 +44,7 @@ extension EmailActionTypeExtension on EmailActionType {
 
   String getToastMessageMoveToMailboxSuccess(BuildContext context, {String? destinationPath}) {
     switch(this) {
+      case EmailActionType.archiveMessage:
       case EmailActionType.moveToMailbox:
         return AppLocalizations.of(context).movedToFolder(destinationPath ?? '');
       case EmailActionType.moveToTrash:
@@ -134,6 +136,8 @@ extension EmailActionTypeExtension on EmailActionType {
 
   String getIcon(ImagePaths imagePaths) {
     switch(this) {
+      case EmailActionType.markAsRead:
+        return imagePaths.icRead;
       case EmailActionType.markAsUnread:
         return imagePaths.icUnreadEmail;
       case EmailActionType.unSpam:
@@ -150,31 +154,112 @@ extension EmailActionTypeExtension on EmailActionType {
         return imagePaths.icDownloadAttachment;
       case EmailActionType.editAsNewEmail:
         return imagePaths.icEdit;
+      case EmailActionType.openInNewTab:
+        return imagePaths.icOpenInNewTab;
+      case EmailActionType.printAll:
+        return imagePaths.icPrinter;
+      case EmailActionType.reply:
+        return imagePaths.icReply;
+      case EmailActionType.forward:
+        return imagePaths.icForward;
+      case EmailActionType.replyAll:
+        return imagePaths.icReplyAll;
+      case EmailActionType.replyToList:
+        return imagePaths.icReply;
+      case EmailActionType.moveToMailbox:
+        return imagePaths.icMoveEmail;
+      case EmailActionType.markAsStarred:
+        return imagePaths.icStar;
+      case EmailActionType.unMarkAsStarred:
+        return imagePaths.icUnStar;
+      case EmailActionType.moveToTrash:
+      case EmailActionType.deletePermanently:
+        return imagePaths.icDeleteComposer;
       default:
         return '';
     }
   }
 
-  String getTitle(BuildContext context) {
+  String getTitle(AppLocalizations appLocalizations) {
     switch(this) {
+      case EmailActionType.markAsRead:
+        return appLocalizations.mark_as_read;
       case EmailActionType.markAsUnread:
-        return AppLocalizations.of(context).mark_as_unread;
+        return appLocalizations.mark_as_unread;
       case EmailActionType.unSpam:
-        return AppLocalizations.of(context).remove_from_spam;
+        return appLocalizations.remove_from_spam;
       case EmailActionType.moveToSpam:
-        return AppLocalizations.of(context).mark_as_spam;
+        return appLocalizations.mark_as_spam;
       case EmailActionType.createRule:
-        return AppLocalizations.of(context).quickCreatingRule;
+        return appLocalizations.quickCreatingRule;
       case EmailActionType.unsubscribe:
-        return AppLocalizations.of(context).unsubscribe;
+        return appLocalizations.unsubscribe;
       case EmailActionType.archiveMessage:
-        return AppLocalizations.of(context).archiveMessage;
+        return appLocalizations.archiveMessage;
       case EmailActionType.downloadMessageAsEML:
-        return AppLocalizations.of(context).downloadMessageAsEML;
+        return appLocalizations.downloadMessageAsEML;
       case EmailActionType.editAsNewEmail:
-        return AppLocalizations.of(context).editAsNewEmail;
+        return appLocalizations.editAsNewEmail;
+      case EmailActionType.openInNewTab:
+        return appLocalizations.openInNewTab;
+      case EmailActionType.printAll:
+        return appLocalizations.print;
+      case EmailActionType.reply:
+        return appLocalizations.reply;
+      case EmailActionType.forward:
+        return appLocalizations.forward;
+      case EmailActionType.replyAll:
+        return appLocalizations.reply_all;
+      case EmailActionType.replyToList:
+        return appLocalizations.replyToList;
+      case EmailActionType.moveToMailbox:
+        return appLocalizations.moveMessage;
+      case EmailActionType.markAsStarred:
+        return appLocalizations.starred;
+      case EmailActionType.unMarkAsStarred:
+        return appLocalizations.not_starred;
+      case EmailActionType.moveToTrash:
+        return appLocalizations.move_to_trash;
+      case EmailActionType.deletePermanently:
+        return appLocalizations.delete_permanently;
       default:
         return '';
+    }
+  }
+
+  Color getPopupMenuIconColor() {
+    switch(this) {
+      case EmailActionType.deletePermanently:
+        return AppColor.redFF3347;
+      default:
+        return AppColor.steelGrayA540;
+    }
+  }
+
+  Color getPopupMenuTitleColor() {
+    switch(this) {
+      case EmailActionType.deletePermanently:
+        return AppColor.redFF3347;
+      default:
+        return Colors.black;
+    }
+  }
+
+  Color getContextMenuIconColor() {
+    switch(this) {
+      case EmailActionType.deletePermanently:
+        return AppColor.redFF3347;
+      default:
+        return AppColor.gray424244.withValues(alpha: 0.72);
+    }
+  }
+
+  Color getContextMenuTitleColor() {
+    switch(this) {
+      case EmailActionType.deletePermanently:
+        return AppColor.redFF3347;
+      default:
+        return AppColor.gray424244.withValues(alpha: 0.9);
     }
   }
 }

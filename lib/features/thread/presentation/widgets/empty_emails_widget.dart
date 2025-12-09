@@ -1,20 +1,19 @@
+import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
-import 'package:core/presentation/views/button/tmail_button_widget.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:tmail_ui_user/features/thread/presentation/styles/empty_emails_widget_styles.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 
-typedef OnCreateFiltersActionCallback = Function();
-
 class EmptyEmailsWidget extends StatelessWidget {
 
   final bool isSearchActive;
   final bool isFilterMessageActive;
   final bool isNetworkConnectionAvailable;
-  final OnCreateFiltersActionCallback? onCreateFiltersActionCallback;
+  final bool isFavoriteFolder;
 
   final _responsiveUtils = Get.find<ResponsiveUtils>();
   final _imagePaths = Get.find<ImagePaths>();
@@ -24,7 +23,7 @@ class EmptyEmailsWidget extends StatelessWidget {
     this.isSearchActive = false,
     this.isFilterMessageActive = false,
     this.isNetworkConnectionAvailable = true,
-    this.onCreateFiltersActionCallback,
+    this.isFavoriteFolder = false,
   }) : super(key: key);
 
   @override
@@ -37,41 +36,32 @@ class EmptyEmailsWidget extends StatelessWidget {
           : MainAxisAlignment.center,
         children: [
           SvgPicture.asset(
-            _imagePaths.icEmptyEmail,
-            width: _getIconSize(context, _responsiveUtils),
-            height: _getIconSize(context, _responsiveUtils),
+            _imagePaths.icEmptyFolder,
+            width: EmptyEmailsWidgetStyles.iconSize,
+            height: EmptyEmailsWidgetStyles.iconSize,
             fit: BoxFit.fill
           ),
           Padding(
             padding: EmptyEmailsWidgetStyles.labelPadding,
             child: Text(
               key: const Key('empty_email_message'),
-              _getMessageEmptyEmail(context),
-              style: const TextStyle(
-                color: EmptyEmailsWidgetStyles.labelTextColor,
-                fontSize: EmptyEmailsWidgetStyles.createFilterLabelTextSize,
-                fontWeight: EmptyEmailsWidgetStyles.createFilterLabelFontWeight
-              ),
+              _getMessageEmptyEmail(AppLocalizations.of(context)),
+              style: ThemeUtils.textStyleInter600(),
               textAlign: TextAlign.center,
             ),
           ),
-          if (_validateShowCreateRuleButton)
-            TMailButtonWidget.fromText(
-              key: const Key('create_filter_rule_button_within_empty_email'),
-              text: AppLocalizations.of(context).createFilters,
-              padding: EmptyEmailsWidgetStyles.createFilterButtonPadding,
-              margin: EmptyEmailsWidgetStyles.createFilterButtonMargin,
-              backgroundColor: EmptyEmailsWidgetStyles.createFilterButtonBackgroundColor,
-              borderRadius: EmptyEmailsWidgetStyles.createFilterButtonBorderRadius,
-              width: _responsiveUtils.isPortraitMobile(context) ? double.infinity : null,
-              textAlign: TextAlign.center,
-              textStyle: const TextStyle(
-                fontSize: EmptyEmailsWidgetStyles.createFilterButtonTextSize,
-                fontWeight: EmptyEmailsWidgetStyles.createFilterButtonFontWeight,
-                color: EmptyEmailsWidgetStyles.createFilterButtonTextColor
+          if (_showEmailSubMessage)
+            Text(
+              key: const Key('empty_email_sub_message'),
+              _getSubMessageEmptyEmail(AppLocalizations.of(context)),
+              style: ThemeUtils.textStyleInter400.copyWith(
+                letterSpacing: -0.15,
+                fontSize: 16,
+                height: 21.01 / 16,
+                color: AppColor.gray424244.withValues(alpha: 0.64),
               ),
-              onTapActionCallback: onCreateFiltersActionCallback,
-            )
+              textAlign: TextAlign.center,
+            ),
         ],
       ),
     );
@@ -88,32 +78,36 @@ class EmptyEmailsWidget extends StatelessWidget {
     );
   }
 
-  double _getIconSize(BuildContext context, ResponsiveUtils responsiveUtils) {
-    if (responsiveUtils.isMobile(context)) {
-      return EmptyEmailsWidgetStyles.mobileIconSize;
-    } else if (responsiveUtils.isDesktop(context)) {
-      return EmptyEmailsWidgetStyles.desktopIconSize;
-    } else {
-      return EmptyEmailsWidgetStyles.tabletIconSize;
-    }
+  bool get _showEmailSubMessage {
+    if (isFilterMessageActive) return false;
+
+    final showNetwork = isNetworkConnectionAvailable && !isSearchActive;
+    final showFavorite = isFavoriteFolder;
+
+    return showNetwork || showFavorite;
   }
 
-  bool get _validateShowCreateRuleButton => isNetworkConnectionAvailable
-    && !isFilterMessageActive && !isSearchActive && onCreateFiltersActionCallback != null;
-
-  String _getMessageEmptyEmail(BuildContext context) {
+  String _getMessageEmptyEmail(AppLocalizations appLocalizations) {
     if (!isNetworkConnectionAvailable) {
-      return AppLocalizations.of(context).no_internet_connection_try_again_later;
+      return appLocalizations.no_internet_connection_try_again_later;
     }
     
     if (isSearchActive) {
-      return AppLocalizations.of(context).no_emails_matching_your_search;
+      return appLocalizations.no_emails_matching_your_search;
+    } else if (isFilterMessageActive) {
+      return appLocalizations.noEmailMatchYourCurrentFilter;
+    } else if (isFavoriteFolder) {
+      return appLocalizations.youDoNotHaveAnyFavoritesEmails;
     } else {
-      if (isFilterMessageActive) {
-        return AppLocalizations.of(context).noEmailMatchYourCurrentFilter;
-      } else {
-        return AppLocalizations.of(context).noEmailInYourCurrentFolder;
-      }
+      return appLocalizations.youDoNotHaveAnyEmailInYourCurrentFolder;
+    }
+  }
+
+  String _getSubMessageEmptyEmail(AppLocalizations appLocalizations) {
+    if (isFavoriteFolder) {
+      return appLocalizations.startToAddFavoritesEmails;
+    } else {
+      return appLocalizations.startToComposeEmails;
     }
   }
 }

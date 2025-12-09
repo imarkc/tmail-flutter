@@ -25,7 +25,6 @@ import 'package:tmail_ui_user/features/mailbox/domain/usecases/get_all_mailbox_i
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/refresh_all_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/subscribe_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/subscribe_multiple_mailbox_interactor.dart';
-import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_categories.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_node.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_tree_builder.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/domain/usecases/verify_name_interactor.dart';
@@ -39,6 +38,7 @@ class MailboxVisibilityController extends BaseMailboxController {
   SubscribeMultipleMailboxInteractor? _subscribeMultipleMailboxInteractor;
   final _accountDashBoardController = Get.find<ManageAccountDashBoardController>();
   final mailboxListScrollController = ScrollController();
+  final foldersExpandMode = Rx(ExpandMode.EXPAND);
 
   MailboxVisibilityController(
     TreeBuilder treeBuilder,
@@ -132,26 +132,6 @@ class MailboxVisibilityController extends BaseMailboxController {
       } else if (subscribeRequest is SubscribeMailboxRequest) {
         consumeState(_subscribeMailboxInteractor!.execute(session, accountId, subscribeRequest));
       }
-    }
-  }
-
-  void toggleMailboxCategories(MailboxCategories categories) {
-    switch(categories) {
-      case MailboxCategories.exchange:
-        final newExpandMode = mailboxCategoriesExpandMode.value.defaultMailbox == ExpandMode.EXPAND ? ExpandMode.COLLAPSE : ExpandMode.EXPAND;
-        mailboxCategoriesExpandMode.value.defaultMailbox = newExpandMode;
-        mailboxCategoriesExpandMode.refresh();
-        break;
-      case MailboxCategories.personalFolders:
-        final newExpandMode = mailboxCategoriesExpandMode.value.personalFolders == ExpandMode.EXPAND ? ExpandMode.COLLAPSE : ExpandMode.EXPAND;
-        mailboxCategoriesExpandMode.value.personalFolders = newExpandMode;
-        mailboxCategoriesExpandMode.refresh();
-        break;
-      case MailboxCategories.teamMailboxes:
-        final newExpandMode = mailboxCategoriesExpandMode.value.teamMailboxes == ExpandMode.EXPAND ? ExpandMode.COLLAPSE : ExpandMode.EXPAND;
-        mailboxCategoriesExpandMode.value.teamMailboxes = newExpandMode;
-        mailboxCategoriesExpandMode.refresh();
-        break;
     }
   }
 

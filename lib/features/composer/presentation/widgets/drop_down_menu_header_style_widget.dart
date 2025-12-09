@@ -1,6 +1,7 @@
 
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/utils/style_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -28,45 +29,43 @@ class DropDownMenuHeaderStyleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonHideUnderline(
-      child: PointerInterceptor(
-        child: DropdownButton2<HeaderStyleType>(
-          isExpanded: true,
-          items: items
-              .map((item) => DropdownMenuItem<HeaderStyleType>(
-                    value: item,
-                    child: PointerInterceptor(
-                      child: Container(
-                        color: Colors.transparent,
-                        height: heightItem,
-                        alignment: Alignment.centerLeft,
-                        child: _buildItemDropdown(item),
-                      ),
+      child: DropdownButton2<HeaderStyleType>(
+        isExpanded: true,
+        items: items
+            .map((item) => DropdownMenuItem<HeaderStyleType>(
+                  value: item,
+                  child: PointerInterceptor(
+                    child: Container(
+                      color: Colors.transparent,
+                      height: heightItem,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: _buildItemDropdown(item),
                     ),
-                  ))
-              .toList(),
-          customButton: icon,
-          onChanged: onChanged,
-          onMenuStateChange: onMenuStateChange,
-          buttonStyleData: ButtonStyleData(height: heightItem),
-          dropdownStyleData: DropdownStyleData(
-            maxHeight: 200,
-            width: dropdownWidth,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              color: Colors.white),
-            elevation: 4,
-            offset: const Offset(0.0, -8.0),
-            scrollbarTheme: ScrollbarThemeData(
-              radius: const Radius.circular(40),
-              thickness: WidgetStateProperty.all<double>(6),
-              thumbVisibility: WidgetStateProperty.all<bool>(true),
-            )
-          ),
-          menuItemStyleData: MenuItemStyleData(
-            height: heightItem,
-            padding: const EdgeInsets.symmetric(horizontal: 12)
+                  ),
+                ))
+            .toList(),
+        customButton: icon,
+        onChanged: onChanged,
+        onMenuStateChange: onMenuStateChange,
+        buttonStyleData: ButtonStyleData(height: heightItem),
+        dropdownStyleData: DropdownStyleData(
+          maxHeight: 200,
+          width: dropdownWidth,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: Colors.white),
+          elevation: 4,
+          offset: const Offset(0.0, -8.0),
+          scrollbarTheme: ScrollbarThemeData(
+            radius: const Radius.circular(40),
+            thickness: WidgetStateProperty.all<double>(6),
+            thumbVisibility: WidgetStateProperty.all<bool>(true),
           )
         ),
+        menuItemStyleData: MenuItemStyleData(
+          height: heightItem,
+          padding: const EdgeInsets.symmetric(horizontal: 12)
+        )
       ),
     );
   }
@@ -106,10 +105,11 @@ class DropDownMenuHeaderStyleWidget extends StatelessWidget {
 
   Widget _buildHeaderStyle(String name, double size, FontWeight fontWeight) {
     return Text(name,
-        style: TextStyle(
-            fontSize: size,
-            fontWeight: fontWeight,
-            color: Colors.black),
+        style: ThemeUtils.defaultTextStyleInterFont.copyWith(
+          fontSize: size,
+          fontWeight: fontWeight,
+          color: Colors.black,
+        ),
         maxLines: 1,
         softWrap: CommonTextStyle.defaultSoftWrap,
         overflow: CommonTextStyle.defaultTextOverFlow);

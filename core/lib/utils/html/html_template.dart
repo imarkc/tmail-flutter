@@ -1,31 +1,13 @@
 
-class HtmlTemplate {
-  static const String fontLink = '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">';
-  static const String nameClassToolTip = 'tmail-tooltip';
-  static const String tooltipLinkCss = '''
-    .$nameClassToolTip .tooltiptext {
-      visibility: hidden;
-      max-width: 400px;
-      background-color: black;
-      color: #fff;
-      text-align: center;
-      border-radius: 6px;
-      padding: 5px 8px 5px 8px;
-      white-space: nowrap; 
-      overflow: hidden;
-      text-overflow: ellipsis;
-      position: absolute;
-      z-index: 1;
-    }
-    .$nameClassToolTip:hover .tooltiptext {
-      visibility: visible;
-    }
-  ''';
+import 'package:flutter/material.dart';
 
+class HtmlTemplate {
   static const String printDocumentCssStyle = '''
     <style> 
+      $fontFaceStyle 
+      
       body,td,div,p,a,input {
-        font-family: arial, sans-serif;
+        font-family: 'Inter', sans-serif;
       }
     
       body, td {
@@ -66,10 +48,68 @@ class HtmlTemplate {
      </style>
   ''';
 
+  static const String fontFaceStyle = '''
+    @font-face {
+      font-family: 'Inter';
+      src: url("/assets/fonts/Inter/Inter-Regular.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+    }
+    
+    @font-face {
+      font-family: 'Inter';
+      src: url("/assets/fonts/Inter/Inter-Medium.ttf") format("truetype");
+      font-weight: 500;
+      font-style: medium;
+    }
+    
+    @font-face {
+      font-family: 'Inter';
+      src: url("/assets/fonts/Inter/Inter-SemiBold.ttf") format("truetype");
+      font-weight: 600;
+      font-style: semi-bold;
+    }
+    
+    @font-face {
+      font-family: 'Inter';
+      src: url("/assets/fonts/Inter/Inter-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: bold;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  ''';
+
+  static String defaultFontStyle({double fontSize = 14}) => '''
+    body {
+      font-weight: 400;
+      font-size: ${fontSize}px;
+      font-style: normal;
+    }
+    
+    p {
+      margin: 0px;
+    }
+  ''';
+
+  static const String defaultEditorFontStyle = '''
+   #editor, .note-editable, .note-frame {
+      font-size: 16px;
+      color: #222222;
+    }
+    
+    p {
+      margin: 0px;
+    }
+  ''';
+
   static const String previewEMLFileCssStyle = '''
     <style> 
+      $fontFaceStyle
+
       body {
-        font-family: Arial, 'Inter', sans-serif;
         color: #333;
         margin: 0;
         padding: 0;
@@ -219,35 +259,73 @@ class HtmlTemplate {
 
   static const String markDownAndASCIIArtStyleCSS = 'display: block; font-family: monospace; white-space: pre; margin: 1em 0px;';
 
-  static const String customInternalStyleCSS = '''
+  static String webCustomInternalStyleCSS({
+    bool useDefaultFontStyle = false,
+    bool customScrollbar = false,
+  }) => '''
     <style>
-      html, .note-editable, .note-codable {
-        overflow: auto;
-      }
+      ${HtmlTemplate.fontFaceStyle}
       
-      html::-webkit-scrollbar, .note-editable::-webkit-scrollbar, .note-codable::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-
-      html::-webkit-scrollbar-thumb, .note-editable::-webkit-scrollbar-thumb, .note-codable::-webkit-scrollbar-thumb {
-        background-color: #c1c1c1;
-        border-radius: 10px;
-        min-height: 70px;
-      }
+      ${useDefaultFontStyle ? HtmlTemplate.defaultEditorFontStyle : ''}
       
-     html::-webkit-scrollbar-track, .note-editable::-webkit-scrollbar-track, .note-codable::-webkit-scrollbar-track {
-        background: transparent;
-        border-radius: 10px;
-      }
-      
-      /* Browsers without `::-webkit-scrollbar-*` support */
-      @supports not selector(::-webkit-scrollbar) {
-          html, .note-editable, .note-codable {
-            scrollbar-width: thin;
-            scrollbar-color: #c1c1c1 transparent;
-          }
-      }
+      ${customScrollbar ? '''
+        html, .note-editable, .note-codable {
+          overflow: auto;
+        }
+        
+        html::-webkit-scrollbar, .note-editable::-webkit-scrollbar, .note-codable::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+  
+        html::-webkit-scrollbar-thumb, .note-editable::-webkit-scrollbar-thumb, .note-codable::-webkit-scrollbar-thumb {
+          background-color: #c1c1c1;
+          border-radius: 10px;
+          min-height: 70px;
+        }
+        
+       html::-webkit-scrollbar-track, .note-editable::-webkit-scrollbar-track, .note-codable::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        /* Browsers without `::-webkit-scrollbar-*` support */
+        @supports not selector(::-webkit-scrollbar) {
+            html, .note-editable, .note-codable {
+              scrollbar-width: thin;
+              scrollbar-color: #c1c1c1 transparent;
+            }
+        }
+      ''' : ''}
     </style>
+  ''';
+
+  static String mobileCustomInternalStyleCSS({
+    bool useDefaultFontStyle = false,
+    TextDirection direction = TextDirection.ltr,
+  }) => '''
+    ${HtmlTemplate.fontFaceStyle}
+  
+    ${useDefaultFontStyle ? HtmlTemplate.defaultEditorFontStyle : ''}
+      
+    #editor {
+      direction: ${direction.name};
+    }
+    
+    #editor .tmail-signature {
+      text-align: ${direction == TextDirection.rtl ? 'right' : 'left'};
+    }
+  ''';
+
+  static const String disableScrollingStyleCSS = '''
+    html, body {
+      overflow: hidden;
+      overscroll-behavior: none;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+    ::-webkit-scrollbar {
+        display: none;
+      }
   ''';
 }

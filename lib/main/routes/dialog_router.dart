@@ -21,14 +21,28 @@ class DialogRouter {
   static Future<dynamic> pushGeneralDialog({
     required String routeName,
     required Object? arguments
-  }) {
+  }) async {
+    _isDialogOpened.value = true;
     _bindingDI(routeName);
 
-    return Get.generalDialog(
+    final returnedValue = await Get.generalDialog(
+      barrierDismissible: true,
+      barrierLabel: routeName,
       routeSettings: RouteSettings(arguments: arguments),
-      pageBuilder: (_, __, ___) => _generateView(routeName: routeName, arguments: arguments)
+      pageBuilder: (_, __, ___) => _generateView(routeName: routeName)
     );
+
+    _isDialogOpened.value = false;
+    if (routeName == AppRoutes.rulesFilterCreator) {
+      isRuleFilterDialogOpened.value = false;
+    }
+    return returnedValue;
   }
+
+  static final RxBool _isDialogOpened = false.obs;
+  static final RxBool isRuleFilterDialogOpened = false.obs;
+
+  static bool get isDialogOpened => _isDialogOpened.value;
 
   static void _bindingDI(String routeName) {
     log('DialogRouter::_bindingDI():routeName: $routeName');
@@ -37,6 +51,7 @@ class DialogRouter {
         MailboxCreatorBindings().dependencies();
         break;
       case AppRoutes.rulesFilterCreator:
+        isRuleFilterDialogOpened.value = true;
         RulesFilterCreatorBindings().dependencies();
         break;
       case AppRoutes.identityCreator:
@@ -54,8 +69,7 @@ class DialogRouter {
     }
   }
 
-  static Widget _generateView({required String routeName, required Object? arguments}) {
-    log('DialogRouter::_generateView():routeName: $routeName | arguments: $arguments');
+  static Widget _generateView({required String routeName}) {
     switch(routeName) {
       case AppRoutes.mailboxCreator:
         return MailboxCreatorView();

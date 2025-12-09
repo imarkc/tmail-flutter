@@ -61,6 +61,8 @@ export 'extensions/session_extension.dart';
 export 'extensions/utc_date_extension.dart';
 export 'extensions/contact_support_capability_extension.dart';
 export 'extensions/list_id_extension.dart';
+export 'extensions/set_email_body_part_extension.dart';
+export 'extensions/oidc_user_info_extension.dart';
 // Identity
 export 'identity/identity_request_dto.dart';
 export 'mailbox/expand_mode.dart';
@@ -77,6 +79,7 @@ export 'oidc/request/oidc_request.dart';
 export 'oidc/response/oidc_discovery_response.dart';
 export 'oidc/response/oidc_link_dto.dart';
 export 'oidc/response/oidc_response.dart';
+export 'oidc/response/oidc_user_info.dart';
 export 'oidc/token_id.dart';
 export 'oidc/token_oidc.dart';
 // Upload
@@ -84,3 +87,5 @@ export 'upload/file_info.dart';
 export 'upload/upload_response.dart';
 // Support
 export 'support/contact_support_capability.dart';
+// SaaS
+export 'saas/saas_account_capability.dart';

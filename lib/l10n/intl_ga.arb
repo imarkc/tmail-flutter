@@ -611,7 +611,7 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noEmailMatchYourCurrentFilter": "Tá brón orainn, níl aon ríomhphoist ann a mheaitseálann do scagaire reatha.",
+  "noEmailMatchYourCurrentFilter": "Níl aon ríomhphoist ann a mheaitseálann do scagaire reatha.",
   "@noEmailMatchYourCurrentFilter": {
     "type": "text",
     "placeholders_order": [],
@@ -1623,7 +1623,7 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "enableSpamReport": "Cumasaigh tuairisc turscair",
+  "enableSpamReport": "Cumasaigh tuarascáil turscair",
   "@enableSpamReport": {
     "type": "text",
     "placeholders_order": [],
@@ -2085,7 +2085,7 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "sending": "Seoladh",
+  "sending": "Ag seoladh",
   "@sending": {
     "type": "text",
     "placeholders_order": [],
@@ -2369,7 +2369,7 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noEmailInYourCurrentFolder": "Tá brón orainn, níl aon ríomhphoist i d'fhillteán reatha",
+  "noEmailInYourCurrentFolder": "Níl aon ríomhphoist i do fhillteán reatha",
   "@noEmailInYourCurrentFolder": {
     "type": "text",
     "placeholders_order": [],
@@ -3621,7 +3621,7 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "titleHeaderAttachment": "{count} Ceangaltáin ({totalSize}):",
+  "titleHeaderAttachment": "{count} Ceangaltáin ({totalSize})",
   "@titleHeaderAttachment": {
     "type": "text",
     "placeholders_order": [
@@ -4383,6 +4383,858 @@
   },
   "markAsImportant": "Marcáil chomh tábhachtach",
   "@markAsImportant": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "viewEntireMessage": "Féach ar an teachtaireacht iomlán",
+  "@viewEntireMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youAcceptedTheProposedTimeForThisMeeting": "Ghlac tú leis an am a moladh don chruinniú seo",
+  "@youAcceptedTheProposedTimeForThisMeeting": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "pullHarderFor": "Tarraing níos deacra ar son",
+  "@pullHarderFor": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youHaveAnotherEventAtThatSameTime": "Tá imeacht eile agat ag an am céanna",
+  "@youHaveAnotherEventAtThatSameTime": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageClipped": "[Teachtaireacht gearrtha]",
+  "@messageClipped": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "retry": "Déan iarracht eile",
+  "@retry": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "refresh": "Athnuachan",
+  "@refresh": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "deepRefresh": "Athnuachan domhain",
+  "@deepRefresh": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "pullDownToRefresh": "Tarraing síos chun athnuachan",
+  "@pullDownToRefresh": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "releaseTo": "Scaoileadh chuig",
+  "@releaseTo": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youNeedToGrantFilesPermissionToExportFile": "Ní mór duit cead a thabhairt do chomhaid chun comhaid a easpórtáil",
+  "@youNeedToGrantFilesPermissionToExportFile": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageExportTraceLogDialog": "Tá log teachtaireachta earráide an API soghluaiste rianaithe. Ar mhaith leat é a easpórtáil?",
+  "@messageExportTraceLogDialog": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "updateMessageToTemplateSuccess": "Nuashonraigh an teachtaireacht chuig an bhfillteán teimpléid go rathúil",
+  "@updateMessageToTemplateSuccess": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveMessageToTemplateCancelled": "Cealaíodh sábháil teachtaireachta chuig fillteán teimpléid",
+  "@saveMessageToTemplateCancelled": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "exportTraceLogFailed": "Theip ar log rianaithe a onnmhairiú",
+  "@exportTraceLogFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveAsTemplate": "Sábháil mar theimpléad",
+  "@saveAsTemplate": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "savingTemplate": "Sábháil teimpléid",
+  "@savingTemplate": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "invalidArguments": "Argóintí neamhbhailí: \"{description}\"",
+  "@invalidArguments": {
+    "type": "text",
+    "placeholders_order": [
+      "description"
+    ],
+    "placeholders": {
+      "description": {}
+    }
+  },
+  "exportTraceLog": "Easpórtáil log rianaithe",
+  "@exportTraceLog": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "noLogsHaveBeenRecordedYet": "Níl aon logaí taifeadta go fóill.",
+  "@noLogsHaveBeenRecordedYet": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "exportTraceLogSuccess": "Easpórtáil logaí rianaithe rathúla ag \"{path}\"",
+  "@exportTraceLogSuccess": {
+    "type": "text",
+    "placeholders_order": [
+      "path"
+    ],
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "saveMessageToTemplateSuccess": "Sábháil an teachtaireacht chuig an bhfillteán teimpléid go rathúil",
+  "@saveMessageToTemplateSuccess": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveMessageToTemplateFailed": "Theip ar an teachtaireacht a shábháil chuig fillteán teimpléid",
+  "@saveMessageToTemplateFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "savingMessageToTemplateFolder": "Ag sábháil teachtaireachta chuig fillteán teimpléid",
+  "@savingMessageToTemplateFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "editLocalCopyInForwardFailed": "Theip ar chóip áitiúil a athrú agus ríomhphoist á n-aistriú.",
+  "@editLocalCopyInForwardFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "support": "Tacaíocht",
+  "@support": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addRecipientsFailed": "Theip ar an bhfaighteoir a chur leis.",
+  "@addRecipientsFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "deleteRecipientsFailed": "Theip ar scriosadh faighteoirí.",
+  "@deleteRecipientsFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youDoNotHaveAnyEmailInYourCurrentFolder": "Níl aon ríomhphoist\n agat sa bhfillteán seo.",
+  "@youDoNotHaveAnyEmailInYourCurrentFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createFilter": "Cruthaigh scagaire",
+  "@createFilter": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createFilterRuleFailed": "Theip ar riail scagaire a chruthú",
+  "@createFilterRuleFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "startToComposeEmails": "Tosaigh ag scríobh ríomhphoist.",
+  "@startToComposeEmails": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "thread": "Snáithe",
+  "@thread": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "threadSettingExplanation": "Féach ar ríomhphoist ghaolmhara iolracha cosúil le comhrá",
+  "@threadSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "threadToggleDescription": "Cumasaigh snáithe",
+  "@threadToggleDescription": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youAreNotInvitedToThisEventPleaseContactTheOrganizer": "Níl cuireadh tugtha duit chuig an ócáid seo. Téigh i dteagmháil leis an eagraí le do thoil.",
+  "@youAreNotInvitedToThisEventPleaseContactTheOrganizer": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "countMessageInSpam": "{count} teachtaireacht sa turscar",
+  "@countMessageInSpam": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "view": "Amharc",
+  "@view": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "daysAgo": "{days,plural, =0{}=1{ (1 lá ó shin)}other{ ({days} lá ó shin)}}",
+  "@daysAgo": {
+    "type": "text",
+    "placeholders_order": [
+      "days"
+    ],
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "copy": "Cóipeáil",
+  "@copy": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "editEmail": "Cuir ríomhphost in eagar",
+  "@editEmail": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createARule": "Cruthaigh riail",
+  "@createARule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "enterSubjectKeywords": "Cuir isteach eochairfhocail ábhair...",
+  "@enterSubjectKeywords": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addAnEmailAddress": "Cuir seoladh ríomhphoist leis",
+  "@addAnEmailAddress": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "dialogRecoverDeletedMessagesDescription": "Is féidir leat teachtaireachtaí a scriosadh laistigh den {period} lá dheireanacha a aisghabháil. Déanfar ríomhphoist aisghafa a athchóiriú chuig do fhillteán aisghafa.",
+  "@dialogRecoverDeletedMessagesDescription": {
+    "type": "text",
+    "placeholders_order": [
+      "period"
+    ],
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "enterName": "Cuir isteach ainm",
+  "@enterName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "enterEmailAddress": "Cuir isteach seoladh ríomhphoist",
+  "@enterEmailAddress": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "archiveAndDownload": "Cartlannú agus íoslódáil",
+  "@archiveAndDownload": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "creatingAnArchiveForDownloading": "Cartlann a chruthú le híoslódáil",
+  "@creatingAnArchiveForDownloading": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "ok": "Ceart go leor",
+  "@ok": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keepACopyInInbox": "Coinnigh cóip sa Bhosca Isteach",
+  "@keepACopyInInbox": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keepACopyInInboxDescription": "Stóráil ríomhphoist ar aghaidh i do bhosca isteach chomh maith le iad a sheoladh chuig faighteoirí",
+  "@keepACopyInInboxDescription": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "dialogWarningTitleForForwardsToOtherDomains": "Tá tú ag atreorú ríomhphoist chuig fearann eile.",
+  "@dialogWarningTitleForForwardsToOtherDomains": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "dialogWarningMessageForForwardsToOtherDomains": "D’fhéadfadh sé seo a bheith ina bhagairt slándála nó d’fhéadfadh sé a bheith ina eastóscadh sonraí mídhleathach. Ar mhaith leat dul ar aghaidh?",
+  "@dialogWarningMessageForForwardsToOtherDomains": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "hideSignature": "Folaigh síniú",
+  "@hideSignature": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "showSignature": "Taispeáin síniú",
+  "@showSignature": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "archiveMessagesFailed": "Theip ar theachtaireachtaí a chartlannú",
+  "@archiveMessagesFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "singularAttachmentTitleHeader": "{count} Ceangaltán ({totalSize})",
+  "@singularAttachmentTitleHeader": {
+    "type": "text",
+    "placeholders_order": [
+      "count",
+      "totalSize"
+    ],
+    "placeholders": {
+      "count": {},
+      "totalSize": {}
+    }
+  },
+  "attachment": "Ceangaltán",
+  "@attachment": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "increaseYourSpace": "Méadaigh do spás",
+  "@increaseYourSpace": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaAvailableLabel": "{count} ar fáil",
+  "@quotaAvailableLabel": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "paywallUrlNotAvailable": "Níl url an bhalla pá ar fáil",
+  "@paywallUrlNotAvailable": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaBannerWarningTitle": "Tá an stóras ag rith gann agat (90%)",
+  "@quotaBannerWarningTitle": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaBannerWarningSubtitleWithPremium": "Chun leanúint ar aghaidh ag seoladh teachtaireachtaí agus ag baint taitneamh as gach gné de Twake Mail, smaoinigh ar do stóras a ghlanadh nó a uasghrádú.",
+  "@quotaBannerWarningSubtitleWithPremium": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaBannerWarningSubtitleWithoutPremium": "Chun leanúint ar aghaidh ag seoladh teachtaireachtaí agus ag baint taitneamh as gach gné de Twake Mail, smaoinigh ar ghlanadh suas.",
+  "@quotaBannerWarningSubtitleWithoutPremium": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "manageMyStorage": "Bainistigh mo stóras",
+  "@manageMyStorage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addARule": "Cuir riail leis",
+  "@addARule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "noRulesConfigured": "Gan Rialacha Cumraithe",
+  "@noRulesConfigured": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageExplanationNoRulesConfigured": "Tosaigh trí do chéad riail a chruthú\n chun bainistíocht ríomhphoist a uathoibriú.",
+  "@messageExplanationNoRulesConfigured": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createMyFirstRule": "Cruthaigh Mo Chéad Riail",
+  "@createMyFirstRule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createANewRule": "Cruthaigh Riail Nua",
+  "@createANewRule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "ruleName": "Ainm an Rialach",
+  "@ruleName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "condition": "Coinníoll",
+  "@condition": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addACondition": "Cuir coinníoll leis",
+  "@addACondition": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "actionsToPerform": "Gníomhartha le Déanamh",
+  "@actionsToPerform": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addAnAction": "Cuir gníomh leis",
+  "@addAnAction": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createRule": "Cruthaigh Riail",
+  "@createRule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "preview": "Réamhamharc",
+  "@preview": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "ruleFilterConditionPreviewMessage": "{conditionCombinerName} de na coinníollacha: {conditionValue}",
+  "@ruleFilterConditionPreviewMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "conditionCombinerName",
+      "conditionValue"
+    ],
+    "placeholders": {
+      "conditionCombinerName": {},
+      "conditionValue": {}
+    }
+  },
+  "actions": "Gníomhartha",
+  "@actions": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createANewFolder": "Cruthaigh Fillteán Nua",
+  "@createANewFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "subtitleDisplayTheFolderNameLocationInFolderCreationModal": "Cruthófar fillteán nua taobh istigh de {folderName}",
+  "@subtitleDisplayTheFolderNameLocationInFolderCreationModal": {
+    "type": "text",
+    "placeholders_order": [
+      "folderName"
+    ],
+    "placeholders": {
+      "folderName": {}
+    }
+  },
+  "folderName": "Ainm an Fhillteáin",
+  "@folderName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "enterTheFolderName": "Cuir isteach ainm an fhillteáin",
+  "@enterTheFolderName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "selectTheFolderLocation": "Roghnaigh suíomh an fhillteáin",
+  "@selectTheFolderLocation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createFolder": "Cruthaigh fillteán",
+  "@createFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "sendMessage": "Seol teachtaireacht",
+  "@sendMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "attachmentReminderModalTitle": "Ar dhearmad tú comhad a cheangal?",
+  "@attachmentReminderModalTitle": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "attachmentReminderModalMessage": "Scríobh tú {keyword} i do theachtaireacht ach níor chuir tú aon cheangaltáin leis. Ar mhaith leat é a sheoladh fós?",
+  "@attachmentReminderModalMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "keyword"
+    ],
+    "placeholders": {
+      "keyword": {}
+    }
+  },
+  "spamReports": "Tuairiscí turscair",
+  "@spamReports": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "spamReportsSettingExplanation": "Cuireann sé seo i gcuimhne duit go gcaithfidh tú do ríomhphoist turscair a mhodhnú go rialta",
+  "@spamReportsSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "spamReportToggleDescription": "Cumasaigh tuairisc turscair",
+  "@spamReportToggleDescription": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "showMoreAttachmentButton": "Taispeáin +{count} eile",
+  "@showMoreAttachmentButton": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hideAttachmentButton": "Folaigh {count}",
+  "@hideAttachmentButton": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "defaultIdentitySetupSuccessful": "Socrú aitheantais réamhshocraithe rathúil",
+  "@defaultIdentitySetupSuccessful": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "storageSettingExplanation": "Déan monatóireacht ar an spás atá ar fáil.",
+  "@storageSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "storageIsAlmostFullMessage": "Tá an stóras beagnach lán. Is féidir leat spás a shaoradh trí chomhaid neamhriachtanacha a scriosadh nó liostáil chun spás breise a fháil.",
+  "@storageIsAlmostFullMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "upgradeStorage": "Uasghrádaigh stóráil",
+  "@upgradeStorage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "storageUsedMessage": "de {limit} a úsáideadh",
+  "@storageUsedMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "limit"
+    ],
+    "placeholders": {
+      "limit": {}
+    }
+  },
+  "storageAvailableMessage": "Ar fáil: {count}",
+  "@storageAvailableMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mailHasBeenStarred": "Tá réalta curtha leis an ríomhphost",
+  "@mailHasBeenStarred": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailHasBeenUnstarred": "Baineadh an réalta as ríomhphost",
+  "@mailHasBeenUnstarred": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keyboardShortcuts": "Aicearraí méarchláir",
+  "@keyboardShortcuts": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keyboardShortcutsSettingExplanation": "Gníomhartha bosca poist agus ríomhphoist",
+  "@keyboardShortcutsSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "navigationAndClosing": "Loingseoireacht & Dúnadh",
+  "@navigationAndClosing": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "readingAndReplying": "Léamh & Freagairt",
+  "@readingAndReplying": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageManagementAndSelection": "Bainistiú & Roghnú Teachtaireachtaí",
+  "@messageManagementAndSelection": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "navigation": "Loingseoireacht",
+  "@navigation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "reading": "Léitheoireacht",
+  "@reading": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "closeMailComposer": "Dún cumadóir ríomhphoist",
+  "@closeMailComposer": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "removeFocusFromSearch": "Bain fócas den chuardach",
+  "@removeFocusFromSearch": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "closeModalWindow": "Dún fuinneog mhódúil",
+  "@closeModalWindow": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "openNewMessage": "Oscail teachtaireacht nua",
+  "@openNewMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailComposer": "Cumadóir ríomhphoist",
+  "@mailComposer": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "focusOnSearch": "Dírigh ar chuardach",
+  "@focusOnSearch": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "openedModal": "Modúil oscailte",
+  "@openedModal": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailboxList": "Liosta bosca poist",
+  "@mailboxList": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "openedMailView": "Radharc ríomhphoist oscailte",
+  "@openedMailView": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailboxListWithSelectedMail": "Liosta bosca poist (ríomhphost roghnaithe)",
+  "@mailboxListWithSelectedMail": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "replyToAll": "Freagra a thabhairt do chách",
+  "@replyToAll": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "deleteMessage": "Scrios an teachtaireacht",
+  "@deleteMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "moveFolderContent": "Bog ábhar an fhillteáin",
+  "@moveFolderContent": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "moveFolderContentToastMessage": "Theip ar bhogadh gach ríomhphost ón bhfillteán seo go fillteán eile.",
+  "@moveFolderContentToastMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "favoriteMailboxDisplayName": "Réalta",
+  "@favoriteMailboxDisplayName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "insertLink": "Cuir nasc isteach",
+  "@insertLink": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "goTo": "Téigh go",
+  "@goTo": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "change": "Athraigh",
+  "@change": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "removeLink": "Bain an nasc",
+  "@removeLink": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "text": "Téacs",
+  "@text": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "typeOrPasteLink": "Clóscríobh nó greamaigh nasc",
+  "@typeOrPasteLink": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "apply": "Cuir i bhfeidhm",
+  "@apply": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "manageYourTwakeAccount": "Bainistigh do chuntas Twake",
+  "@manageYourTwakeAccount": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}

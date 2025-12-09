@@ -1,3 +1,349 @@
+## [0.22.1] - 2025-11-21
+### Added
+- Translation: vi, ru, fr, uk, cn
+
+### Fixed
+- Memory leak in focus node in ThreadDetailController
+- Storage full message
+- Empty state when no email in Favorites
+- Cannot open inserted link in composer 
+- Resize image in composer
+- Tooltip for link 
+
+## [0.22.0] - 2025-11-17
+### Added
+  - TF-4148: Add link to common settings in mobile application
+  - TF-4145: Add OIDC user info endpoint & paywall URL with FQDN validation
+  - TF-4142: Implement hyperlink insertion in composer
+  - TF-4064: Support drag & drop email addresses in composer on mobile
+  - TF-4082: Save and restore text formatting menu state in composer
+  - TF-4050: Preview and download uploaded files in composer on web
+  - TF-1715: Add Favorite folder with star email support
+  - TF-4053: Implement move folder content feature
+  - TF-4011: Support Tab shortcut key in tag input field
+  - TF-4122: Display CTA to download mobile application
+  - TF-3996: Add dividers for items in context menu on desktop
+  - TF-3976: Support native DNS resolvers without Cloudflare/Google dependency
+  - TF-3911: Add keyboard shortcuts support & shortcuts dictionary in settings
+
+  ## Fixed
+  - TF-4146: Handle time for email view
+  - TF-4139: Fix attachment reminder mistakenly shown when replying
+  - TF-4128: Separate download handling into independent class on web
+  - TF-4124: Fix localhost addresses email validation
+  - TF-4122: Replace deprecated apple-mobile-web-app-capable meta tag
+  - TF-4117: Fix UI blocking when opening recipient modal in composer
+  - TF-4004: Apply new UI for delete rule email dialog as confirm modal
+  - TF-3976: Fix URL lookup failure when DNS resolution fails
+  - TF-3871: Fix blue bar displays wrongly for event counter
+  - Fix email subject text cut off at the bottom on web
+  - Fix duplicated email subject after enabling thread mode
+  - Fix hide storage section when quota is empty
+
+## [0.20.1] - 2025-10-24
+### Added
+- Translation: Chinese, French, Vietnamese, Russian, Ukrainian, Irish
+
+## [0.20.0] - 2025-10-17
+### Fixed
+- #4045 Display storage only when storage exceeds 80% of total storage
+- #4049 Pre-fill OIDC login form
+- #4058 Support 16kb page size for Android
+- #4066 Simplify filters
+- #4068 Change profile doesn’t work
+- #4069 Automatically reply should be deactivated after end date
+- #4084 Cannot read or scroll emails when opening them in Twake Mail on Android chrome mobile browser
+- #4093 Make interface more compact
+- #4102 Don't display free-busy on IMIP responses (accepted, tentative, rejected)
+- White overlay hides bottom action in create identity view
+- Email content disappears after marking as `star/unstar` when thread is disabled
+
+## [0.19.6] - 2025-10-12
+### Fixed
+- Remove Reply-to in one-line field
+
+## [0.19.5] - 2025-10-10
+### Fixed
+- Fix bug relate to recipients 
+
+## [0.19.4] - 2025-10-08
+### Changed
+- #4075 Move Attachment panel to top on web view
+
+### Fixed
+- Drag & drop text in composer must be move, not copy
+- #4013 Remove prefix in recipient fields when it is not focus
+
+## [0.19.3] - 2025-09-26
+### Added
+- Translation vi, en, ru, fr, uk
+
+### Fixed
+- gray screen when comeback app from background
+- rule filter dialog auto close when click outside
+- Server setting for readonly fields
+
+## [0.19.2] - 2025-09-19
+### Fixed
+- Cannot Next/Previous email when thread disabled on web
+
+## [0.19.1] - 2025-09-19
+### Fixed
+- Fix cannot send email after close attachment reminder dialog
+- Fix thread detail next/previous
+- Fix email content is broken when perform previous/next email then back to app
+- Fix click twice on the signature collapse button to view signature when composer has Cc or Bcc
+- TF-4029 Fix singular vs plural for attachments
+- Translated using Weblate (Ukrainian)
+
+## [0.19.0] - 2025-09-17
+### Added
+- #4004 Rule filter: loading bar, preview/hide conditions, redesigned create rule view (web & mobile), new empty state
+- #4009 Attachment text detector
+- #3985 Premium capability for paywall when running in SaaS mode
+- #3977 Option for Disable/Enable Spam banner 
+- #3996 Group context menu actions
+
+### Changed
+- #4002 Change folder creation modal 
+
+### Fixed
+- Fix cannot drag & drop attachment from email detailed view to composer on web
+- Fix cannot open email on tablet/iPad
+- #4014 Fix copy & paste images broken after going full screen
+- #4011 Support arrow keys to regain focus after deleting a recipient
+- #3894 Fix blank email content when opening email (stalwart)
+- #4000 Improve attachment handling in detailed view (show all button hidden by default)
+- #3998 Reduce size of toggle in vacation settings
+- #3989 Open email modal with single click on mobile & web
+- HOTFIX: Enable reply toggle regardless of thread setting
+- HOTFIX: Enable iOS quote toggle
+- HOTFIX: Realtime update while searching on mobile
+- HOTFIX: Next/Previous navigation broken after realtime update (#3990)
+
+### Tests
+- Added numerous E2E and integration tests:
+  - Mailbox actions: switch, pull to refresh, toggle read/star/spam, mark unread, move/delete, quick filter, count real-time update, subfolder management
+  - Composer: read receipt, attachment & inline
+  - Email view: view inline images, download attachment, scroll long/short/XSS content, copy email address, display address info
+  - Rule creation: by email address, list redesign, no-content state
+  - Reply email with Reply-To
+  - Trash/Spam mailbox empty & recover
+  - Team mailbox receive email, quota view increase, search mailbox
+  - Logout flow
+
+## [0.18.4] - 2025-08-28
+### Fixed
+- Handle color picker in vacation, identity
+- Cursor jumping in composer
+
+## [0.18.3] - 2025-08-27
+### Fixed
+- Translation Portuguese, French, Irish, Chinese, Vietnamese, Russian
+- Safari input
+- Sort order in advanced search
+- Close color picker
+- Integration tests
+- Icons in editing rule
+- Handle popback in deleting identity, email rule
+
+## [0.18.2] - 2025-08-22
+### Fixed
+- Hot fix pod.lock to build iOS
+
+## [0.18.1] - 2025-08-22
+#### Changed
+- Revert `Build gz files during build, not during startup (Closes: #3920)` to find better solution to have also correct env files in build
+
+## [0.18.0] - 2025-08-22
+### Added
+- #3834 Remember user sort
+- #3912 [Thread Detail] Real time update issue
+- #3914 Apply new style for action on hover in list
+- #3919 Change logo for `Download Twake Mail application` banner on web mobile app
+- #2948 Apply New Identity view
+- #2666 Edit one recipient in cc, bcc, to
+- Update Cozy integration doc (#3905)
+- Build gz files during build, not during startup (Closes: #3920)
+- Auto create email address tag for input field
+- Apply new design for recover deleted emails
+- Support vertical scrolling email view when cursor is over calendar event description
+- Support vertical scrolling of all information between app bar and bottom bar in email view
+- Translated using Weblate (Chinese (Simplified Han script))
+- Translated using Weblate (French)
+- Translated using Weblate (Irish)
+- Translated using Weblate (Russian)
+- Translated using Weblate (Vietnamese)
+
+### Changed
+- #3586 [Bug] Can not open links on mail in mobile device after taking a scroll action
+- Change order of attachment and mail body on desktop and mobile
+- Update Thread Detail Reply toggle design
+- Update toast message when start download all attachment
+
+### Fixed
+- #3963 Context menu actions
+- #3964 [BUG] Text is not well displayed when preview email
+- #3953 Close modal when user clicks out of modal
+- #3944 Update new style for  Composer
+- #3924 [Thread Detail] Blinking when loading thread
+- #3947 [Thread Detail] [Part 2] Thread level actions
+- #3941 [Thread Detail] [Part-1] Thread level actions
+- #3940 Browser back button doesn't work as expected when inside Cozy dashboard
+- #3939 Display minor action on '…' menu in mobile view
+- #3936 [Thread Detail] Hide app bar icons when thread is disabled
+- #3933 Avoid load fonts from `https://fonts.gstatic.com`
+- #3956 Adjust UI for Vacation section in setting
+- #3952 Change new UI/UX for Forwarding section in setting
+- #3950 Apply new style for Folder visibility
+- #3945 Change style for Signature Composer
+- #3918 Email text be overlapped in body
+- #3889 Phone: Cannot see input when typing email body with attachments
+- #3864 [MANAGEMENT] Pasting address with display name
+- #3833 Failed to keep mobile app connect after network issue
+- #3294 BLUE-BAR mail to attentees: duplicated recipients
+- HOTFIX Thread Detail show actions when setting enabled
+- HOTFIX Compile error
+- HOTFIX Update flutter docker image for 3.27.4
+- Hot fix green background signature in profile setting
+- Fix attachments cannot be export multiple times in mobile
+- Remove files are not used
+- Apply new style for create identity view on mobile
+- Apply new style for create identity view on desktop
+- Set padding for email address tag in input field
+- Reuse widgets for advanced search form view
+- Use common `FilterField` & `EmailReceiveTimeType` objects for the entire app
+- Avoid calling `getMinInputLengthAutocomplete` multiple times from session
+
+## [0.17.2] - 2025-07-24
+### Fixed
+- Safari long email content be clipped
+- Safari drag n drop image be placed under signature
+- Remove space in Re/Fwd and `:` in French
+
+## [0.17.1] - 2025-07-21
+### Fixed
+- Blank email in thread detail after open email from notification
+- Content spacing between email in thread detail
+- Temporary disable Toggle quote in iOS (due to platform issue: click link in web view)
+
+## [0.17.0] - 2025-07-20
+### Added
+- TF-3881 Thread Detail improvements and fixes.
+- TF-3878 Thread Detail content and setting fixes.
+- TF-3699 Thread Detail next/previous actions.
+- TF-3731 Thread Detail email cache optimization.
+- TF-3837 Thread Detail offline view adjustment.
+- TF-3804 Thread Detail parallel email loading.
+- TF-3844 Thread Detail context menu style fix.
+- TF-3845 Thread Detail blue bar scroll fix.
+- TF-3775 Thread Detail UI and functionality improvements.
+- TF-3720 Thread Detail email display refinements.
+- TF-3698 Thread Detail refactoring and real-time updates.
+- TF-3769 Thread Detail comprehensive UI/UX and performance enhancements.
+- TF-3697 Open specific thread detail email.
+- TF-3724 Thread Detail UI and action optimizations.
+- TF-3715 Thread Detail extensive bug fixes and action refinements.
+- TF-3644 Thread Detail scroll handling.
+- TF-3643 Thread Detail extensive UI/UX, performance, and data handling improvements.
+
+### Fixed
+- TF-3835 Android font selection fix.
+- HOTFIX Integration tests and Patrol version updates.
+- Spam banner/alert UI updates.
+- TF-3847 Stalwart server avatar fix.
+- Profile and Language settings UI/UX improvements.
+- Font rendering consistency.
+- Advanced search tag handling fix.
+- Preferences and Settings UI redesign.
+- Modal and dialog UI updates.
+- TF-3846 Notion email mobile view fix.
+- Custom font loading optimization.
+- TF-3826 Webfinger and network error handling for login.
+- #3885 Fix language default 
+- Android API 35 support
+
+## [0.16.4] - 2025-07-01
+### Fixed
+- Changing from Hive to HiveCE for fixing synchronizing issues when multiple isolate access to db
+- Cursor pointer is wrong color
+- #3819 Fix modified signature not saved in Draft
+- Incorrect Support button alignment
+- #3822 Quota view misaligned
+- #3792 Hide button in blue bar if user is not a participant
+- #3177 Fix drag n drop image make double signature
+
+## [0.16.3] - 2025-06-20
+### Added
+- Translation
+
+### Fixed
+- lottie not work in EML preview
+- style for Trash/Spam banner mobile
+- #3791 sending queue email lost body
+
+## [0.16.2] - 2025-06-20
+### Fixed
+- [iOS] update privacy manifest for lottie library
+- Translation
+- #3792 Reply email with only blobId or partId
+
+## [0.16.1] - 2025-06-19
+### Fixed
+- [iOS] Update new profiles for iOS release
+
+## [0.16.0] - 2025-06-18
+### Fixed
+- #3772 Change Splash screen
+- #3795 Fix cannot send emails with stalwart
+- #3712 Common settings for language
+- #3603 Cozy app bar
+- #3766 Change context menu for mobile
+- #3759 Change context menu for web app
+- #3763 Update style for Advanced search form
+- #3767 Recent items for search history
+- #3765 Change dialog style
+- #3786 Add Return-Path header when request read receipt (- #3790)
+- #3764 Empty view for folder
+- #3758 Update Mailbox View
+- #3773 Change banner of Trash/Spam folder
+- #3761 Fix correct size for search icon in mailbox search
+- #3752 Better error handling when updating recipients in Forwarding
+- #3760 Change style of input dialog on web
+- #3717 Allow access settings when own email address is null (Stalwart interopability)
+- #3484 Try get oidc configuration if possible when web finger is not available (Stalwart interopability)
+- #3762 Update style for `Clean` button of Trash/Spam folder
+- #3675 Remove mark all read button
+
+## [0.15.5] - 2025-05-19
+### Fixed
+- Changing position of Get help button in Left menu
+- Open email in new tab Safari v16.6
+- #3735 Clearer warning message in composer when adding recipient
+- #3740 Duplicate signature when changing From field
+- Back button in Search list mobile
+- #3701 Translation for favorite toggle 
+
+## [0.15.4] - 2025-05-19
+### Fixed
+- #3691 support html escape in search result
+- #3703 Some mail still have scroll left in mobile to see content
+- #3696 Upgreade ios build with xcode 18
+- Missing signature in mobile
+- #3684 Signature in wrong place if move inline image
+- #3671 Composer are blocked without network
+- #3704 Rearrange mailbox view
+- #3683 Fix draft save toast only show one time
+- #3685 `From` is displayed incorrectly in Draft on mobile
+- #3719 Handling `notFound` in Email/get
+- #3719 Handling requestTooLarge error 
+- #3678 Support semantic for Set as default identity
+- Translation
+
+### Added
+- #3707 Add Mailbox/clear to clear mailbox
+- #3515 Save as template
+
 ## [0.15.3] - 2025-04-22
 ### Fixed
 - #3670 Forwarding email make attachment bar disappear

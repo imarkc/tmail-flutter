@@ -15,7 +15,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 0.15.3
+version: 0.22.1
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -51,6 +51,9 @@ dependencies:
   server_settings:
     path: server_settings
 
+  cozy:
+    path: cozy
+
   ### Dependencies from git ###
   rich_text_composer:
     git:
@@ -79,49 +82,44 @@ dependencies:
 
   flutter_appauth_web:
     git:
-      url: https://github.com/CarlosPacheco/flutter_appauth_web.git
-      ref: main
+      url: https://github.com/linagora/flutter_appauth_web.git
+      ref: upgrade-flutter-appauth
 
   flutter_date_range_picker:
     git:
       url: https://github.com/linagora/flutter-date-range-picker.git
       ref: main
 
-  # TODO: We will change it when the PR in upstream repository will be merged
-  # https://github.com/dietfriends/dns_client/pull/9
-  dns_client:
-    git:
-      url: https://github.com/linagora/dns_client.git
-      ref: twake-supported
-
   linagora_design_flutter:
     git:
       url: https://github.com/linagora/linagora-design-flutter.git
       ref: master
 
-  # TODO: Fix bug where apps cannot be launched on iOS 18. We will change it when the PR in upstream repository will be merged
-  # https://github.com/GeekyAnts/external_app_launcher/pull/42
-  external_app_launcher:
+  ### Original dependency is abandoned, so we use fork
+  ### https://github.com/linagora/intl_generator/pull/1
+  intl_generator:
     git:
-      url: https://github.com/putnokiabel/external_app_launcher.git
+      url: https://github.com/linagora/intl_generator.git
       ref: master
 
   ### Dependencies from pub.dev ###
-  super_tag_editor: 0.3.2
+  super_tag_editor: 1.1.0
+
+  super_dns_client: 0.3.8
+
+  external_app_launcher: 4.0.3
 
   cupertino_icons: 1.0.6
 
   get: 4.6.6
 
-  intl_generator: 0.4.1
-
-  flutter_svg: 2.0.9
+  flutter_svg: 2.1.0
 
   dio: 5.0.0
 
   equatable: 2.0.5
 
-  shared_preferences: 2.0.18
+  shared_preferences: 2.5.3
 
   dartz: 0.10.1
 
@@ -133,31 +131,31 @@ dependencies:
 
   http_parser: 4.0.2
 
-  collection: 1.18.0
+  collection: 1.19.1
 
   filesize: 2.0.1
 
   uuid: 3.0.7
 
-  flutter_downloader: 1.10.2
+  flutter_downloader: 1.12.0
 
-  external_path: 1.0.3
+  external_path: 2.2.0
 
   path_provider: 2.1.5
 
   device_info_plus: 9.0.1
 
-  permission_handler: 10.2.0
+  permission_handler: 12.0.1
 
   share_plus: 7.2.1
 
-  hive: 2.2.3
+  hive_ce: 2.11.3
 
   pointer_interceptor: 0.10.1+2
 
   rxdart: 0.27.7
 
-  connectivity_plus: 3.0.3
+  connectivity_plus: 4.0.0
 
   dropdown_button2: 2.0.0
 
@@ -165,17 +163,17 @@ dependencies:
 
   flutter_portal: 1.1.3
 
-  timeago: 3.7.0
+  timeago: 3.7.1
 
-  better_open_file: 3.6.4
+  open_file: 3.5.10
 
-  flutter_appauth: 6.0.6
+  flutter_appauth: 9.0.1
 
   percent_indicator: 4.2.2
 
   worker_manager: 5.0.3
 
-  async: 2.11.0
+  async: 2.13.0
 
   html: 0.15.3
 
@@ -187,39 +185,37 @@ dependencies:
 
   url_launcher: 6.3.1
 
-  firebase_core: 2.7.0
+  firebase_core: 2.11.0
 
-  firebase_messaging: 14.2.5
+  firebase_messaging: 14.5.0
 
-  flutter_local_notifications: 17.2.1
+  flutter_local_notifications: 17.2.2
 
   fading_edge_scrollview: 4.1.1
 
   focused_menu_custom: 1.2.0
 
-  focus_detector_v2: 3.0.0+2
+  focus_detector_v2: 3.1.0+1
 
   universal_html: 2.2.4
 
   debounce_throttle: 2.0.0
 
-  flutter_appauth_platform_interface: 6.0.0
+  flutter_appauth_platform_interface: 9.0.0
 
-  intl: 0.19.0
+  intl: 0.20.2
 
-  workmanager: 0.5.1
+  workmanager: 0.9.0+3
 
   flutter_typeahead: 5.0.2
 
   flutter_keyboard_visibility: 6.0.0
 
-  extended_text: 14.0.0
-
   date_format: 2.0.7
 
   flutter_linkify: 6.0.0
 
-  flutter_slidable: 3.1.0
+  flutter_slidable: 3.1.2
 
   url_strategy: 0.2.0
 
@@ -239,13 +235,13 @@ dependencies:
 
   future_loading_dialog: 0.3.0
 
-  file_picker: 8.0.5
+  file_picker: 10.2.0
 
   app_settings: 5.1.1
 
-  web_socket_channel: 2.4.4
+  web_socket_channel: 3.0.3
 
-  flutter_web_auth_2: 3.1.1
+  flutter_web_auth_2: 4.1.0
 
   app_links: 6.3.2
 
@@ -260,13 +256,17 @@ dependencies:
   twake_previewer_flutter:
     git:
       url: https://github.com/linagora/twake-previewer-flutter.git
-      ref: main
+      ref: update/flutter-3.32.8
+
+  lottie_native: 0.1.2
+
+  flutter_custom_tab_bar: 1.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  build_runner: 2.4.9
+  build_runner: 2.4.10
 
   mockito: 5.4.4
 
@@ -284,25 +284,26 @@ dev_dependencies:
 
   http_mock_adapter: 0.4.2
 
-  patrol: 3.14.0
+  patrol: 3.19.0
 
-  patrol_log: 0.3.0
+  patrol_log: 0.5.0
 
-  patrol_finders: 2.7.0
+  patrol_finders: 2.9.0
 
   plugin_platform_interface: 2.1.8
 
 dependency_overrides:
-  firebase_core_platform_interface: 4.6.0
+  firebase_core_platform_interface: 4.8.0
 
   json_annotation: 4.8.1
 
-  # TODO: Remove and upgrade file_picker after
-  # https://github.com/miguelpruivo/flutter_file_picker/pull/1771 is merged and published
-  file_picker:
+  # TODO: Due conflict version of hive_ce_generator with other dependencies
+  # So we will remove it when found the appropriate version
+  hive:
     git:
-      url: https://github.com/linagora/flutter_file_picker.git
-      ref: fixbug/tmail-0.15.12-memory-leak
+      url: https://github.com/IO-Design-Team/hive_ce
+      ref: 18f92b53295e9eb77ebd4830d905a72cd404a126
+      path: overrides/hive
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -321,6 +322,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/animations/
     - env.file
     - configurations/
     - configurations/icons/
@@ -361,6 +363,54 @@ flutter:
           weight: 500
         - asset: assets/fonts/Inter/Inter-Regular.ttf
 
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/fallback/Roboto-Regular.ttf
+
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/fallback/NotoSans-Regular.ttf
+
+    - family: NotoSansArabic
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansArabic-Regular.ttf
+
+    - family: NotoSansTamil
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansTamil-Regular.ttf
+
+    - family: NotoSansThai
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansThai-Regular.ttf
+
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansKR-Regular.ttf
+
+    - family: NotoSansSC
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansSC-Regular.ttf
+
+    - family: NotoSansMath
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansMath-Regular.ttf
+
+    - family: NotoSansEgyptianHieroglyphs
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansEgyptianHieroglyphs-Regular.ttf
+
+    - family: NotoEmoji
+      fonts:
+        - asset: assets/fonts/fallback/NotoEmoji-Regular.ttf
+
+    - family: NotoSansSymbols
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansSymbols-Regular.ttf
+
+    - family: NotoSansSymbols2
+      fonts:
+        - asset: assets/fonts/fallback/NotoSansSymbols2-Regular.ttf
+
 flutter_icons:
   android: true
   ios: false
@@ -370,9 +420,13 @@ flutter_icons:
   adaptive_icon_foreground: "assets/icons/icon_launcher.png"
 
 flutter_native_splash:
-  color: "#000000"
-  branding: "assets/icons/icon_branding.png"
-  image: "assets/icons/icon_logo.png"
+  color: "#ffffff"
+  image_ios: "assets/icons/icon_logo_ios.png"
+  image_android: "assets/icons/icon_android.png"
+  branding: "assets/icons/icon_twp.png"
+  android_12:
+    image: "assets/icons/icon_android.png"
+    branding: "assets/icons/icon_twp_android12.png"
 
 cider:
   link_template:

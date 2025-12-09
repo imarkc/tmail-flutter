@@ -16,8 +16,8 @@ import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:model/model.dart';
 import 'package:rule_filter/rule_filter/capability_rule_filter.dart';
 import 'package:tmail_ui_user/features/base/before_reconnect_manager.dart';
+import 'package:tmail_ui_user/features/base/mixin/emit_state_mixin.dart';
 import 'package:tmail_ui_user/features/base/mixin/logout_mixin.dart';
-import 'package:tmail_ui_user/features/base/mixin/message_dialog_action_mixin.dart';
 import 'package:tmail_ui_user/features/base/mixin/popup_context_menu_action_mixin.dart';
 import 'package:tmail_ui_user/features/caching/caching_manager.dart';
 import 'package:tmail_ui_user/features/email/presentation/bindings/mdn_interactor_bindings.dart';
@@ -64,9 +64,7 @@ import 'package:tmail_ui_user/main/utils/twake_app_manager.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class BaseController extends GetxController
-    with MessageDialogActionMixin,
-        PopupContextMenuActionMixin,
-        LogoutMixin {
+    with PopupContextMenuActionMixin, LogoutMixin, EmitStateMixin {
 
   final CachingManager cachingManager = Get.find<CachingManager>();
   final LanguageCacheManager languageCacheManager = Get.find<LanguageCacheManager>();
@@ -424,11 +422,12 @@ abstract class BaseController extends GetxController
     BuildContext context,
     Session? session,
     AccountId? accountId,
+    String ownEmailAddress,
   ) {
     if (PlatformInfo.isMobile) {
       showLogoutConfirmDialog(
         context: context,
-        userAddress: session?.getOwnEmailAddress() ?? '',
+        userAddress: ownEmailAddress,
         onConfirmAction: () => _handleLogoutAction(session, accountId),
       );
     } else {

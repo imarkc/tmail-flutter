@@ -29,11 +29,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
   final OnEditorTextSizeChanged? onEditorTextSizeChanged;
   final double? height;
   final double? horizontalPadding;
+  final LinkOverlayOptions? linkOverlayOptions;
   final OnDragEnterListener? onDragEnter;
   final OnDragOverListener? onDragOver;
   final OnPasteImageSuccessAction? onPasteImageSuccessAction;
   final OnPasteImageFailureAction? onPasteImageFailureAction;
   final OnInitialContentLoadComplete? onInitialContentLoadComplete;
+  final OnKeyDownEditorAction? onKeyDownEditorAction;
 
   const WebEditorView({
     super.key,
@@ -50,11 +52,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
     this.onEditorTextSizeChanged,
     this.height,
     this.horizontalPadding,
+    this.linkOverlayOptions,
     this.onDragEnter,
     this.onDragOver,
     this.onPasteImageSuccessAction,
     this.onPasteImageFailureAction,
     this.onInitialContentLoadComplete,
+    this.onKeyDownEditorAction,
   });
 
   @override
@@ -80,11 +84,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
           onEditorTextSizeChanged: onEditorTextSizeChanged,
           height: height,
           horizontalPadding: horizontalPadding,
+          linkOverlayOptions: linkOverlayOptions,
           onDragEnter: onDragEnter,
           onDragOver: onDragOver,
           onPasteImageSuccessAction: onPasteImageSuccessAction,
           onPasteImageFailureAction: onPasteImageFailureAction,
           onInitialContentLoadComplete: onInitialContentLoadComplete,
+          onKeyDownEditorAction: onKeyDownEditorAction,
         );
       case EmailActionType.editDraft:
       case EmailActionType.editSendingEmail:
@@ -110,11 +116,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
             onEditorTextSizeChanged: onEditorTextSizeChanged,
             height: height,
             horizontalPadding: horizontalPadding,
+            linkOverlayOptions: linkOverlayOptions,
             onDragEnter: onDragEnter,
             onDragOver: onDragOver,
             onPasteImageSuccessAction: onPasteImageSuccessAction,
             onPasteImageFailureAction: onPasteImageFailureAction,
             onInitialContentLoadComplete: onInitialContentLoadComplete,
+            onKeyDownEditorAction: onKeyDownEditorAction,
           ),
           (success) {
             if (success is GetEmailContentLoading) {
@@ -142,11 +150,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
                 onEditorTextSizeChanged: onEditorTextSizeChanged,
                 height: height,
                 horizontalPadding: horizontalPadding,
+                linkOverlayOptions: linkOverlayOptions,
                 onDragEnter: onDragEnter,
                 onDragOver: onDragOver,
                 onPasteImageSuccessAction: onPasteImageSuccessAction,
                 onPasteImageFailureAction: onPasteImageFailureAction,
                 onInitialContentLoadComplete: onInitialContentLoadComplete,
+                onKeyDownEditorAction: onKeyDownEditorAction,
               );
             }
           }
@@ -180,11 +190,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
               onEditorTextSizeChanged: onEditorTextSizeChanged,
               height: height,
               horizontalPadding: horizontalPadding,
+              linkOverlayOptions: linkOverlayOptions,
               onDragEnter: onDragEnter,
               onDragOver: onDragOver,
               onPasteImageSuccessAction: onPasteImageSuccessAction,
               onPasteImageFailureAction: onPasteImageFailureAction,
               onInitialContentLoadComplete: onInitialContentLoadComplete,
+              onKeyDownEditorAction: onKeyDownEditorAction,
             );
           },
           (success) {
@@ -213,11 +225,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
                 onEditorTextSizeChanged: onEditorTextSizeChanged,
                 height: height,
                 horizontalPadding: horizontalPadding,
+                linkOverlayOptions: linkOverlayOptions,
                 onDragEnter: onDragEnter,
                 onDragOver: onDragOver,
                 onPasteImageSuccessAction: onPasteImageSuccessAction,
                 onPasteImageFailureAction: onPasteImageFailureAction,
                 onInitialContentLoadComplete: onInitialContentLoadComplete,
+                onKeyDownEditorAction: onKeyDownEditorAction,
               );
             }
           }
@@ -236,11 +250,13 @@ class WebEditorView extends StatelessWidget with EditorViewMixin {
           onEditorTextSizeChanged: onEditorTextSizeChanged,
           height: height,
           horizontalPadding: horizontalPadding,
+          linkOverlayOptions: linkOverlayOptions,
           onDragEnter: onDragEnter,
           onDragOver: onDragOver,
           onPasteImageSuccessAction: onPasteImageSuccessAction,
           onPasteImageFailureAction: onPasteImageFailureAction,
           onInitialContentLoadComplete: onInitialContentLoadComplete,
+          onKeyDownEditorAction: onKeyDownEditorAction,
         );
     }
   }

@@ -18,11 +18,15 @@ import 'package:model/email/presentation_email.dart';
 import 'package:model/extensions/presentation_email_extension.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:tmail_ui_user/features/base/base_mailbox_controller.dart';
+import 'package:tmail_ui_user/features/base/extensions/handle_mailbox_action_type_extension.dart';
 import 'package:tmail_ui_user/features/base/mixin/mailbox_action_handler_mixin.dart';
 import 'package:tmail_ui_user/features/email/domain/model/move_action.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/constants/mailbox_constants.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/exceptions/null_session_or_accountid_exception.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/exceptions/set_mailbox_name_exception.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_right_request.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subaddressing_action.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subscribe_action_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subscribe_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/move_mailbox_request.dart';
@@ -34,30 +38,38 @@ import 'package:tmail_ui_user/features/mailbox/domain/state/create_new_mailbox_s
 import 'package:tmail_ui_user/features/mailbox/domain/state/delete_multiple_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/get_all_mailboxes_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/mark_as_mailbox_read_state.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/state/move_folder_content_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/move_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/refresh_changes_all_mailboxes_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/rename_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/search_mailbox_state.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/state/subaddressing_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/subscribe_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/subscribe_multiple_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/create_new_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/delete_multiple_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/get_all_mailbox_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/usecases/move_folder_content_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/move_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/refresh_all_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/rename_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/search_mailbox_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/usecases/subaddressing_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/subscribe_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/subscribe_multiple_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/action/mailbox_ui_action.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/extensions/handle_favorite_tab_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/extensions/presentation_mailbox_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_actions.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_tree_builder.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/utils/mailbox_action_reactor.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/utils/mailbox_utils.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/domain/usecases/verify_name_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/presentation/model/mailbox_creator_arguments.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/presentation/model/new_mailbox_arguments.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/handle_create_new_rule_filter.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/handle_reactive_obx_variable_extension.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/dashboard_routes.dart';
 import 'package:tmail_ui_user/features/search/mailbox/presentation/search_mailbox_bindings.dart';
 import 'package:tmail_ui_user/features/thread/domain/model/search_query.dart';
@@ -75,6 +87,8 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
   final SubscribeMailboxInteractor _subscribeMailboxInteractor;
   final SubscribeMultipleMailboxInteractor _subscribeMultipleMailboxInteractor;
   final CreateNewMailboxInteractor _createNewMailboxInteractor;
+  final SubaddressingInteractor _subAddressingInteractor;
+  final MoveFolderContentInteractor _moveFolderContentInteractor;
 
   final dashboardController = Get.find<MailboxDashBoardController>();
 
@@ -82,6 +96,8 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
   final listMailboxSearched = RxList<PresentationMailbox>();
   final textInputSearchController = TextEditingController();
   late Debouncer<String> _deBouncerTime;
+  FocusNode? searchFocusNode;
+  late MailboxActionReactor mailboxActionReactor;
 
   PresentationMailbox? get selectedMailbox => dashboardController.selectedMailbox.value;
 
@@ -99,6 +115,8 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
     this._subscribeMailboxInteractor,
     this._subscribeMultipleMailboxInteractor,
     this._createNewMailboxInteractor,
+    this._subAddressingInteractor,
+    this._moveFolderContentInteractor,
     TreeBuilder treeBuilder,
     VerifyNameInteractor verifyNameInteractor,
     GetAllMailboxInteractor getAllMailboxInteractor,
@@ -113,26 +131,38 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
   @override
   void onInit() {
     super.onInit();
+    mailboxActionReactor = MailboxActionReactor(_moveFolderContentInteractor);
     _initializeDebounceTimeTextSearchChange();
     _registerObxStreamListener();
+    if (PlatformInfo.isWeb) {
+      _registerInputFocusListener();
+    }
     _getAllMailboxAction();
   }
 
   @override
   void handleFailureViewState(Failure failure) {
-    super.handleFailureViewState(failure);
     if (failure is SearchMailboxFailure) {
       _handleSearchMailboxFailure(failure);
     } else if (failure is CreateNewMailboxFailure) {
       _createNewMailboxFailure(failure);
     } else if (failure is RenameMailboxFailure) {
       _renameMailboxFailure(failure);
+    } else if (failure is SubaddressingFailure) {
+      handleSubAddressingFailure(failure);
+    } else if (failure is MoveFolderContentFailure) {
+      handleMoveFolderContentFailure(
+        failure: failure,
+        dashboardController: dashboardController,
+        toastManager: toastManager,
+      );
+    } else {
+      super.handleFailureViewState(failure);
     }
   }
 
   @override
   void handleSuccessViewState(Success success) async {
-    super.handleSuccessViewState(success);
     if (success is GetAllMailboxSuccess) {
       currentMailboxState = success.currentMailboxState;
       await buildTree(success.mailboxList);
@@ -164,7 +194,32 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
       _handleSubscribeMultipleMailboxHasSomeSuccess(success);
     } else if (success is CreateNewMailboxSuccess) {
       _createNewMailboxSuccess(success);
+    } else if (success is SubaddressingSuccess) {
+      handleSubAddressingSuccess(success);
+    } else if (success is MoveFolderContentSuccess) {
+      handleMoveFolderContentSuccess(
+        success: success,
+        mailboxActionReactor: mailboxActionReactor,
+        dashboardController: dashboardController,
+        baseMailboxController: this,
+      );
+    } else {
+      super.handleSuccessViewState(success);
     }
+  }
+
+  @override
+  void onDone() {
+    super.onDone();
+    viewState.value.fold((failure) {
+      if (failure is GetAllMailboxFailure) {
+        addFavoriteFolderToMailboxList();
+      }
+    }, (success) {
+      if (success is GetAllMailboxSuccess) {
+        addFavoriteFolderToMailboxList();
+      }
+    });
   }
 
   void _initializeDebounceTimeTextSearchChange() {
@@ -200,13 +255,30 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
     });
   }
 
+  void _registerInputFocusListener() {
+    searchFocusNode = FocusNode();
+    searchFocusNode?.addListener(_onSearchFocusChanged);
+    searchFocusNode?.requestFocus();
+  }
+
+  void _onSearchFocusChanged() {
+    log('$runtimeType::_onSearchFocusChanged: ${searchFocusNode?.hasFocus}');
+    final hasFocus = searchFocusNode?.hasFocus ?? false;
+    dashboardController.onSearchInputFocusChanged(hasFocus);
+  }
+
+  void _disposeInputFocusListener() {
+    searchFocusNode?.removeListener(_onSearchFocusChanged);
+    searchFocusNode?.dispose();
+  }
+
   void _getAllMailboxAction() {
     if (session != null && accountId != null) {
       getAllMailbox(session!, accountId!);
     }
   }
 
-  void _refreshMailboxChanges({jmap.State? newState}) {
+  void _refreshMailboxChanges({required jmap.State newState}) {
     if (accountId == null ||
         session == null ||
         currentMailboxState == null ||
@@ -272,12 +344,7 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
     BuildContext context,
     MailboxActions actions,
     PresentationMailbox mailbox,
-    {bool isFocusedMenu = false}
   ) {
-    if (!isFocusedMenu) {
-      popBack();
-    }
-
     switch(actions) {
       case MailboxActions.openInNewTab:
         openMailboxInNewTabAction(mailbox);
@@ -338,9 +405,95 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
       case MailboxActions.newSubfolder:
         goToCreateNewMailboxView(context, parentMailbox: mailbox);
         break;
+      case MailboxActions.createFilter:
+        dashboardController.openCreateEmailRuleView(
+          presentationMailbox: mailbox,
+        );
+        break;
+      case MailboxActions.recoverDeletedMessages:
+        dashboardController.gotoEmailRecovery();
+        break;
+      case MailboxActions.copySubaddress:
+        try {
+          final subAddress = getSubAddress(
+            dashboardController.ownEmailAddress.value,
+            findNodePathWithSeparator(mailbox.id, '.')!,
+          );
+          copySubAddressAction(context, subAddress);
+        } catch (error) {
+          appToast.showToastErrorMessage(
+            context,
+            AppLocalizations.of(context).errorWhileFetchingSubaddress,
+          );
+        }
+        break;
+      case MailboxActions.allowSubaddressing:
+        try{
+          final subAddress = getSubAddress(
+            dashboardController.ownEmailAddress.value,
+            findNodePathWithSeparator(mailbox.id, '.')!,
+          );
+          openConfirmationDialogSubAddressingAction(
+            context,
+            mailbox.id,
+            mailbox.getDisplayName(context),
+            subAddress,
+            mailbox.rights,
+            onAllowSubAddressingAction: _handleSubAddressingAction
+          );
+        } catch (error) {
+          appToast.showToastErrorMessage(
+            context,
+            AppLocalizations.of(context).errorWhileFetchingSubaddress,
+          );
+        }
+        break;
+      case MailboxActions.disallowSubaddressing:
+        _handleSubAddressingAction(mailbox.id, mailbox.rights, actions);
+        break;
+      case MailboxActions.moveFolderContent:
+        performMoveFolderContent(
+          context: context,
+          mailboxSelected: mailbox,
+          mailboxActionReactor: mailboxActionReactor,
+          dashboardController: dashboardController,
+          baseMailboxController: this,
+        );
+        break;
       default:
         break;
     }
+  }
+
+  void _handleSubAddressingAction(
+    MailboxId mailboxId,
+    Map<String, List<String>?>? currentRights,
+    MailboxActions subAddressingAction,
+  ) {
+    final accountId = dashboardController.accountId.value;
+    final session = dashboardController.sessionCurrent;
+
+    if (session != null && accountId != null) {
+      final allowSubAddressingRequest = MailboxRightRequest(
+          mailboxId,
+          currentRights,
+          subAddressingAction == MailboxActions.allowSubaddressing
+              ? MailboxSubaddressingAction.allow
+              : MailboxSubaddressingAction.disallow
+      );
+
+      consumeState(_subAddressingInteractor.execute(
+        session,
+        accountId,
+        allowSubAddressingRequest,
+      ));
+    } else {
+      handleSubAddressingFailure(
+        SubaddressingFailure.withException(NullSessionOrAccountIdException()),
+      );
+    }
+
+    popBack();
   }
 
   void _renameMailboxAction(PresentationMailbox presentationMailbox, MailboxName newMailboxName) {
@@ -667,14 +820,7 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
 
   void goToCreateNewMailboxView(BuildContext context, {PresentationMailbox? parentMailbox}) async {
     if (session != null && accountId != null) {
-      final arguments = MailboxCreatorArguments(
-          accountId!,
-          defaultMailboxTree.value,
-          personalMailboxTree.value,
-          teamMailboxesTree.value,
-          session!,
-          parentMailbox
-        );
+      final arguments = MailboxCreatorArguments(allMailboxes, parentMailbox);
 
       final result = PlatformInfo.isWeb
         ? await DialogRouter.pushGeneralDialog(routeName: AppRoutes.mailboxCreator, arguments: arguments)
@@ -748,10 +894,17 @@ class SearchMailboxController extends BaseMailboxController with MailboxActionHa
     }
   }
 
+  void clearSearchInputFocus() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   @override
   void onClose() {
     textInputSearchController.dispose();
     _deBouncerTime.cancel();
+    if (PlatformInfo.isWeb) {
+      _disposeInputFocusListener();
+    }
     super.onClose();
   }
 }

@@ -32,6 +32,7 @@ extension EmailCacheExtension on EmailCache {
       mailboxIds: mailboxIds != null
         ? Map.fromIterables(mailboxIds!.keys.map((value) => MailboxId(Id(value))), mailboxIds!.values)
         : null,
+      threadId: threadId == null ? null : ThreadId(Id(threadId!)),
       headerCalendarEvent: headerCalendarEvent != null
         ? Map.fromIterables(headerCalendarEvent!.keys.map((value) => IndividualHeaderIdentifier(value)), headerCalendarEvent!.values)
         : null,
@@ -51,6 +52,13 @@ extension EmailCacheExtension on EmailCache {
             priorityHeader!.keys.map((value) => IndividualHeaderIdentifier(value)),
             priorityHeader!.values)
         : null,
+      listUnsubscribeHeader: unsubscribeHeader != null
+        ? Map.fromIterables(
+            unsubscribeHeader!.keys.map((value) => IndividualHeaderIdentifier(value)),
+            unsubscribeHeader!.values)
+        : null,
+      messageId: messageId != null ? MessageIdsHeaderValue(messageId!.toSet()) : null,
+      references: references != null ? MessageIdsHeaderValue(references!.toSet()) : null,
     );
   }
 

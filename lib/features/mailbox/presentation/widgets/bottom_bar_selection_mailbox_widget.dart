@@ -1,11 +1,13 @@
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:core/presentation/views/button/tmail_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_actions.dart';
+import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 
 typedef OnMailboxActionsClick = void Function(MailboxActions, List<PresentationMailbox>);
 
@@ -44,13 +46,16 @@ class BottomBarSelectionMailboxWidget extends StatelessWidget {
               key: Key('${action.name}_button'),
               text: responsiveUtils.isLandscapeMobile(context)
                 ? ''
-                : action.getTitleContextMenu(context),
+                : action.getContextMenuTitle(AppLocalizations.of(context)),
               icon: action.getContextMenuIcon(imagePaths),
               borderRadius: 0,
               backgroundColor: Colors.transparent,
               flexibleText: true,
-              tooltipMessage: action.getTitleContextMenu(context),
-              textStyle: const TextStyle(fontSize: 12, color: AppColor.colorTextButton),
+              tooltipMessage: action.getContextMenuTitle(AppLocalizations.of(context)),
+              textStyle: ThemeUtils.defaultTextStyleInterFont.copyWith(
+                fontSize: 12,
+                color: AppColor.colorTextButton,
+              ),
               onTapActionCallback: () => onMailboxActionsClick.call(action, _listSelectionMailbox),
             ));
           })

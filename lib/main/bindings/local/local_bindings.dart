@@ -22,6 +22,7 @@ import 'package:tmail_ui_user/features/caching/clients/sending_email_hive_cache_
 import 'package:tmail_ui_user/features/caching/clients/session_hive_cache_client.dart';
 import 'package:tmail_ui_user/features/caching/clients/state_cache_client.dart';
 import 'package:tmail_ui_user/features/caching/clients/token_oidc_cache_client.dart';
+import 'package:tmail_ui_user/features/caching/manager/session_cache_manger.dart';
 import 'package:tmail_ui_user/features/cleanup/data/local/recent_login_url_cache_manager.dart';
 import 'package:tmail_ui_user/features/cleanup/data/local/recent_login_username_cache_manager.dart';
 import 'package:tmail_ui_user/features/cleanup/data/local/recent_search_cache_manager.dart';
@@ -32,8 +33,9 @@ import 'package:tmail_ui_user/features/login/data/local/oidc_configuration_cache
 import 'package:tmail_ui_user/features/login/data/local/token_oidc_cache_manager.dart';
 import 'package:tmail_ui_user/features/mailbox/data/local/mailbox_cache_manager.dart';
 import 'package:tmail_ui_user/features/mailbox/data/local/state_cache_manager.dart';
-import 'package:tmail_ui_user/features/mailbox_dashboard/data/local/local_spam_report_manager.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/data/local/local_sort_order_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/data/local/language_cache_manager.dart';
+import 'package:tmail_ui_user/features/manage_account/data/local/preferences_setting_manager.dart';
 import 'package:tmail_ui_user/features/offline_mode/manager/new_email_cache_manager.dart';
 import 'package:tmail_ui_user/features/offline_mode/manager/new_email_cache_worker_queue.dart';
 import 'package:tmail_ui_user/features/offline_mode/manager/opened_email_cache_manager.dart';
@@ -74,6 +76,7 @@ class LocalBindings extends Bindings {
     Get.put(OidcConfigurationCacheClient());
     Get.put(OidcConfigurationCacheManager(Get.find<SharedPreferences>(), Get.find<OidcConfigurationCacheClient>()));
     Get.put(LanguageCacheManager(Get.find<SharedPreferences>()));
+    Get.put(PreferencesSettingManager(Get.find<SharedPreferences>()));
     Get.put(RecentLoginUrlCacheClient());
     Get.put(RecentLoginUrlCacheManager((Get.find<RecentLoginUrlCacheClient>())));
     Get.put(RecentLoginUsernameCacheClient());
@@ -89,25 +92,28 @@ class LocalBindings extends Bindings {
     Get.put(SendingEmailHiveCacheClient());
     Get.put(SendingEmailCacheManager(Get.find<SendingEmailHiveCacheClient>()));
     Get.put(SessionHiveCacheClient());
-    Get.put(LocalSpamReportManager(Get.find<SharedPreferences>()));
+    Get.put(SessionCacheManager(Get.find<SessionHiveCacheClient>()));
+    Get.put(LocalSortOrderManager(Get.find<SharedPreferences>()));
     Get.put(CachingManager(
-      Get.find<MailboxCacheClient>(),
-      Get.find<StateCacheClient>(),
-      Get.find<EmailCacheClient>(),
-      Get.find<RecentSearchCacheClient>(),
-      Get.find<RecentLoginUrlCacheClient>(),
-      Get.find<RecentLoginUsernameCacheClient>(),
-      Get.find<AccountCacheClient>(),
-      Get.find<FcmCacheClient>(),
-      Get.find<FirebaseRegistrationCacheClient>(),
+      Get.find<MailboxCacheManager>(),
+      Get.find<StateCacheManager>(),
+      Get.find<EmailCacheManager>(),
+      Get.find<RecentSearchCacheManager>(),
+      Get.find<RecentLoginUrlCacheManager>(),
+      Get.find<RecentLoginUsernameCacheManager>(),
+      Get.find<AccountCacheManager>(),
+      Get.find<FCMCacheManager>(),
       Get.find<HiveCacheVersionClient>(),
-      Get.find<NewEmailHiveCacheClient>(),
-      Get.find<OpenedEmailHiveCacheClient>(),
+      Get.find<NewEmailCacheManager>(),
+      Get.find<OpenedEmailCacheManager>(),
       Get.find<FileUtils>(),
       Get.find<SendingEmailCacheManager>(),
-      Get.find<SessionHiveCacheClient>(),
-      Get.find<LocalSpamReportManager>(),
+      Get.find<SessionCacheManager>(),
       Get.find<KeychainSharingManager>(),
+      Get.find<TokenOidcCacheManager>(),
+      Get.find<OidcConfigurationCacheManager>(),
+      Get.find<EncryptionKeyCacheManager>(),
+      Get.find<AuthenticationInfoCacheManager>(),
     ));
   }
 

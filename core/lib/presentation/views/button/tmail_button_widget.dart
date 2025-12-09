@@ -2,6 +2,7 @@
 import 'package:core/presentation/action/action_callback_define.dart';
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/utils/style_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:core/presentation/views/container/tmail_container_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -14,6 +15,7 @@ class TMailButtonWidget extends StatelessWidget {
 
   final double borderRadius;
   final double? width;
+  final double? height;
   final double maxWidth;
   final double maxHeight;
   final double minWidth;
@@ -41,6 +43,8 @@ class TMailButtonWidget extends StatelessWidget {
   final bool isLoading;
   final Color? hoverColor;
   final TextOverflow? textOverflow;
+  final Alignment? alignment;
+  final bool isTextExpanded;
 
   const TMailButtonWidget({
     super.key,
@@ -50,6 +54,7 @@ class TMailButtonWidget extends StatelessWidget {
     this.onLongPressActionCallback,
     this.borderRadius = 20,
     this.width,
+    this.height,
     this.maxWidth = double.infinity,
     this.maxHeight = double.infinity,
     this.minWidth = 0,
@@ -76,6 +81,8 @@ class TMailButtonWidget extends StatelessWidget {
     this.isLoading = false,
     this.hoverColor,
     this.textOverflow,
+    this.alignment,
+    this.isTextExpanded = false,
   });
 
   factory TMailButtonWidget.fromIcon({
@@ -86,6 +93,7 @@ class TMailButtonWidget extends StatelessWidget {
     OnLongPressActionCallback? onLongPressActionCallback,
     double borderRadius = 20,
     double? width,
+    double? height,
     double maxWidth = double.infinity,
     double maxHeight = double.infinity,
     double minWidth = 0,
@@ -101,6 +109,7 @@ class TMailButtonWidget extends StatelessWidget {
     List<BoxShadow>? boxShadow,
     EdgeInsetsGeometry? margin,
     Color? hoverColor,
+    Alignment? alignment,
   }) {
     return TMailButtonWidget(
       key: key,
@@ -110,6 +119,7 @@ class TMailButtonWidget extends StatelessWidget {
       onLongPressActionCallback: onLongPressActionCallback,
       borderRadius: borderRadius,
       width: width,
+      height: height,
       maxWidth : maxWidth,
       maxHeight: maxHeight,
       minWidth: minWidth,
@@ -126,6 +136,7 @@ class TMailButtonWidget extends StatelessWidget {
       boxShadow: boxShadow,
       margin: margin,
       hoverColor: hoverColor,
+      alignment: alignment,
     );
   }
 
@@ -137,6 +148,7 @@ class TMailButtonWidget extends StatelessWidget {
     OnLongPressActionCallback? onLongPressActionCallback,
     double borderRadius = 20,
     double? width,
+    double? height,
     double maxWidth = double.infinity,
     double maxHeight = double.infinity,
     double minWidth = 0,
@@ -147,11 +159,12 @@ class TMailButtonWidget extends StatelessWidget {
     List<BoxShadow>? boxShadow,
     EdgeInsetsGeometry? margin,
     TextAlign? textAlign,
-    bool flexibleText = false,
     BoxBorder? border,
     int? maxLines,
     Color? hoverColor,
     TextOverflow? textOverflow,
+    Alignment? alignment,
+    bool isTextExpanded = false,
   }) {
     return TMailButtonWidget(
       key: key,
@@ -161,6 +174,7 @@ class TMailButtonWidget extends StatelessWidget {
       onLongPressActionCallback: onLongPressActionCallback,
       borderRadius: borderRadius,
       width: width,
+      height: height,
       maxWidth : maxWidth,
       maxHeight: maxHeight,
       minWidth: minWidth,
@@ -171,53 +185,68 @@ class TMailButtonWidget extends StatelessWidget {
       boxShadow: boxShadow,
       margin: margin,
       textAlign: textAlign,
-      flexibleText: flexibleText,
       border: border,
       maxLines: maxLines,
       hoverColor: hoverColor,
       textOverflow: textOverflow,
+      alignment: alignment,
+      isTextExpanded: isTextExpanded,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     Widget childWidget;
+    Widget? textWidget;
+    Widget? iconWidget;
+    Widget? trailingIconWidget;
 
+    if (text.isNotEmpty) {
+      textWidget = Text(
+        text,
+        textAlign: textAlign,
+        style: textStyle ?? ThemeUtils.defaultTextStyleInterFont.copyWith(
+          fontSize: 12,
+          color: AppColor.colorTextButtonHeaderThread,
+        ),
+        maxLines: maxLines,
+        overflow: textOverflow ??
+            (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
+        softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
+      );
+    }
+
+    if (icon != null) {
+      iconWidget = SvgPicture.asset(
+        icon!,
+        width: iconSize,
+        height: iconSize,
+        fit: BoxFit.fill,
+        colorFilter: iconColor?.asFilter(),
+      );
+    }
+
+    if (trailingIcon != null) {
+      trailingIconWidget = Padding(
+        padding: EdgeInsetsDirectional.only(top: iconSpace),
+        child: SvgPicture.asset(
+          trailingIcon!,
+          width: trailingIconSize,
+          height: trailingIconSize,
+          fit: BoxFit.fill,
+          colorFilter: trailingIconColor?.asFilter(),
+        ),
+      );
+    }
     if (icon != null && text.isNotEmpty) {
       if (verticalDirection) {
         childWidget = Column(
           mainAxisSize: mainAxisSize,
           children: [
-            SvgPicture.asset(
-              icon!,
-              width: iconSize,
-              height: iconSize,
-              fit: BoxFit.fill,
-              colorFilter: iconColor?.asFilter()
-            ),
+            iconWidget!,
             SizedBox(height: iconSpace),
-            Text(
-              text,
-              textAlign: textAlign,
-              style: textStyle ?? const TextStyle(
-                fontSize: 12,
-                color: AppColor.colorTextButtonHeaderThread
-              ),
-              maxLines: maxLines,
-              overflow: textOverflow ?? (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
-              softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
-            ),
-            if (trailingIcon != null)
-              Padding(
-                padding: EdgeInsetsDirectional.only(top: iconSpace),
-                child: SvgPicture.asset(
-                  trailingIcon!,
-                  width: trailingIconSize,
-                  height: trailingIconSize,
-                  fit: BoxFit.fill,
-                  colorFilter: trailingIconColor?.asFilter()
-                ),
-              ),
+            textWidget!,
+            if (trailingIcon != null) trailingIconWidget!,
           ]
         );
       } else {
@@ -226,51 +255,15 @@ class TMailButtonWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: mainAxisSize,
             children: [
-              SvgPicture.asset(
-                icon!,
-                width: iconSize,
-                height: iconSize,
-                fit: BoxFit.fill,
-                colorFilter: iconColor?.asFilter()
-              ),
+              iconWidget!,
               SizedBox(width: iconSpace),
               if (flexibleText)
-                Flexible(
-                  child: Text(
-                    text,
-                    textAlign: textAlign,
-                    style: textStyle ?? const TextStyle(
-                      fontSize: 12,
-                      color: AppColor.colorTextButtonHeaderThread
-                    ),
-                    maxLines: maxLines,
-                    overflow: textOverflow ?? (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
-                    softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
-                  ),
-                )
+                Flexible(child: textWidget!)
+              else if (isTextExpanded)
+                Expanded(child: textWidget!)
               else
-                Text(
-                  text,
-                  textAlign: textAlign,
-                  style: textStyle ?? const TextStyle(
-                    fontSize: 12,
-                    color: AppColor.colorTextButtonHeaderThread
-                  ),
-                  maxLines: maxLines,
-                  overflow: textOverflow ?? (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
-                  softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
-                ),
-              if (trailingIcon != null)
-                Padding(
-                  padding: EdgeInsetsDirectional.only(start: iconSpace),
-                  child: SvgPicture.asset(
-                    trailingIcon!,
-                    width: trailingIconSize,
-                    height: trailingIconSize,
-                    fit: BoxFit.fill,
-                    colorFilter: trailingIconColor?.asFilter()
-                  ),
-                ),
+                textWidget!,
+              if (trailingIcon != null) trailingIconWidget!,
             ]
           );
         } else {
@@ -279,40 +272,14 @@ class TMailButtonWidget extends StatelessWidget {
             mainAxisSize: mainAxisSize,
             children: [
               if (flexibleText)
-                Flexible(
-                  child: Text(
-                    text,
-                    textAlign: textAlign,
-                    style: textStyle ?? const TextStyle(
-                      fontSize: 12,
-                      color: AppColor.colorTextButtonHeaderThread
-                    ),
-                    maxLines: maxLines,
-                    overflow: textOverflow ?? (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
-                    softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
-                  ),
-                )
+                Flexible(child: textWidget!)
+              else if (isTextExpanded)
+                Expanded(child: textWidget!)
               else
-                Text(
-                  text,
-                  textAlign: textAlign,
-                  style: textStyle ?? const TextStyle(
-                    fontSize: 12,
-                    color: AppColor.colorTextButtonHeaderThread
-                  ),
-                  maxLines: maxLines,
-                  overflow: textOverflow ?? (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
-                  softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
-                ),
+                textWidget!,
               SizedBox(width: iconSpace),
               if (!isLoading)
-                SvgPicture.asset(
-                  icon!,
-                  width: iconSize,
-                  height: iconSize,
-                  fit: BoxFit.fill,
-                  colorFilter: iconColor?.asFilter()
-                )
+                iconWidget!
               else 
                 SizedBox(
                   width: iconSize,
@@ -327,25 +294,9 @@ class TMailButtonWidget extends StatelessWidget {
         }
       }
     } else if (icon != null) {
-      childWidget = SvgPicture.asset(
-        icon!,
-        width: iconSize,
-        height: iconSize,
-        fit: BoxFit.fill,
-        colorFilter: iconColor?.asFilter()
-      );
+      childWidget = iconWidget!;
     } else {
-      childWidget = Text(
-        text,
-        textAlign: textAlign,
-        style: textStyle ?? const TextStyle(
-          fontSize: 12,
-          color: AppColor.colorTextButtonHeaderThread
-        ),
-        maxLines: maxLines,
-        overflow: textOverflow ?? (maxLines == 1 ? CommonTextStyle.defaultTextOverFlow : null),
-        softWrap: maxLines == 1 ? CommonTextStyle.defaultSoftWrap : null,
-      );
+      childWidget = textWidget!;
     }
 
     return TMailContainerWidget(
@@ -354,6 +305,7 @@ class TMailButtonWidget extends StatelessWidget {
       onLongPressActionCallback: onLongPressActionCallback,
       borderRadius: borderRadius,
       width: width,
+      height: height,
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       minWidth: minWidth,
@@ -364,6 +316,7 @@ class TMailButtonWidget extends StatelessWidget {
       boxShadow: boxShadow,
       border: border,
       hoverColor: hoverColor,
+      alignment: alignment,
       child: childWidget,
     );
   }

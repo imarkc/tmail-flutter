@@ -1,18 +1,14 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:core/data/model/preview_attachment.dart';
 import 'package:core/data/network/download/downloaded_response.dart';
 import 'package:core/domain/extensions/datetime_extension.dart';
 import 'package:core/presentation/extensions/html_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
-import 'package:core/presentation/state/failure.dart';
-import 'package:core/presentation/state/success.dart';
 import 'package:core/utils/file_utils.dart';
 import 'package:core/utils/preview_eml_file_utils.dart';
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action_id.dart';
@@ -26,7 +22,6 @@ import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/core/user_name.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
 import 'package:model/account/account_request.dart';
-import 'package:model/download/download_task_id.dart';
 import 'package:model/email/attachment.dart';
 import 'package:model/email/mark_star_action.dart';
 import 'package:model/email/read_actions.dart';
@@ -77,16 +72,6 @@ class EmailLocalStorageDataSourceImpl extends EmailDataSource {
 
   @override
   Future<void> deleteSendingEmail(AccountId accountId, UserName userName, String sendingId) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<Uint8List> downloadAttachmentForWeb(DownloadTaskId taskId, Attachment attachment, AccountId accountId, String baseDownloadUrl, AccountRequest accountRequest, StreamController<Either<Failure, Success>> onReceiveController, {CancelToken? cancelToken}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<DownloadTaskId>> downloadAttachments(List<Attachment> attachments, AccountId accountId, String baseDownloadUrl, AccountRequest accountRequest) {
     throw UnimplementedError();
   }
 
@@ -264,21 +249,7 @@ class EmailLocalStorageDataSourceImpl extends EmailDataSource {
   Future<void> markAsForwarded(Session session, AccountId accountId, List<EmailId> emailIds) {
     throw UnimplementedError();
   }
-  
-  @override
-  Future<void> downloadAllAttachmentsForWeb(
-    AccountId accountId,
-    EmailId emailId,
-    String baseDownloadAllUrl,
-    String outputFileName,
-    AccountRequest accountRequest,
-    DownloadTaskId taskId,
-    StreamController<Either<Failure, Success>> onReceiveController,
-    {CancelToken? cancelToken}
-  ) {
-    throw UnimplementedError();
-  }
-  
+
   @override
   Future<DownloadedResponse> exportAllAttachments(AccountId accountId, EmailId emailId, String baseDownloadAllUrl, String outputFileName, AccountRequest accountRequest, {CancelToken? cancelToken}) {
     throw UnimplementedError();
@@ -331,7 +302,7 @@ class EmailLocalStorageDataSourceImpl extends EmailDataSource {
 
       final htmlDocument = _previewEmlFileUtils.generatePreviewEml(
         appName: appLocalizations.app_name,
-        userName: entireMessageRequest.userName.value,
+        ownEmailAddress: entireMessageRequest.ownEmailAddress,
         subjectPrefix: appLocalizations.subject,
         subject: email.subject?.escapeLtGtHtmlString() ?? '',
         emailContent: emailContentEscaped,
@@ -343,7 +314,9 @@ class EmailLocalStorageDataSourceImpl extends EmailDataSource {
         ccPrefix: appLocalizations.cc_email_address_prefix,
         bccPrefix: appLocalizations.bcc_email_address_prefix,
         replyToPrefix: appLocalizations.replyToEmailAddressPrefix,
-        titleAttachment: appLocalizations.attachments.toLowerCase(),
+        titleAttachment: listPreviewAttachment.length > 1
+          ? appLocalizations.attachments.toLowerCase()
+          : appLocalizations.attachment.toLowerCase(),
         attachmentIcon: attachmentIconBase64Data,
         toAddress: email.to?.listEmailAddressToString(isFullEmailAddress: true),
         ccAddress: email.cc?.listEmailAddressToString(isFullEmailAddress: true),
@@ -354,5 +327,27 @@ class EmailLocalStorageDataSourceImpl extends EmailDataSource {
 
       return htmlDocument;
     }).catchError(_exceptionThrower.throwException);
+  }
+  
+  @override
+  Future<Email> saveEmailAsTemplate(
+    Session session,
+    AccountId accountId,
+    Email email, {
+    CreateNewMailboxRequest? createNewMailboxRequest,
+    CancelToken? cancelToken,
+  }) {
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<Email> updateEmailTemplate(
+    Session session,
+    AccountId accountId,
+    Email newEmail,
+    EmailId oldEmailId, {
+    CancelToken? cancelToken,
+  }) {
+    throw UnimplementedError();
   }
 }

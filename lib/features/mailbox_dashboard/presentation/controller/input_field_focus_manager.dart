@@ -10,7 +10,8 @@ class InputFieldFocusManager {
   late FocusNode notKeywordFieldFocusNode;
   late FocusNode mailboxFieldFocusNode;
   late FocusNode attachmentCheckboxFocusNode;
-  late FocusNode searchButtonFocusNode;
+  late FocusNode starredCheckboxFocusNode;
+  late FocusNode unreadCheckboxFocusNode;
 
   InputFieldFocusManager() {
     fromFieldFocusNode = FocusNode();
@@ -19,8 +20,9 @@ class InputFieldFocusManager {
     hasKeywordFieldFocusNode = FocusNode();
     notKeywordFieldFocusNode = FocusNode();
     mailboxFieldFocusNode = FocusNode();
-    attachmentCheckboxFocusNode = FocusNode(skipTraversal: true);
-    searchButtonFocusNode = FocusNode();
+    attachmentCheckboxFocusNode = FocusNode();
+    starredCheckboxFocusNode = FocusNode();
+    unreadCheckboxFocusNode = FocusNode();
   }
 
   factory InputFieldFocusManager.initial() {
@@ -35,6 +37,7 @@ class InputFieldFocusManager {
     notKeywordFieldFocusNode.dispose();
     mailboxFieldFocusNode.dispose();
     attachmentCheckboxFocusNode.dispose();
-    searchButtonFocusNode.dispose();
+    starredCheckboxFocusNode.dispose();
+    unreadCheckboxFocusNode.dispose();
   }
 }

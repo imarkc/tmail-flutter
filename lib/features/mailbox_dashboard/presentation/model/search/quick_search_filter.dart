@@ -17,6 +17,7 @@ enum QuickSearchFilter {
   last7Days,
   fromMe,
   starred,
+  unread,
   sortBy,
   dateTime,
   from,
@@ -43,7 +44,7 @@ enum QuickSearchFilter {
         return AppLocalizations.of(context).fromMe;
       case QuickSearchFilter.sortBy:
         return sortOrderType?.getTitle(context)
-          ?? AppLocalizations.of(context).mostRecent;
+          ?? SearchEmailFilter.defaultSortOrder.getTitle(context);
       case QuickSearchFilter.dateTime:
         return receiveTimeType?.getTitle(
           context,
@@ -58,6 +59,8 @@ enum QuickSearchFilter {
         return AppLocalizations.of(context).to_email_address_prefix;
       case QuickSearchFilter.starred:
         return AppLocalizations.of(context).starred;
+      case QuickSearchFilter.unread:
+        return AppLocalizations.of(context).unread;
     }
   }
 
@@ -80,13 +83,15 @@ enum QuickSearchFilter {
       case QuickSearchFilter.folder:
         return imagePaths.icFolderMailbox;
       case QuickSearchFilter.starred:
-        return isSelected ? imagePaths.icSelectedSB : imagePaths.icStar;
+        return isSelected ? imagePaths.icSelectedSB : imagePaths.icUnStar;
+      case QuickSearchFilter.unread:
+        return isSelected ? imagePaths.icSelectedSB : imagePaths.icUnread;
     }
   }
 
   Color getBackgroundColor({bool isSelected = false}) {
     if (isSelected) {
-      return AppColor.primaryColor.withOpacity(0.06);
+      return AppColor.primaryColor.withValues(alpha: 0.06);
     } else {
       return AppColor.colorSearchFilterButton;
     }
@@ -94,17 +99,17 @@ enum QuickSearchFilter {
 
   Color getMobileBackgroundColor({bool isSelected = false}) {
     if (isSelected) {
-      return AppColor.primaryColor.withOpacity(0.06);
+      return AppColor.primaryColor.withValues(alpha: 0.06);
     } else {
-      return AppColor.colorMobileSearchFilterButton.withOpacity(0.6);
+      return AppColor.colorMobileSearchFilterButton.withValues(alpha: 0.6);
     }
   }
 
   Color getSuggestionBackgroundColor({bool isSelected = false}) {
     if (isSelected) {
-      return AppColor.primaryColor.withOpacity(0.06);
+      return AppColor.primaryColor.withValues(alpha: 0.06);
     } else {
-      return AppColor.colorSuggestionSearchFilterButton.withOpacity(0.6);
+      return AppColor.colorSuggestionSearchFilterButton.withValues(alpha: 0.6);
     }
   }
 
@@ -112,11 +117,7 @@ enum QuickSearchFilter {
     if (isSelected) {
       return AppColor.primaryColor;
     } else {
-      if (this == QuickSearchFilter.starred) {
-        return AppColor.colorStarredSearchFilterIcon;
-      } else {
-        return AppColor.colorSearchFilterIcon;
-      }
+      return AppColor.colorSearchFilterIcon;
     }
   }
 
@@ -138,7 +139,7 @@ enum QuickSearchFilter {
           currentUserEmail?.isNotEmpty == true &&
           currentUserEmail == searchFilter.from.first;
       case QuickSearchFilter.sortBy:
-        return sortOrderType != EmailSortOrderType.mostRecent;
+        return sortOrderType != SearchEmailFilter.defaultSortOrder;
       case QuickSearchFilter.dateTime:
         return searchFilter.emailReceiveTimeType != EmailReceiveTimeType.allTime;
       case QuickSearchFilter.from:
@@ -149,6 +150,8 @@ enum QuickSearchFilter {
         return searchFilter.mailbox != null;
       case QuickSearchFilter.starred:
         return searchFilter.hasKeyword.contains(KeyWordIdentifier.emailFlagged.value) == true;
+      case QuickSearchFilter.unread:
+        return searchFilter.unread;
     }
   }
 

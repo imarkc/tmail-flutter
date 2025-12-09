@@ -18,6 +18,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:rxdart/subjects.dart';
+import 'package:tmail_ui_user/features/base/extensions/handle_mailbox_action_type_extension.dart';
 import 'package:tmail_ui_user/features/caching/caching_manager.dart';
 import 'package:tmail_ui_user/features/composer/domain/usecases/send_email_interactor.dart';
 import 'package:tmail_ui_user/features/composer/presentation/manager/composer_manager.dart';
@@ -36,14 +37,20 @@ import 'package:tmail_ui_user/features/login/data/network/interceptors/authoriza
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_authority_oidc_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_credential_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/get_authenticated_account_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_authentication_info_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_oidc_user_info_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_stored_oidc_configuration_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_token_oidc_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/update_account_cache_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/exceptions/empty_folder_name_exception.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/exceptions/invalid_mail_format_exception.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/usecases/clear_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/create_new_default_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/create_new_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/delete_multiple_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/get_all_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/mark_as_mailbox_read_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/usecases/move_folder_content_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/move_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/refresh_all_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/rename_mailbox_interactor.dart';
@@ -55,18 +62,21 @@ import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_tree_b
 import 'package:tmail_ui_user/features/mailbox_creator/domain/usecases/verify_name_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/get_all_recent_search_latest_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/get_composer_cache_on_web_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/get_stored_email_sort_order_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/quick_search_email_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/remove_all_composer_cache_on_web_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/remove_composer_cache_by_id_on_web_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/remove_email_drafts_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/save_recent_search_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/store_email_sort_order_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/action/download_ui_action.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/advanced_filter_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/app_grid_dashboard_controller.dart';
-import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/download/download_controller.dart';
+import 'package:tmail_ui_user/features/download/presentation/controllers/download_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/search_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/spam_report_controller.dart';
-import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/advanced_search_filter.dart';
+import 'package:tmail_ui_user/features/base/model/filter_filter.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_receive_time_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_sort_order_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/search_email_filter.dart';
@@ -144,9 +154,12 @@ const fallbackGenerators = {
   MockSpec<QuickSearchEmailInteractor>(),
   MockSpec<SaveRecentSearchInteractor>(),
   MockSpec<GetAllRecentSearchLatestInteractor>(),
+  MockSpec<StoreEmailSortOrderInteractor>(),
+  MockSpec<GetStoredEmailSortOrderInteractor>(),
   MockSpec<GetSessionInteractor>(),
   MockSpec<GetAuthenticatedAccountInteractor>(),
   MockSpec<UpdateAccountCacheInteractor>(),
+  MockSpec<GetOidcUserInfoInteractor>(),
   MockSpec<CreateNewMailboxInteractor>(),
   MockSpec<DeleteMultipleMailboxInteractor>(),
   MockSpec<RenameMailboxInteractor>(),
@@ -155,6 +168,7 @@ const fallbackGenerators = {
   MockSpec<SubscribeMultipleMailboxInteractor>(),
   MockSpec<SubaddressingInteractor>(),
   MockSpec<CreateDefaultMailboxInteractor>(),
+  MockSpec<MoveFolderContentInteractor>(),
   MockSpec<TreeBuilder>(),
   MockSpec<VerifyNameInteractor>(),
   MockSpec<GetAllMailboxInteractor>(),
@@ -184,6 +198,10 @@ const fallbackGenerators = {
   MockSpec<GetIdentityCacheOnWebInteractor>(),
   MockSpec<ComposerManager>(fallbackGenerators: fallbackGenerators),
   MockSpec<CleanAndGetEmailsInMailboxInteractor>(),
+  MockSpec<ClearMailboxInteractor>(),
+  MockSpec<GetAuthenticationInfoInteractor>(),
+  MockSpec<GetStoredOidcConfigurationInteractor>(),
+  MockSpec<GetTokenOIDCInteractor>(),
 ])
 void main() {
   // mock mailbox dashboard controller direct dependencies
@@ -232,6 +250,8 @@ void main() {
   final quickSearchEmailInteractor = MockQuickSearchEmailInteractor();
   final saveRecentSearchInteractor = MockSaveRecentSearchInteractor();
   final getAllRecentSearchLatestInteractor = MockGetAllRecentSearchLatestInteractor();
+  final storeEmailSortOrderInteractor = MockStoreEmailSortOrderInteractor();
+  final getStoredEmailSortOrderInteractor = MockGetStoredEmailSortOrderInteractor();
   late SearchController searchController;
 
   // mock base controller Get dependencies
@@ -254,6 +274,7 @@ void main() {
   final getSessionInteractor = MockGetSessionInteractor();
   final getAuthenticatedAccountInteractor = MockGetAuthenticatedAccountInteractor();
   final updateAccountCacheInteractor = MockUpdateAccountCacheInteractor();
+  final getOidcUserInfoInteractor = MockGetOidcUserInfoInteractor();
 
   // mock mailbox controller direct dependencies
   final createNewMailboxInteractor = MockCreateNewMailboxInteractor();
@@ -264,6 +285,7 @@ void main() {
   final subscribeMultipleMailboxInteractor = MockSubscribeMultipleMailboxInteractor();
   final subaddressingInteractor = MockSubaddressingInteractor();
   final createDefaultMailboxInteractor = MockCreateDefaultMailboxInteractor();
+  final moveFolderContentInteractor = MockMoveFolderContentInteractor();
   final treeBuilder = MockTreeBuilder();
   final verifyNameInteractor = MockVerifyNameInteractor();
   final getAllMailboxInteractor = MockGetAllMailboxInteractor();
@@ -271,6 +293,11 @@ void main() {
   final removeAllComposerCacheOnWebInteractor = MockRemoveAllComposerCacheOnWebInteractor();
   final removeComposerCacheByIdOnWebInteractor = MockRemoveComposerCacheByIdOnWebInteractor();
   final getAllIdentitiesInteractor = MockGetAllIdentitiesInteractor();
+  final clearMailboxInteractor = MockClearMailboxInteractor();
+  final getAuthenticationInfoInteractor = MockGetAuthenticationInfoInteractor();
+  final getStoredOidcConfigurationInteractor = MockGetStoredOidcConfigurationInteractor();
+  final getTokenOIDCInteractor = MockGetTokenOIDCInteractor();
+
   final composerManager = MockComposerManager();
   late MailboxController mailboxController;
 
@@ -321,10 +348,15 @@ void main() {
     Get.put<GetSessionInteractor>(getSessionInteractor);
     Get.put<GetAuthenticatedAccountInteractor>(getAuthenticatedAccountInteractor);
     Get.put<UpdateAccountCacheInteractor>(updateAccountCacheInteractor);
+    Get.put<GetOidcUserInfoInteractor>(getOidcUserInfoInteractor);
     Get.put<GetAllIdentitiesInteractor>(getAllIdentitiesInteractor);
+    Get.put<ClearMailboxInteractor>(clearMailboxInteractor);
     Get.put<RemoveAllComposerCacheOnWebInteractor>(removeAllComposerCacheOnWebInteractor);
     Get.put<RemoveComposerCacheByIdOnWebInteractor>(removeComposerCacheByIdOnWebInteractor);
     Get.put<ComposerManager>(composerManager);
+    Get.put<GetAuthenticationInfoInteractor>(getAuthenticationInfoInteractor);
+    Get.put<GetStoredOidcConfigurationInteractor>(getStoredOidcConfigurationInteractor);
+    Get.put<GetTokenOIDCInteractor>(getTokenOIDCInteractor);
 
     searchController = SearchController(
       quickSearchEmailInteractor,
@@ -361,6 +393,9 @@ void main() {
       removeAllComposerCacheOnWebInteractor,
       removeComposerCacheByIdOnWebInteractor,
       getAllIdentitiesInteractor,
+      clearMailboxInteractor,
+      storeEmailSortOrderInteractor,
+      getStoredEmailSortOrderInteractor,
     );
   });
 
@@ -369,6 +404,7 @@ void main() {
       getEmailsInMailboxInteractor = MockGetEmailsInMailboxInteractor();
 
       when(emailReceiveManager.pendingSharedFileInfo).thenAnswer((_) => BehaviorSubject.seeded([]));
+      when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
 
       Get.put(mailboxDashboardController);
       mailboxDashboardController.onReady();
@@ -382,6 +418,7 @@ void main() {
         subscribeMultipleMailboxInteractor,
         subaddressingInteractor,
         createDefaultMailboxInteractor,
+        moveFolderContentInteractor,
         treeBuilder,
         verifyNameInteractor,
         getAllMailboxInteractor,
@@ -414,6 +451,7 @@ void main() {
       // arrange
       when(context.owner).thenReturn(BuildOwner(focusManager: FocusManager()));
       when(context.mounted).thenReturn(true);
+      when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
       
       // expect query in search controller update as expected
       mailboxDashboardController.searchEmailByQueryString(queryString);
@@ -441,8 +479,8 @@ void main() {
         getLatestChanges: anyNamed('getLatestChanges'),
         propertiesCreated: anyNamed('propertiesCreated'),
         propertiesUpdated: anyNamed('propertiesUpdated')));
-      expect(searchController.sortOrderFiltered, EmailSortOrderType.mostRecent);
-      expect(searchController.searchEmailFilter.value, SearchEmailFilter.initial());
+      expect(searchController.sortOrderFiltered, EmailSortOrderType.oldest);
+      expect(searchController.searchEmailFilter.value, SearchEmailFilter.withSortOrder(EmailSortOrderType.oldest));
       verify(getEmailsInMailboxInteractor.execute(
         testSession, testAccountId,
         limit: ThreadConstants.defaultLimit,
@@ -471,8 +509,9 @@ void main() {
       when(context.mounted).thenReturn(true);
 
       // expect query in advanced filter controller update as expected
-      advancedFilterController.updateListEmailAddress(AdvancedSearchFilterField.from, [fromEmailAddress]);
-      advancedFilterController.updateListEmailAddress(AdvancedSearchFilterField.to, [toEmailAddress]);
+      advancedFilterController.setMemorySearchFilter(SearchEmailFilter.initial());
+      advancedFilterController.updateListEmailAddress(FilterField.from, [fromEmailAddress]);
+      advancedFilterController.updateListEmailAddress(FilterField.to, [toEmailAddress]);
       advancedFilterController.subjectFilterInputController.text = emailSubject;
       advancedFilterController.hasKeyWordFilterInputController.text = emailContainsWord;
       advancedFilterController.notKeyWordFilterInputController.text = emailNotContainsWord;
@@ -501,7 +540,7 @@ void main() {
         getLatestChanges: anyNamed('getLatestChanges'),
         propertiesCreated: anyNamed('propertiesCreated'),
         propertiesUpdated: anyNamed('propertiesUpdated')));
-      expect(searchController.sortOrderFiltered, EmailSortOrderType.mostRecent);
+      expect(searchController.sortOrderFiltered, SearchEmailFilter.defaultSortOrder);
       expect(searchController.searchEmailFilter.value, SearchEmailFilter.initial());
       verify(getEmailsInMailboxInteractor.execute(
         testSession, testAccountId,
@@ -546,6 +585,7 @@ void main() {
         text: SearchQuery(queryString),
         emailReceiveTimeType: EmailReceiveTimeType.last30Days,
         hasAttachment: true,
+        position: 0,
       )
     );
   });
@@ -601,6 +641,7 @@ void main() {
       getEmailsInMailboxInteractor = MockGetEmailsInMailboxInteractor();
 
       when(emailReceiveManager.pendingSharedFileInfo).thenAnswer((_) => BehaviorSubject.seeded([]));
+      when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
 
       Get.put(mailboxDashboardController);
       mailboxDashboardController.onReady();
@@ -614,6 +655,7 @@ void main() {
           subscribeMultipleMailboxInteractor,
           subaddressingInteractor,
           createDefaultMailboxInteractor,
+          moveFolderContentInteractor,
           treeBuilder,
           verifyNameInteractor,
           getAllMailboxInteractor,
@@ -641,37 +683,37 @@ void main() {
     test('should return subaddress with valid email and folder name', () {
       const String userEmail = 'user@example.com';
       const String folderName = 'folder';
-      final result = mailboxController.getSubaddress(userEmail, folderName);
+      final result = mailboxController.getSubAddress(userEmail, folderName);
 
-      expect(result, equals('user+folder@example.com'));
+      expect(result, equals('<user+folder@example.com>'));
     });
 
     test('should throw an error if empty local part', () {
       const userEmail = '@example.com';
       const folderName = 'folder';
 
-      expect(() => mailboxController.getSubaddress(userEmail, folderName), throwsA(isA<InvalidMailFormatException>()));
+      expect(() => mailboxController.getSubAddress(userEmail, folderName), throwsA(isA<InvalidMailFormatException>()));
     });
 
     test('should throw an error if empty folder name', () {
       const userEmail = 'user@example.com';
       const folderName = '';
 
-      expect(() => mailboxController.getSubaddress(userEmail, folderName), throwsA(isA<EmptyFolderNameException>()));
+      expect(() => mailboxController.getSubAddress(userEmail, folderName), throwsA(isA<EmptyFolderNameException>()));
     });
 
     test('should throw an error if empty domain', () {
       const userEmail = 'user@';
       const folderName = 'folder';
 
-      expect(() => mailboxController.getSubaddress(userEmail, folderName), throwsA(isA<InvalidMailFormatException>()));
+      expect(() => mailboxController.getSubAddress(userEmail, folderName), throwsA(isA<InvalidMailFormatException>()));
     });
 
     test('should throw an error if absent `@`', () {
       const userEmail = 'invalid-email-format';
       const folderName = 'folder';
 
-      expect(() => mailboxController.getSubaddress(userEmail, folderName), throwsA(isA<InvalidMailFormatException>()));
+      expect(() => mailboxController.getSubAddress(userEmail, folderName), throwsA(isA<InvalidMailFormatException>()));
     });
   });
 }

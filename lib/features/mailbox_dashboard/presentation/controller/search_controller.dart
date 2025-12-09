@@ -9,6 +9,7 @@ import 'package:jmap_dart_client/jmap/core/filter/filter.dart';
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/core/sort/comparator.dart';
 import 'package:jmap_dart_client/jmap/core/unsigned_int.dart';
+import 'package:jmap_dart_client/jmap/core/user_name.dart';
 import 'package:jmap_dart_client/jmap/core/utc_date.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email_comparator.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email_comparator_property.dart';
@@ -16,7 +17,6 @@ import 'package:jmap_dart_client/jmap/mail/email/email_filter_condition.dart';
 import 'package:jmap_dart_client/jmap/mail/email/keyword_identifier.dart';
 import 'package:model/email/presentation_email.dart';
 import 'package:model/extensions/email_filter_condition_extension.dart';
-import 'package:model/extensions/session_extension.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:tmail_ui_user/features/base/base_controller.dart';
 import 'package:tmail_ui_user/features/base/mixin/date_range_picker_mixin.dart';
@@ -27,6 +27,7 @@ import 'package:tmail_ui_user/features/mailbox_dashboard/domain/state/quick_sear
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/get_all_recent_search_latest_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/quick_search_email_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/save_recent_search_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/handle_keyboard_shortcut_actions_extension.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_receive_time_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_sort_order_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/quick_search_filter.dart';
@@ -47,10 +48,12 @@ class SearchController extends BaseController with DateRangePickerMixin {
   final listFilterOnSuggestionForm = RxList<QuickSearchFilter>();
   final simpleSearchIsActivated = RxBool(false);
   final advancedSearchIsActivated = RxBool(false);
+  final isSearchInputFocused = RxBool(false);
 
   SearchQuery? get searchQuery => searchEmailFilter.value.text;
 
   FocusNode searchFocus = FocusNode();
+  FocusNode? keyboardFocusNode;
   String currentSearchText = '';
 
   SearchController(
@@ -58,6 +61,23 @@ class SearchController extends BaseController with DateRangePickerMixin {
     this._saveRecentSearchInteractor,
     this._getAllRecentSearchLatestInteractor,
   );
+
+  @override
+  void onInit() {
+    super.onInit();
+    searchFocus.addListener(_onSearchFocusChanged);
+    onKeyboardShortcutInit();
+  }
+
+  void _onSearchFocusChanged() {
+    log('SearchController::_onSearchFocusChanged: ${searchFocus.hasFocus}');
+    isSearchInputFocused.value = searchFocus.hasFocus;
+    if (searchFocus.hasFocus) {
+      refocusKeyboardShortcutFocus();
+    } else {
+      clearKeyboardShortcutFocus();
+    }
+  }
 
   void openAdvanceSearch() {
     isAdvancedSearchViewOpen.value = true;
@@ -67,8 +87,10 @@ class SearchController extends BaseController with DateRangePickerMixin {
     isAdvancedSearchViewOpen.value = false;
   }
 
-  void clearSearchFilter() {
-    searchEmailFilter.value = SearchEmailFilter.initial();
+  void clearSearchFilter({EmailSortOrderType? sortOrderType}) {
+    searchEmailFilter.value = SearchEmailFilter.withSortOrder(
+      sortOrderType ?? searchEmailFilter.value.sortOrderType,
+    );
   }
 
   void synchronizeSearchFilter(SearchEmailFilter searchFilter) {
@@ -88,6 +110,7 @@ class SearchController extends BaseController with DateRangePickerMixin {
   Future<List<PresentationEmail>> quickSearchEmails({
     required Session session,
     required AccountId accountId,
+    required String ownEmailAddress,
     required String query,
   }) async {
     currentSearchText = query;
@@ -98,7 +121,10 @@ class SearchController extends BaseController with DateRangePickerMixin {
       sort: <Comparator>{}..add(
         EmailComparator(EmailComparatorProperty.receivedAt)
           ..setIsAscending(false)),
-      filter: _mappingToFilterOnSuggestionForm(currentUserEmail: session.getOwnEmailAddress(), query: query),
+      filter: _mappingToFilterOnSuggestionForm(
+        currentUserEmail: ownEmailAddress,
+        query: query,
+      ),
       properties: EmailUtils.getPropertiesForEmailGetMethod(session, accountId),
     ).then((result) => result.fold(
       (failure) => <PresentationEmail>[],
@@ -121,7 +147,7 @@ class SearchController extends BaseController with DateRangePickerMixin {
       hasAttachment: listFilterOnSuggestionForm.contains(QuickSearchFilter.hasAttachment)
         ? true
         : null,
-      from: listFilterOnSuggestionForm.contains(QuickSearchFilter.fromMe)
+      from: listFilterOnSuggestionForm.contains(QuickSearchFilter.fromMe) && currentUserEmail.isNotEmpty
         ? currentUserEmail
         : null,
       hasKeyword: listFilterOnSuggestionForm.contains(QuickSearchFilter.starred)
@@ -134,20 +160,19 @@ class SearchController extends BaseController with DateRangePickerMixin {
       : null;
   }
 
-  void applyFilterSuggestionToSearchFilter(String? currentUserEmail) {
+  void applyFilterSuggestionToSearchFilter(String currentUserEmail) {
     final receiveTime = listFilterOnSuggestionForm.contains(QuickSearchFilter.last7Days)
       ? EmailReceiveTimeType.last7Days
-      : EmailReceiveTimeType.allTime;
+      : null;
 
-    final hasAttachment = listFilterOnSuggestionForm.contains(QuickSearchFilter.hasAttachment) ? true : false;
+    final hasAttachment = listFilterOnSuggestionForm.contains(QuickSearchFilter.hasAttachment)
+        ? true
+        : null;
 
     var listFromAddress = searchEmailFilter.value.from;
-    if (currentUserEmail != null) {
-      if (listFilterOnSuggestionForm.contains(QuickSearchFilter.fromMe)) {
-        listFromAddress.add(currentUserEmail);
-      } else {
-        listFromAddress.remove(currentUserEmail);
-      }
+    if (currentUserEmail.isNotEmpty &&
+        listFilterOnSuggestionForm.contains(QuickSearchFilter.fromMe)) {
+      listFromAddress.add(currentUserEmail);
     }
 
     final listHasKeyword = listFilterOnSuggestionForm.contains(QuickSearchFilter.starred)
@@ -155,10 +180,10 @@ class SearchController extends BaseController with DateRangePickerMixin {
       : null;
 
     updateFilterEmail(
-      emailReceiveTimeTypeOption: Some(receiveTime),
-      hasAttachmentOption: Some(hasAttachment),
+      emailReceiveTimeTypeOption: receiveTime != null ? Some(receiveTime) : null,
+      hasAttachmentOption: hasAttachment != null ? Some(hasAttachment) : null,
       fromOption: Some(listFromAddress),
-      hasKeywordOption: optionOf(listHasKeyword),
+      hasKeywordOption: listHasKeyword != null ? Some(listHasKeyword) : null,
     );
 
     clearFilterSuggestion();
@@ -178,6 +203,7 @@ class SearchController extends BaseController with DateRangePickerMixin {
     Option<PresentationMailbox>? mailboxOption,
     Option<EmailReceiveTimeType>? emailReceiveTimeTypeOption,
     Option<bool>? hasAttachmentOption,
+    Option<bool>? unreadOption,
     Option<UTCDate>? beforeOption,
     Option<UTCDate>? startDateOption,
     Option<UTCDate>? endDateOption,
@@ -194,6 +220,7 @@ class SearchController extends BaseController with DateRangePickerMixin {
       mailboxOption: mailboxOption,
       emailReceiveTimeTypeOption: emailReceiveTimeTypeOption,
       hasAttachmentOption: hasAttachmentOption,
+      unreadOption: unreadOption,
       beforeOption: beforeOption,
       startDateOption: startDateOption,
       endDateOption: endDateOption,
@@ -215,6 +242,10 @@ class SearchController extends BaseController with DateRangePickerMixin {
 
   Set<String> get listAddressOfFromFiltered => searchEmailFilter.value.from;
 
+  Set<String> get listHasKeywordFiltered => searchEmailFilter.value.hasKeyword;
+
+  bool get unreadFiltered => searchEmailFilter.value.unread;
+
   EmailSortOrderType get sortOrderFiltered => searchEmailFilter.value.sortOrderType;
 
   bool isSearchActive() =>
@@ -226,13 +257,6 @@ class SearchController extends BaseController with DateRangePickerMixin {
     searchState.value = searchState.value.enableSearchState();
   }
 
-  void disableSimpleSearch() {
-    updateFilterEmail(textOption: Some(SearchQuery.initial()));
-    _clearAllTextInputSimpleSearch();
-    deactivateSimpleSearch();
-    hideSimpleSearchFormView();
-  }
-
   void clearTextSearch() {
     searchInputController.clear();
     searchFocus.requestFocus();
@@ -242,13 +266,25 @@ class SearchController extends BaseController with DateRangePickerMixin {
     searchInputController.text = value;
   }
 
-  void saveRecentSearch(RecentSearch recentSearch) {
-    consumeState(_saveRecentSearchInteractor.execute(recentSearch));
+  void saveRecentSearch(
+    AccountId accountId,
+    UserName userName,
+    RecentSearch recentSearch,
+  ) {
+    consumeState(_saveRecentSearchInteractor.execute(
+      accountId,
+      userName,
+      recentSearch,
+    ));
   }
 
-  Future<List<RecentSearch>> getAllRecentSearchAction(String pattern) async {
+  Future<List<RecentSearch>> getAllRecentSearchAction(
+    AccountId accountId,
+    UserName userName,
+    String pattern,
+  ) async {
     return await _getAllRecentSearchLatestInteractor
-        .execute(pattern: pattern)
+        .execute(accountId, userName, pattern: pattern)
         .then((result) => result.fold(
             (failure) => <RecentSearch>[],
             (success) => success is GetAllRecentSearchLatestSuccess
@@ -306,7 +342,9 @@ class SearchController extends BaseController with DateRangePickerMixin {
   @override
   void onClose() {
     searchInputController.dispose();
+    searchFocus.removeListener(_onSearchFocusChanged);
     searchFocus.dispose();
+    onKeyboardShortcutDispose();
     super.onClose();
   }
 }

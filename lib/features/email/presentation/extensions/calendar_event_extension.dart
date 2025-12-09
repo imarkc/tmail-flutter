@@ -20,6 +20,7 @@ import 'package:jmap_dart_client/jmap/mail/calendar/properties/calendar_sequence
 import 'package:jmap_dart_client/jmap/mail/calendar/properties/event_id.dart';
 import 'package:jmap_dart_client/jmap/mail/calendar/properties/event_method.dart';
 import 'package:jmap_dart_client/jmap/mail/calendar/properties/recurrence_rule/recurrence_rule.dart';
+import 'package:tmail_ui_user/features/email/domain/model/event_action.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 import 'package:tmail_ui_user/main/utils/app_utils.dart';
 
@@ -149,7 +150,7 @@ extension CalendarEventExtension on CalendarEvent {
     if (participants?.isNotEmpty == true) {
       final listMatchedAttendee = participants
         !.where((attendee) => attendee.mailto != null && listEmailAddressSender.contains(attendee.mailto!.mailAddress.value))
-        .whereNotNull();
+        .nonNulls;
       log('CalendarEventExtension::findAttendeeHasUpdatedStatus:listMatchedAttendee: $listMatchedAttendee');
       if (listMatchedAttendee.isNotEmpty) {
         return listMatchedAttendee.first;
@@ -362,12 +363,12 @@ extension CalendarEventExtension on CalendarEvent {
       final videoConferences = List<String>.empty(growable: true);
 
       final openPaasVideoConferences = extensionFields?.mapFields['X-OPENPAAS-VIDEOCONFERENCE']
-        ?.whereNotNull()
+        ?.nonNulls
         .where((link) => link.isNotEmpty)
         .toList() ?? [];
       log('CalendarEventExtension::openPaasVideoConferences: $openPaasVideoConferences');
       final googleVideoConferences = extensionFields!.mapFields['X-GOOGLE-CONFERENCE']
-        ?.whereNotNull()
+        ?.nonNulls
         .where((link) => link.isNotEmpty)
         .toList() ?? [];
       log('CalendarEventExtension::googleVideoConferences: $googleVideoConferences');
@@ -382,15 +383,70 @@ extension CalendarEventExtension on CalendarEvent {
     return [];
   }
 
-  bool get isDisplayedEventReplyAction => method != null
-    && _methodIsRepliable
-    && organizer != null
-    && participants?.isNotEmpty == true;
+  bool isDisplayedEventReplyAction(String ownerEmailAddress) =>
+      method != null &&
+      _methodIsRepliable &&
+      organizer != null &&
+      participants?.isNotEmpty == true &&
+      userIsListedInParticipants(ownerEmailAddress);
 
   bool get _methodIsRepliable => 
     method == EventMethod.request ||
     method == EventMethod.add ||
     method == EventMethod.counter;
+
+  bool userIsListedInParticipants(String ownEmailAddress) {
+    final participant = participants?.firstWhereOrNull((participant) =>
+    participant.mailto?.mailAddress.value == ownEmailAddress);
+    return participant != null;
+  }
+
+  bool userIsOrganizer(String ownEmailAddress) {
+    return organizer?.mailto?.value == ownEmailAddress;
+  }
+
+  bool isDisplayedWarningMessage(String ownerEmailAddress) {
+    return !userIsListedInParticipants(ownerEmailAddress) &&
+      !userIsOrganizer(ownerEmailAddress);
+  }
+
+  bool get isDisplayedMailToAttendees =>
+      organizer != null || participants?.isNotEmpty == true;
+
+  List<EventActionType> getEventActionTypesIsDisplayed(
+    String ownerEmailAddress,
+  ) {
+    if (isDisplayedEventReplyAction(ownerEmailAddress)) {
+      return [
+        if (method == EventMethod.counter)
+          EventActionType.acceptCounter
+        else
+          ...[
+            EventActionType.yes,
+            EventActionType.maybe,
+            EventActionType.no,
+          ],
+        EventActionType.mailToAttendees,
+      ];
+    } else if (isDisplayedMailToAttendees) {
+      return [
+        EventActionType.mailToAttendees,
+      ];
+    } else {
+      return [];
+    }
+  }
+
+  bool isIMIPResponsesAvailable(List<String> listEmailAddressSender) {
+    final participationStatus = findAttendeeHasUpdatedStatus(
+      listEmailAddressSender,
+    )?.participationStatus?.value;
+
+    return method == EventMethod.reply &&
+        (participationStatus == acceptedParticipationStatus ||
+            participationStatus == tentativeParticipationStatus ||
+            participationStatus == declinedParticipationStatus);
+  }
 
   CalendarEvent copyWith({
     EventId? eventId,

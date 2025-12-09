@@ -16,10 +16,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:jmap_dart_client/jmap/account_id.dart';
+import 'package:jmap_dart_client/jmap/core/error/method/error_method_response.dart';
+import 'package:jmap_dart_client/jmap/core/error/set_error.dart';
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/identities/identity.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email_address.dart';
+import 'package:jmap_dart_client/jmap/mail/mailbox/mailbox.dart';
 import 'package:model/model.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -29,9 +32,12 @@ import 'package:tmail_ui_user/features/base/base_controller.dart';
 import 'package:tmail_ui_user/features/base/before_reconnect_handler.dart';
 import 'package:tmail_ui_user/features/base/before_reconnect_manager.dart';
 import 'package:tmail_ui_user/features/base/mixin/auto_complete_result_mixin.dart';
+import 'package:tmail_ui_user/features/base/mixin/message_dialog_action_manager.dart';
 import 'package:tmail_ui_user/features/base/state/base_ui_state.dart';
 import 'package:tmail_ui_user/features/base/state/button_state.dart';
 import 'package:tmail_ui_user/features/composer/domain/exceptions/compose_email_exception.dart';
+import 'package:tmail_ui_user/features/composer/domain/exceptions/set_method_exception.dart';
+import 'package:tmail_ui_user/features/composer/domain/extensions/set_method_exception_description_extension.dart';
 import 'package:tmail_ui_user/features/composer/domain/model/contact_suggestion_source.dart';
 import 'package:tmail_ui_user/features/composer/domain/repository/composer_repository.dart';
 import 'package:tmail_ui_user/features/composer/domain/state/download_image_as_base64_state.dart';
@@ -50,11 +56,14 @@ import 'package:tmail_ui_user/features/composer/domain/usecases/restore_email_in
 import 'package:tmail_ui_user/features/composer/domain/usecases/save_composer_cache_on_web_interactor.dart';
 import 'package:tmail_ui_user/features/composer/presentation/controller/rich_text_mobile_tablet_controller.dart';
 import 'package:tmail_ui_user/features/composer/presentation/controller/rich_text_web_controller.dart';
+import 'package:tmail_ui_user/features/composer/presentation/extensions/attachment_detection_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/auto_create_tag_for_recipients_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/get_draft_mailbox_id_for_composer_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/get_outbox_mailbox_id_for_composer_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/get_sent_mailbox_id_for_composer_extension.dart';
+import 'package:tmail_ui_user/features/composer/presentation/extensions/handle_keyboard_shortcut_actions_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/handle_message_failure_extension.dart';
+import 'package:tmail_ui_user/features/composer/presentation/extensions/handle_recipients_collapsed_extensions.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/list_identities_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/sanitize_signature_in_email_content_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_email_attachments_extension.dart';
@@ -64,30 +73,37 @@ import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_em
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_email_recipients_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_email_request_read_receipt_flag_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_email_subject_extension.dart';
+import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_email_template_id_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_list_identities_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_selected_identity_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/update_screen_display_mode_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/mixin/drag_drog_file_mixin.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/create_email_request.dart';
-import 'package:tmail_ui_user/features/composer/presentation/model/saved_email_draft.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/inline_image.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/prefix_recipient_state.dart';
+import 'package:tmail_ui_user/features/composer/presentation/model/saved_composing_email.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/screen_display_mode.dart';
 import 'package:tmail_ui_user/features/composer/presentation/styles/composer_style.dart';
 import 'package:tmail_ui_user/features/composer/presentation/view/editor_view_mixin.dart';
 import 'package:tmail_ui_user/features/composer/presentation/widgets/mobile/from_composer_bottom_sheet_builder.dart';
 import 'package:tmail_ui_user/features/composer/presentation/widgets/saving_message_dialog_view.dart';
+import 'package:tmail_ui_user/features/composer/presentation/widgets/saving_template_dialog_view.dart';
 import 'package:tmail_ui_user/features/composer/presentation/widgets/sending_message_dialog_view.dart';
 import 'package:tmail_ui_user/features/email/domain/state/get_email_content_state.dart';
+import 'package:tmail_ui_user/features/email/domain/state/save_template_email_state.dart';
+import 'package:tmail_ui_user/features/email/domain/state/update_template_email_state.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/get_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/print_email_interactor.dart';
+import 'package:tmail_ui_user/features/email/domain/usecases/save_template_email_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/transform_html_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/presentation/extensions/presentation_email_extension.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/composer_arguments.dart';
-import 'package:tmail_ui_user/features/email/presentation/utils/email_utils.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/remove_composer_cache_by_id_on_web_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/validate_premium_storage_extension.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/open_and_close_composer_extension.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/update_text_formatting_menu_state_extension.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/draggable_app_state.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/state/get_all_identities_state.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_identities_interactor.dart';
@@ -96,8 +112,8 @@ import 'package:tmail_ui_user/features/network_connection/presentation/network_c
   if (dart.library.html) 'package:tmail_ui_user/features/network_connection/presentation/web_network_connection_controller.dart';
 import 'package:tmail_ui_user/features/server_settings/domain/usecases/get_server_setting_interactor.dart';
 import 'package:tmail_ui_user/features/upload/domain/exceptions/pick_file_exception.dart';
-import 'package:tmail_ui_user/features/upload/domain/extensions/list_file_info_extension.dart';
 import 'package:tmail_ui_user/features/upload/domain/extensions/file_info_extension.dart';
+import 'package:tmail_ui_user/features/upload/domain/extensions/list_file_info_extension.dart';
 import 'package:tmail_ui_user/features/upload/domain/extensions/list_file_upload_extension.dart';
 import 'package:tmail_ui_user/features/upload/domain/model/upload_task_id.dart';
 import 'package:tmail_ui_user/features/upload/domain/state/attachment_upload_state.dart';
@@ -125,16 +141,15 @@ class ComposerController extends BaseController
   final isInitialRecipient = false.obs;
   final subjectEmail = Rxn<String>();
   final screenDisplayMode = ScreenDisplayMode.normal.obs;
-  final toAddressExpandMode = ExpandMode.EXPAND.obs;
-  final ccAddressExpandMode = ExpandMode.EXPAND.obs;
-  final bccAddressExpandMode = ExpandMode.EXPAND.obs;
-  final replyToAddressExpandMode = ExpandMode.EXPAND.obs;
   final emailContentsViewState = Rxn<Either<Failure, Success>>();
   final hasRequestReadReceipt = false.obs;
   final fromRecipientState = PrefixRecipientState.disabled.obs;
+  final toRecipientState = PrefixRecipientState.enabled.obs;
   final ccRecipientState = PrefixRecipientState.disabled.obs;
   final bccRecipientState = PrefixRecipientState.disabled.obs;
   final replyToRecipientState = PrefixRecipientState.disabled.obs;
+  final recipientsCollapsedState = PrefixRecipientState.disabled.obs;
+  final prefixRootState = PrefixEmailAddress.to.obs;
   final identitySelected = Rxn<Identity>();
   final listFromIdentities = RxList<Identity>();
   final isEmailChanged = Rx<bool>(false);
@@ -157,6 +172,7 @@ class ComposerController extends BaseController
   final ComposerRepository _composerRepository;
   final String? composerId;
   final ComposerArguments? composerArgs;
+  final SaveTemplateEmailInteractor _saveTemplateEmailInteractor;
 
   GetAllAutoCompleteInteractor? _getAllAutoCompleteInteractor;
   GetAutoCompleteInteractor? _getAutoCompleteInteractor;
@@ -194,11 +210,13 @@ class ComposerController extends BaseController
   FocusNode? ccAddressFocusNodeKeyboard;
   FocusNode? bccAddressFocusNodeKeyboard;
   FocusNode? replyToAddressFocusNodeKeyboard;
+  FocusNode? keyboardShortcutFocusNode;
 
   StreamSubscription<html.Event>? _subscriptionOnDragEnter;
   StreamSubscription<html.Event>? _subscriptionOnDragOver;
   StreamSubscription<html.Event>? _subscriptionOnDragLeave;
   StreamSubscription<html.Event>? _subscriptionOnDrop;
+  StreamSubscription<html.Event>? _subscriptionOnBlur;
   StreamSubscription<String>? _composerCacheListener;
 
   RichTextMobileTabletController? richTextMobileTabletController;
@@ -226,20 +244,23 @@ class ComposerController extends BaseController
   EmailActionType? currentEmailActionType;
   EmailActionType? savedActionType;
   int minInputLengthAutocomplete = AppConfig.defaultMinInputLengthAutocomplete;
+  EmailId? currentTemplateEmailId;
 
   @visibleForTesting
   int? get savedEmailDraftHash => _savedEmailDraftHash;
 
   GetEmailContentInteractor get getEmailContentInteractor => _getEmailContentInteractor;
-  
+
   GetServerSettingInteractor get getServerSettingInteractor => _getServerSettingInteractor;
 
   GetAllIdentitiesInteractor get getAllIdentitiesInteractor => _getAllIdentitiesInteractor;
 
   TransformHtmlEmailContentInteractor get transformHtmlEmailContentInteractor => _transformHtmlEmailContentInteractor;
 
+  String get ownEmailAddress =>
+      mailboxDashBoardController.ownEmailAddress.value;
+
   late Worker uploadInlineImageWorker;
-  late Worker dashboardViewStateWorker;
   late bool _isEmailBodyLoaded;
 
   ComposerController(
@@ -257,6 +278,7 @@ class ComposerController extends BaseController
     this._createNewAndSaveEmailToDraftsInteractor,
     this.printEmailInteractor,
     this._composerRepository,
+    this._saveTemplateEmailInteractor,
     {
       this.composerId,
       this.composerArgs,
@@ -279,6 +301,7 @@ class ComposerController extends BaseController
     _listenStreamEvent();
     _beforeReconnectManager.addListener(onBeforeReconnect);
     _injectBinding();
+    onKeyboardShortcutInit();
   }
 
   @override
@@ -311,6 +334,7 @@ class ComposerController extends BaseController
     _subscriptionOnDragOver?.cancel();
     _subscriptionOnDragLeave?.cancel();
     _subscriptionOnDrop?.cancel();
+    _subscriptionOnBlur?.cancel();
     subjectEmailInputFocusNode?.removeListener(_subjectEmailInputFocusListener);
     _composerCacheListener?.cancel();
     _beforeReconnectManager.removeListener(onBeforeReconnect);
@@ -322,6 +346,7 @@ class ComposerController extends BaseController
     } else {
       richTextMobileTabletController = null;
     }
+    onKeyboardShortcutDispose();
     super.onClose();
   }
 
@@ -353,7 +378,6 @@ class ComposerController extends BaseController
     bccEmailAddressController.dispose();
     replyToEmailAddressController.dispose();
     uploadInlineImageWorker.dispose();
-    dashboardViewStateWorker.dispose();
     scrollController.dispose();
     scrollControllerEmailAddress.removeListener(_scrollControllerEmailAddressListener);
     scrollControllerEmailAddress.dispose();
@@ -451,6 +475,11 @@ class ComposerController extends BaseController
         mailboxDashBoardController.localFileDraggableAppState.value = DraggableAppState.inActive;
       }
     });
+
+    // https://github.com/flutter/flutter/issues/155265#issuecomment-2417101524
+    _subscriptionOnBlur = html.window.onBlur.listen((event) {
+      html.document.activeElement?.blur();
+    });
   }
 
   Future<void> _saveComposerCacheOnWebAction() async {
@@ -500,6 +529,7 @@ class ComposerController extends BaseController
       session: session,
       accountId: accountId,
       emailActionType: arguments.emailActionType,
+      ownEmailAddress: ownEmailAddress,
       subject: subjectEmail.value ?? '',
       emailContent: emailContent,
       fromSender: arguments.presentationEmail?.from ?? {},
@@ -528,22 +558,12 @@ class ComposerController extends BaseController
       savedDraftHash: arguments.savedDraftHash ?? _savedEmailDraftHash,
       savedActionType: savedActionType ?? currentEmailActionType,
       savedEmailDraftId: emailIdEditing,
+      templateEmailId: currentTemplateEmailId,
     );
   }
 
   void _scrollControllerEmailAddressListener() {
-    if (toEmailAddressController.text.isNotEmpty) {
-      keyToEmailTagEditor.currentState?.closeSuggestionBox();
-    }
-    if (ccEmailAddressController.text.isNotEmpty) {
-      keyCcEmailTagEditor.currentState?.closeSuggestionBox();
-    }
-    if (bccEmailAddressController.text.isNotEmpty) {
-      keyBccEmailTagEditor.currentState?.closeSuggestionBox();
-    }
-    if (replyToEmailAddressController.text.isNotEmpty) {
-      keyReplyToEmailTagEditor.currentState?.closeSuggestionBox();
-    }
+    _closeSuggestionBox();
   }
 
   void createFocusNodeInput() {
@@ -570,8 +590,8 @@ class ComposerController extends BaseController
           && !responsiveUtils.isScreenWithShortestSide(currentContext!)) {
         richTextMobileTabletController?.richTextController.hideRichTextView();
       }
-      _collapseAllRecipient();
       autoCreateEmailTag();
+      triggerHideRecipientsFieldsWhenUnfocus();
     }
   }
 
@@ -608,7 +628,7 @@ class ComposerController extends BaseController
       mailboxDashBoardController.accountId.value,
     );
   }
-  
+
   Future<void> setupComposer() async {
     _isEmailBodyLoaded = false;
     final arguments = PlatformInfo.isWeb ? composerArgs : Get.arguments;
@@ -627,12 +647,21 @@ class ComposerController extends BaseController
     setupEmailAttachments(arguments);
     setupEmailOtherComponents(arguments);
     setupEmailRequestReadReceiptFlag(arguments);
+    setupEmailTemplateId(arguments);
 
     await setupListIdentities(arguments);
     await setupEmailContent(arguments);
 
-    if (screenDisplayMode.value.isNotContentVisible()) {
+    if (screenDisplayMode.value.isNotContentVisible() &&
+        currentContext != null &&
+        responsiveUtils.isWebDesktop(currentContext!)) {
       await setupSelectedIdentityWithoutApplySignature();
+    }
+
+    if (PlatformInfo.isWeb) {
+      richTextWebController?.updateFormattingOptions(
+        mailboxDashBoardController.isTextFormattingMenuOpened.value,
+      );
     }
   }
 
@@ -670,7 +699,7 @@ class ComposerController extends BaseController
     required EmailActionType actionType,
     String? listPost,
   }) {
-    final senderEmailAddress = mailboxDashBoardController.sessionCurrent?.getOwnEmailAddress();
+    final senderEmailAddress = ownEmailAddress;
     final isSender = presentationEmail.from
       .asList()
       .any((element) => element.emailAddress.isNotEmpty && element.emailAddress == senderEmailAddress);
@@ -687,26 +716,12 @@ class ComposerController extends BaseController
     listBccEmailAddress = List.from(recipients.bcc);
     listReplyToEmailAddress = List.from(recipients.replyTo);
 
-    if (listToEmailAddress.isNotEmpty || listCcEmailAddress.isNotEmpty || listBccEmailAddress.isNotEmpty || listReplyToEmailAddress.isNotEmpty) {
+    if (isRecipientsWithoutReplyToNotEmpty) {
+      hideAllRecipientsFields();
       isInitialRecipient.value = true;
-      toAddressExpandMode.value = ExpandMode.COLLAPSE;
+    } else {
+      toRecipientState.value = PrefixRecipientState.enabled;
     }
-
-    if (listCcEmailAddress.isNotEmpty) {
-      ccRecipientState.value = PrefixRecipientState.enabled;
-      ccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    }
-
-    if (listBccEmailAddress.isNotEmpty) {
-      bccRecipientState.value = PrefixRecipientState.enabled;
-      bccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    }
-
-    if (listReplyToEmailAddress.isNotEmpty) {
-      replyToRecipientState.value = PrefixRecipientState.enabled;
-      replyToAddressExpandMode.value = ExpandMode.COLLAPSE;
-    }
-
     updateStatusEmailSendButton();
   }
 
@@ -736,8 +751,7 @@ class ComposerController extends BaseController
   void updateStatusEmailSendButton() {
     if (listToEmailAddress.isNotEmpty
         || listCcEmailAddress.isNotEmpty
-        || listBccEmailAddress.isNotEmpty
-        || listReplyToEmailAddress.isNotEmpty) {
+        || listBccEmailAddress.isNotEmpty) {
       isEnableEmailSendButton.value = true;
     } else {
       isEnableEmailSendButton.value = false;
@@ -751,87 +765,84 @@ class ComposerController extends BaseController
     }
     _sendButtonState = ButtonState.disabled;
 
-    clearFocus(context);
+    clearFocus();
 
     if (toEmailAddressController.text.isNotEmpty
         || ccEmailAddressController.text.isNotEmpty
         || bccEmailAddressController.text.isNotEmpty
         || replyToEmailAddressController.text.isNotEmpty) {
-      _collapseAllRecipient();
       autoCreateEmailTag();
     }
 
+    final appLocalizations = AppLocalizations.of(context);
+
     if (!isEnableEmailSendButton.value) {
-      showConfirmDialogAction(context,
-        AppLocalizations.of(context).message_dialog_send_email_without_recipient,
-        AppLocalizations.of(context).add_recipients,
-        title: AppLocalizations.of(context).sending_failed,
+      MessageDialogActionManager().showConfirmDialogAction(context,
+        appLocalizations.message_dialog_send_email_without_recipient,
+        appLocalizations.add_recipients,
+        title: appLocalizations.sending_failed,
         hasCancelButton: false,
         showAsBottomSheet: true,
+        dialogMargin: MediaQuery.paddingOf(context).add(const EdgeInsets.only(bottom: 12)),
       ).whenComplete(() => _sendButtonState = ButtonState.enabled);
       return;
     }
 
-    final allListEmailAddress = listToEmailAddress + listCcEmailAddress + listBccEmailAddress + listReplyToEmailAddress;
-    final listEmailAddressInvalid = allListEmailAddress
-        .where((emailAddress) => !EmailUtils.isEmailAddressValid(emailAddress.emailAddress))
-        .toList();
-    if (listEmailAddressInvalid.isNotEmpty) {
-      showConfirmDialogAction(context,
-        AppLocalizations.of(context).message_dialog_send_email_with_email_address_invalid,
-        AppLocalizations.of(context).fix_email_addresses,
-        onConfirmAction: () {
-          toAddressExpandMode.value = ExpandMode.EXPAND;
-          ccAddressExpandMode.value = ExpandMode.EXPAND;
-          bccAddressExpandMode.value = ExpandMode.EXPAND;
-          replyToAddressExpandMode.value = ExpandMode.EXPAND;
-        },
+    if (existEmailAddressInvalid) {
+      MessageDialogActionManager().showConfirmDialogAction(context,
+        appLocalizations.message_dialog_send_email_with_email_address_invalid,
+        appLocalizations.fix_email_addresses,
+        onConfirmAction: showFullRecipients,
         showAsBottomSheet: true,
-        title: AppLocalizations.of(context).sending_failed,
-        hasCancelButton: false
+        title: appLocalizations.sending_failed,
+        hasCancelButton: false,
+        dialogMargin: MediaQuery.paddingOf(context).add(const EdgeInsets.only(bottom: 12)),
       ).whenComplete(() => _sendButtonState = ButtonState.enabled);
       return;
     }
 
     if (subjectEmail.value == null || subjectEmail.isEmpty == true) {
-      showConfirmDialogAction(context,
-        AppLocalizations.of(context).message_dialog_send_email_without_a_subject,
-        AppLocalizations.of(context).cancel,
-        cancelTitle: AppLocalizations.of(context).send_anyway,
-        onCancelAction: () => _handleSendMessages(context),
-        onConfirmAction: popBack,
+      MessageDialogActionManager().showConfirmDialogAction(context,
+        appLocalizations.message_dialog_send_email_without_a_subject,
+        appLocalizations.send_anyway,
+        cancelTitle: appLocalizations.cancel,
+        onConfirmAction: () => _prepareToSendMessages(context),
+        onCancelAction: popBack,
         autoPerformPopBack: false,
-        title: AppLocalizations.of(context).empty_subject,
+        title: appLocalizations.empty_subject,
         showAsBottomSheet: true,
+        dialogMargin: MediaQuery.paddingOf(context).add(const EdgeInsets.only(bottom: 12)),
       ).whenComplete(() => _sendButtonState = ButtonState.enabled);
       return;
     }
 
     if (!uploadController.allUploadAttachmentsCompleted) {
-      showConfirmDialogAction(
+      MessageDialogActionManager().showConfirmDialogAction(
         context,
-        AppLocalizations.of(context).messageDialogSendEmailUploadingAttachment,
-        AppLocalizations.of(context).got_it,
-        title: AppLocalizations.of(context).sending_failed,
+        appLocalizations.messageDialogSendEmailUploadingAttachment,
+        appLocalizations.got_it,
+        title: appLocalizations.sending_failed,
         showAsBottomSheet: true,
-        hasCancelButton: false
+        hasCancelButton: false,
+        dialogMargin: MediaQuery.paddingOf(context).add(const EdgeInsets.only(bottom: 12)),
       ).whenComplete(() => _sendButtonState = ButtonState.enabled);
       return;
     }
 
     if (uploadController.isExceededMaxSizeAttachmentsPerEmail()) {
-      showConfirmDialogAction(
+      MessageDialogActionManager().showConfirmDialogAction(
         context,
-        AppLocalizations.of(context).message_dialog_send_email_exceeds_maximum_size(
-            filesize(mailboxDashBoardController.maxSizeAttachmentsPerEmail?.value ?? 0, 0)),
-        AppLocalizations.of(context).got_it,
-        title: AppLocalizations.of(context).sending_failed,
+        appLocalizations.message_dialog_send_email_exceeds_maximum_size(
+          filesize(mailboxDashBoardController.maxSizeAttachmentsPerEmail?.value ?? 0, 0),
+        ),
+        appLocalizations.got_it,
+        title: appLocalizations.sending_failed,
         hasCancelButton: false
       ).whenComplete(() => _sendButtonState = ButtonState.enabled);
       return;
     }
 
-    _handleSendMessages(context);
+    _prepareToSendMessages(context);
   }
 
   Future<String> getContentInEditor() async {
@@ -848,7 +859,7 @@ class ComposerController extends BaseController
     }
   }
 
-  void _handleSendMessages(BuildContext context) async {
+  Future<void> _prepareToSendMessages(BuildContext context) async {
     final arguments = composerArguments.value;
     final session = mailboxDashBoardController.sessionCurrent;
     final accountId = mailboxDashBoardController.accountId.value;
@@ -865,6 +876,51 @@ class ComposerController extends BaseController
     }
 
     final emailContent = await getContentInEditor();
+    if (!context.mounted) {
+      _sendButtonState = ButtonState.enabled;
+      return;
+    }
+    final attachmentKeywords = validateAttachmentReminder(
+      emailSubject: subjectEmail.value ?? '',
+      emailContent: emailContent,
+    );
+    if (attachmentKeywords.isNotEmpty &&
+        uploadController.attachmentsUploaded.isEmpty) {
+      showAttachmentReminderModal(
+        context: context,
+        keywords: attachmentKeywords,
+        onConfirmAction: () {
+          _sendMessageToServer(
+            context: context,
+            session: session,
+            accountId: accountId,
+            arguments: arguments,
+            emailContent: emailContent,
+          );
+        },
+        onCancelAction: () {
+          _sendButtonState = ButtonState.enabled;
+        }
+      ).whenComplete(() => _sendButtonState = ButtonState.enabled);
+      return;
+    }
+
+    _sendMessageToServer(
+      context: context,
+      session: session,
+      accountId: accountId,
+      arguments: arguments,
+      emailContent: emailContent,
+    );
+  }
+
+  Future<void> _sendMessageToServer({
+    required BuildContext context,
+    required Session session,
+    required AccountId accountId,
+    required ComposerArguments arguments,
+    required String emailContent,
+  }) async {
     final uploadUri = _getUploadUriFromSession(session, accountId);
     final cancelToken = CancelToken();
     final resultState = await _showSendingMessageDialog(
@@ -873,15 +929,19 @@ class ComposerController extends BaseController
       arguments: arguments,
       emailContent: emailContent,
       uploadUri: uploadUri,
-      cancelToken: cancelToken
+      cancelToken: cancelToken,
     );
-    log('ComposerController::_handleSendMessages: resultState = $resultState');
-    if (resultState is SendEmailSuccess || mailboxDashBoardController.validateSendingEmailFailedWhenNetworkIsLostOnMobile(resultState)) {
+
+    if (resultState is SendEmailSuccess ||
+        mailboxDashBoardController
+            .validateSendingEmailFailedWhenNetworkIsLostOnMobile(resultState)) {
       _sendButtonState = ButtonState.enabled;
       _closeComposerAction(result: resultState);
-    } else if (resultState is SendEmailFailure && resultState.exception is SendingEmailCanceledException) {
+    } else if (resultState is SendEmailFailure &&
+        resultState.exception is SendingEmailCanceledException) {
       _sendButtonState = ButtonState.enabled;
-    } else if (resultState is SendEmailFailure || resultState is GenerateEmailFailure) {
+    } else if (resultState is SendEmailFailure ||
+        resultState is GenerateEmailFailure) {
       if (resultState.exception is BadCredentialsException) {
         _sendButtonState = ButtonState.enabled;
         handleBadCredentialsException();
@@ -912,6 +972,7 @@ class ComposerController extends BaseController
           session: session,
           accountId: accountId,
           emailActionType: arguments.emailActionType,
+          ownEmailAddress: ownEmailAddress,
           subject: subjectEmail.value ?? '',
           emailContent: emailContent,
           fromSender: arguments.presentationEmail?.from ?? {},
@@ -958,29 +1019,52 @@ class ComposerController extends BaseController
     required BuildContext context,
     required FeatureFailure failure
   }) async {
-    final errorMessage = getMessageFailure(
+    final messageRecord = getMessageFailure(
       appLocalizations: AppLocalizations.of(context),
       exception: failure.exception,
     );
-    await showConfirmDialogAction(
+
+    final isIncreaseMySpaceIsDisabled =
+        !mailboxDashBoardController.validatePremiumIsAvailable() ||
+            mailboxDashBoardController.validateUserHasIsAlreadyHighestSubscription();
+
+    final needIncreaseMySpace = !isIncreaseMySpaceIsDisabled &&
+        messageRecord.errorType == SetError.overQuota;
+
+    await MessageDialogActionManager().showConfirmDialogAction(
       context,
       title: '',
-      errorMessage,
-      AppLocalizations.of(context).edit,
-      cancelTitle: AppLocalizations.of(context).closeAnyway,
+      messageRecord.message,
+      needIncreaseMySpace
+        ? AppLocalizations.of(context).increaseYourSpace
+        : AppLocalizations.of(context).edit,
+      cancelTitle: needIncreaseMySpace
+        ? AppLocalizations.of(context).edit
+        : AppLocalizations.of(context).closeAnyway,
       alignCenter: true,
       outsideDismissible: false,
       autoPerformPopBack: false,
       onConfirmAction: () {
         _sendButtonState = ButtonState.enabled;
         popBack();
-        _autoFocusFieldWhenLauncher();
+
+        if (needIncreaseMySpace) {
+          mailboxDashBoardController.paywallController?.navigateToPaywall();
+        } else {
+          _autoFocusFieldWhenLauncher();
+        }
       },
       onCancelAction: () {
         _sendButtonState = ButtonState.enabled;
-        _closeComposerAction(closeOverlays: true);
+
+        if (needIncreaseMySpace) {
+          popBack();
+          _autoFocusFieldWhenLauncher();
+        } else {
+          _closeComposerAction(closeOverlays: true);
+        }
       },
-    );
+    ).whenComplete(() => _sendButtonState = ButtonState.enabled);
   }
 
   void _checkContactPermission() async {
@@ -1056,7 +1140,7 @@ class ComposerController extends BaseController
   }
 
   void openPickAttachmentMenu(BuildContext context, List<Widget> actionTiles) {
-    clearFocus(context);
+    clearFocus();
 
     (ContextMenuBuilder(context)
         ..addHeader((ContextMenuHeaderBuilder(const Key('attachment_picker_context_menu_header_builder'))
@@ -1128,12 +1212,11 @@ class ComposerController extends BaseController
   }
 
   Future<bool> _validateEmailChange() async {
-    final newDraftHash = await _hashDraftEmail();
-    log('ComposerController::_validateEmailChange:newDraftHash = $newDraftHash | _savedEmailDraftHash = $_savedEmailDraftHash');
+    final newDraftHash = await _hashComposingEmail();
     return _savedEmailDraftHash != newDraftHash;
   }
 
-  Future<int> _hashDraftEmail() async {
+  Future<int> _hashComposingEmail() async {
     String emailContent = await getContentInEditor();
 
     emailContent = await _composerRepository.removeCollapsedExpandedSignatureEffect(
@@ -1147,7 +1230,7 @@ class ComposerController extends BaseController
       );
     }
 
-    final savedEmailDraft = SavedEmailDraft(
+    final savedEmailDraft = SavedComposingEmail(
       subject: subjectEmail.value ?? '',
       content: emailContent,
       toRecipients: listToEmailAddress.toSet(),
@@ -1166,11 +1249,11 @@ class ComposerController extends BaseController
   }
 
   Future<void> _updateSavedEmailDraftHash() async {
-    _savedEmailDraftHash = await _hashDraftEmail();
+    _savedEmailDraftHash = await _hashComposingEmail();
   }
 
   Future<void> initEmailDraftHash() async {
-    final currentDraftHash = await _hashDraftEmail();
+    final currentDraftHash = await _hashComposingEmail();
 
     final oldSavedDraftHash = composerArguments.value?.savedDraftHash;
 
@@ -1244,14 +1327,25 @@ class ComposerController extends BaseController
         await _showConfirmDialogWhenSaveMessageToDraftsFailure(
           context: context,
           failure: resultState,
-          onConfirmAction: () {
+          onConfirmAction: (needIncreaseMySpace) {
             _saveToDraftButtonState = ButtonState.enabled;
             popBack();
-            _autoFocusFieldWhenLauncher();
+
+            if (needIncreaseMySpace) {
+              mailboxDashBoardController.paywallController?.navigateToPaywall();
+            } else {
+              _autoFocusFieldWhenLauncher();
+            }
           },
-          onCancelAction: () {
+          onCancelAction: (needIncreaseMySpace) {
             _saveToDraftButtonState = ButtonState.enabled;
-            _closeComposerAction(closeOverlays: true);
+
+            if (needIncreaseMySpace) {
+              popBack();
+              _autoFocusFieldWhenLauncher();
+            } else {
+              _closeComposerAction(closeOverlays: true);
+            }
           },
         );
       } else {
@@ -1262,15 +1356,102 @@ class ComposerController extends BaseController
     }
   }
 
-  void clearFocus(BuildContext context) {
-    log('ComposerController::clearFocus:');
+  Future<void> handleClickSaveAsTemplateButton(BuildContext context) async {
+    if (composerArguments.value == null ||
+        mailboxDashBoardController.sessionCurrent == null ||
+        mailboxDashBoardController.accountId.value == null
+    ) {
+      log('ComposerController::handleClickSaveAsTemplateButton: SESSION or ACCOUNT_ID or ARGUMENTS is NULL');
+      return;
+    }
+
+    MailboxId? templateMailboxId = mailboxDashBoardController
+      .getMailboxIdByRole(PresentationMailbox.roleTemplates);
+    templateMailboxId ??= mailboxDashBoardController.mapMailboxById
+      .where((_, mailbox) => mailbox.name?.name.toLowerCase() ==
+        PresentationMailbox.roleTemplates.value.toLowerCase())
+      .keys
+      .firstOrNull;
+
+    final emailContent = await getContentInEditor();
+    final cancelToken = CancelToken();
+    final resultState = await _showSavingMessageToTemplateDialog(
+      emailContent: emailContent,
+      templateMailboxId: templateMailboxId,
+      templateEmailId: currentTemplateEmailId,
+      createNewMailboxRequest: templateMailboxId != null
+        ? null
+        : CreateNewMailboxRequest(
+            MailboxName(PresentationMailbox.roleTemplates.value.toUpperCase()),
+          ),
+      cancelToken: cancelToken,
+    );
+
+    if (resultState is SaveTemplateEmailSuccess && context.mounted == true) {
+      currentTemplateEmailId = resultState.emailId;
+      appToast.showToastSuccessMessage(
+        context,
+        AppLocalizations.of(context).saveMessageToTemplateSuccess,
+      );
+    } else if (resultState is UpdateTemplateEmailSuccess && context.mounted == true) {
+      currentTemplateEmailId = resultState.emailId;
+      appToast.showToastSuccessMessage(
+        context,
+        AppLocalizations.of(context).updateMessageToTemplateSuccess,
+      );
+    } else if (resultState is SaveTemplateEmailFailure ||
+        resultState is UpdateTemplateEmailFailure ||
+        resultState is GenerateEmailFailure
+    ) {
+      if (resultState.exception is BadCredentialsException) {
+        handleBadCredentialsException();
+      } else if (context.mounted) {
+        String message = '';
+        final exception = resultState.exception;
+        if (exception is SetMethodException) {
+          final exceptionDescription = exception.getDescriptionFromErrorType(
+            ErrorMethodResponse.invalidArguments,
+          );
+          message = exceptionDescription != null
+            ? AppLocalizations.of(context).invalidArguments(exceptionDescription)
+            : AppLocalizations.of(context).saveMessageToTemplateFailed;
+        } else if (cancelToken.isCancelled) {
+          message = AppLocalizations.of(context).saveMessageToTemplateCancelled;
+        } else {
+          message = AppLocalizations.of(context).saveMessageToTemplateFailed;
+        }
+
+        appToast.showToastErrorMessage(context, message);
+      }
+    }
+  }
+
+  void clearFocus() {
     if (PlatformInfo.isMobile) {
       htmlEditorApi?.unfocus();
+      FocusManager.instance.primaryFocus?.unfocus();
+    } else {
+      toAddressFocusNode?.unfocus();
+      ccAddressFocusNode?.unfocus();
+      bccAddressFocusNode?.unfocus();
+      replyToAddressFocusNode?.unfocus();
     }
-    FocusScope.of(context).unfocus();
+  }
+
+  void clickOutsideComposer() {
+    clearFocus();
+    triggerHideRecipientsFieldsWhenUnfocus();
+    if (PlatformInfo.isWeb) {
+      refocusKeyboardShortcutFocus();
+    }
   }
 
   void _closeComposerAction({dynamic result, bool closeOverlays = false}) {
+    if (PlatformInfo.isWeb && richTextWebController != null) {
+      mailboxDashBoardController.updateTextFormattingMenuState(
+        richTextWebController!.isFormattingOptionsEnabled,
+      );
+    }
     mailboxDashBoardController.closeComposer(
       result: result,
       closeOverlays: closeOverlays,
@@ -1299,6 +1480,9 @@ class ComposerController extends BaseController
       case PrefixEmailAddress.from:
         fromRecipientState.value = PrefixRecipientState.enabled;
         break;
+      case PrefixEmailAddress.to:
+        toRecipientState.value = PrefixRecipientState.enabled;
+        break;
       case PrefixEmailAddress.cc:
         ccRecipientState.value = PrefixRecipientState.enabled;
         break;
@@ -1308,14 +1492,19 @@ class ComposerController extends BaseController
       case PrefixEmailAddress.replyTo:
         replyToRecipientState.value = PrefixRecipientState.enabled;
         break;
-      default:
-        break;
     }
+
+    updatePrefixRootState();
   }
 
   void deleteEmailAddressType(PrefixEmailAddress prefixEmailAddress) {
     updateListEmailAddress(prefixEmailAddress, <EmailAddress>[]);
     switch(prefixEmailAddress) {
+      case PrefixEmailAddress.to:
+        toRecipientState.value = PrefixRecipientState.disabled;
+        toAddressFocusNode = FocusNode();
+        toEmailAddressController.clear();
+        break;
       case PrefixEmailAddress.cc:
         ccRecipientState.value = PrefixRecipientState.disabled;
         ccAddressFocusNode = FocusNode();
@@ -1334,13 +1523,19 @@ class ComposerController extends BaseController
       default:
         break;
     }
+
+    updatePrefixRootState();
   }
 
-  void _collapseAllRecipient() {
-    toAddressExpandMode.value = ExpandMode.COLLAPSE;
-    ccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    bccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    replyToAddressExpandMode.value = ExpandMode.COLLAPSE;
+  void clearFocusRecipients() {
+    toAddressFocusNode?.unfocus();
+    ccAddressFocusNode?.unfocus();
+    bccAddressFocusNode?.unfocus();
+    replyToAddressFocusNode?.unfocus();
+  }
+
+  void clearFocusSubject() {
+    subjectEmailInputFocusNode?.unfocus();
   }
 
   void _closeSuggestionBox() {
@@ -1358,47 +1553,8 @@ class ComposerController extends BaseController
     }
   }
 
-  void showFullEmailAddress(PrefixEmailAddress prefixEmailAddress) {
-    switch(prefixEmailAddress) {
-      case PrefixEmailAddress.to:
-        toAddressExpandMode.value = ExpandMode.EXPAND;
-        toAddressFocusNode?.requestFocus();
-        break;
-      case PrefixEmailAddress.cc:
-        ccAddressExpandMode.value = ExpandMode.EXPAND;
-        ccAddressFocusNode?.requestFocus();
-        break;
-      case PrefixEmailAddress.bcc:
-        bccAddressExpandMode.value = ExpandMode.EXPAND;
-        bccAddressFocusNode?.requestFocus();
-        break;
-      case PrefixEmailAddress.replyTo:
-        replyToAddressExpandMode.value = ExpandMode.EXPAND;
-        replyToAddressFocusNode?.requestFocus();
-        break;
-      default:
-        break;
-    }
-  }
-
   void onEmailAddressFocusChange(PrefixEmailAddress prefixEmailAddress, bool isFocus) {
     if (isFocus) {
-      switch(prefixEmailAddress) {
-        case PrefixEmailAddress.to:
-          toAddressExpandMode.value = ExpandMode.EXPAND;
-          break;
-        case PrefixEmailAddress.cc:
-          ccAddressExpandMode.value = ExpandMode.EXPAND;
-          break;
-        case PrefixEmailAddress.bcc:
-          bccAddressExpandMode.value = ExpandMode.EXPAND;
-          break;
-        case PrefixEmailAddress.replyTo:
-          replyToAddressExpandMode.value = ExpandMode.EXPAND;
-          break;
-        default:
-          break;
-      }
       _closeSuggestionBox();
       if (PlatformInfo.isMobile
           && currentContext != null
@@ -1408,28 +1564,24 @@ class ComposerController extends BaseController
     } else {
       switch(prefixEmailAddress) {
         case PrefixEmailAddress.to:
-          toAddressExpandMode.value = ExpandMode.COLLAPSE;
           final inputToEmail = toEmailAddressController.text;
           if (inputToEmail.trim().isNotEmpty) {
             autoCreateEmailTagForType(PrefixEmailAddress.to, inputToEmail);
           }
           break;
         case PrefixEmailAddress.cc:
-          ccAddressExpandMode.value = ExpandMode.COLLAPSE;
           final inputCcEmail = ccEmailAddressController.text;
           if (inputCcEmail.trim().isNotEmpty) {
             autoCreateEmailTagForType(PrefixEmailAddress.cc, inputCcEmail);
           }
           break;
         case PrefixEmailAddress.bcc:
-          bccAddressExpandMode.value = ExpandMode.COLLAPSE;
           final inputBccEmail = bccEmailAddressController.text;
           if (inputBccEmail.trim().isNotEmpty) {
             autoCreateEmailTagForType(PrefixEmailAddress.bcc, inputBccEmail);
           }
           break;
         case PrefixEmailAddress.replyTo:
-          replyToAddressExpandMode.value = ExpandMode.COLLAPSE;
           final inputReplyToEmail = replyToEmailAddressController.text;
           if (inputReplyToEmail.trim().isNotEmpty) {
             autoCreateEmailTagForType(PrefixEmailAddress.replyTo, inputReplyToEmail);
@@ -1481,10 +1633,6 @@ class ComposerController extends BaseController
     } else {
       listBccEmailAddress = listEmailAddress.toList();
     }
-    toAddressExpandMode.value = ExpandMode.COLLAPSE;
-    ccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    bccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    bccAddressExpandMode.refresh();
     updateStatusEmailSendButton();
   }
 
@@ -1495,15 +1643,15 @@ class ComposerController extends BaseController
     if (listBccEmailAddress.isEmpty) {
       bccRecipientState.value = PrefixRecipientState.disabled;
     }
-    toAddressExpandMode.value = ExpandMode.COLLAPSE;
-    ccAddressExpandMode.value = ExpandMode.COLLAPSE;
-    bccAddressExpandMode.value = ExpandMode.COLLAPSE;
     updateStatusEmailSendButton();
   }
 
   Future<void> applySignature(String signature) async {
     if (PlatformInfo.isWeb) {
-      richTextWebController?.editorController.insertSignature(signature);
+      richTextWebController?.editorController.insertSignature(
+        signature,
+        allowCollapsed: false,
+      );
     } else {
       await htmlEditorApi?.insertSignature(signature, allowCollapsed: false);
     }
@@ -1517,8 +1665,8 @@ class ComposerController extends BaseController
     }
   }
 
-  void insertImage(BuildContext context, double maxWith) async {
-    clearFocus(context);
+  void insertImage(BuildContext context, double maxWith) {
+    clearFocus();
 
     if (responsiveUtils.isMobile(context)) {
       maxWithEditor = maxWith - 40;
@@ -1555,8 +1703,8 @@ class ComposerController extends BaseController
     }
   }
 
-  void handleClickDeleteComposer(BuildContext context) {
-    clearFocus(context);
+  void handleClickDeleteComposer() {
+    clearFocus();
     _closeComposerAction();
   }
 
@@ -1569,8 +1717,8 @@ class ComposerController extends BaseController
         const Duration(milliseconds: 300),
         richTextMobileTabletController?.richTextController.showDeviceKeyboard);
     }
-    _collapseAllRecipient();
     autoCreateEmailTag();
+    triggerHideRecipientsFieldsWhenUnfocus();
   }
 
   void _onChangeCursorOnMobile(List<int>? coordinates, BuildContext context) {
@@ -1688,17 +1836,21 @@ class ComposerController extends BaseController
   }
 
   void handleOnFocusHtmlEditorWeb() {
+    clearFocusRecipients();
+    clearFocusSubject();
     FocusManager.instance.primaryFocus?.unfocus();
-    richTextWebController?.editorController.setFocus();
+    if (richTextWebController?.codeViewEnabled != true) {
+      richTextWebController?.editorController.setFocus();
+    }
     richTextWebController?.closeAllMenuPopup();
     if (menuMoreOptionController?.menuIsShowing == true) {
       menuMoreOptionController?.hideMenu();
     }
-  }
-
-  void handleOnMouseDownHtmlEditorWeb() {
-    _collapseAllRecipient();
+    if (mailboxDashBoardController.isPopupMenuOpened.isTrue) {
+      popBack();
+    }
     autoCreateEmailTag();
+    triggerHideRecipientsFieldsWhenUnfocus();
   }
 
   FocusNode? getNextFocusOfToEmailAddress() {
@@ -1802,11 +1954,12 @@ class ComposerController extends BaseController
     }
 
     _closeComposerButtonState = ButtonState.disabled;
+    autoCreateEmailTag();
 
     if (_validateCloseComposerWithoutSave()) {
       log('ComposerController::handleClickCloseComposer: ARGUMENTS is NULL or EMAIL NOT LOADED');
       _closeComposerButtonState = ButtonState.enabled;
-      clearFocus(context);
+      clearFocus();
       _closeComposerAction();
       return;
     }
@@ -1814,16 +1967,14 @@ class ComposerController extends BaseController
     final isChanged = await _validateEmailChange();
 
     if (isChanged && context.mounted) {
-      clearFocus(context);
+      clearFocus();
       await _showConfirmDialogSaveMessage(context);
       return;
     }
 
-    if (context.mounted) {
-      _closeComposerButtonState = ButtonState.enabled;
-      clearFocus(context);
-      _closeComposerAction();
-    }
+    _closeComposerButtonState = ButtonState.enabled;
+    clearFocus();
+    _closeComposerAction();
   }
 
   bool _validateCloseComposerWithoutSave() {
@@ -1831,7 +1982,9 @@ class ComposerController extends BaseController
 
     if (PlatformInfo.isWeb &&
         !_isEmailBodyLoaded &&
-        !screenDisplayMode.value.isNotContentVisible()) return true;
+        !screenDisplayMode.value.isNotContentVisible()) {
+      return true;
+    }
 
     if (PlatformInfo.isMobile && !_isEmailBodyLoaded) return true;
 
@@ -1839,17 +1992,16 @@ class ComposerController extends BaseController
   }
 
   Future<void> _showConfirmDialogSaveMessage(BuildContext context) async {
-    await showConfirmDialogAction(
+    await MessageDialogActionManager().showConfirmDialogAction(
       context,
       title: AppLocalizations.of(context).saveMessage.capitalizeFirstEach,
       AppLocalizations.of(context).warningMessageWhenClickCloseComposer,
       AppLocalizations.of(context).save,
       cancelTitle: AppLocalizations.of(context).discardChanges,
       alignCenter: true,
-      outsideDismissible: false,
       autoPerformPopBack: false,
-      titleActionButtonMaxLines: 1,
       isArrangeActionButtonsVertical: true,
+      isScrollContentEnabled: responsiveUtils.isLandscapeMobile(context),
       usePopScope: true,
       onConfirmAction: () => _handleSaveMessageToDraft(context),
       onCancelAction: () {
@@ -1870,6 +2022,7 @@ class ComposerController extends BaseController
         }
       },
     );
+    _closeComposerButtonState = ButtonState.enabled;
   }
 
   void handleOnDragEnterHtmlEditorWeb(List<dynamic>? types) {
@@ -1993,6 +2146,7 @@ class ComposerController extends BaseController
           session: session,
           accountId: accountId,
           emailActionType: arguments.emailActionType,
+          ownEmailAddress: ownEmailAddress,
           subject: subjectEmail.value ?? '',
           emailContent: emailContent,
           fromSender: arguments.presentationEmail?.from ?? {},
@@ -2030,6 +2184,57 @@ class ComposerController extends BaseController
     );
   }
 
+  Future<dynamic> _showSavingMessageToTemplateDialog({
+    required String emailContent,
+    required MailboxId? templateMailboxId,
+    required EmailId? templateEmailId,
+    required CreateNewMailboxRequest? createNewMailboxRequest,
+    CancelToken? cancelToken,
+  }) {
+    final childWidget = PointerInterceptor(
+      child: SavingTemplateDialogView(
+        createEmailRequest: CreateEmailRequest(
+          session: mailboxDashBoardController.sessionCurrent!,
+          accountId: mailboxDashBoardController.accountId.value!,
+          emailActionType: composerArguments.value!.emailActionType,
+          ownEmailAddress: ownEmailAddress,
+          subject: subjectEmail.value ?? '',
+          emailContent: emailContent,
+          fromSender: composerArguments.value!.presentationEmail?.from ?? {},
+          toRecipients: listToEmailAddress.toSet(),
+          ccRecipients: listCcEmailAddress.toSet(),
+          bccRecipients: listBccEmailAddress.toSet(),
+          replyToRecipients: listReplyToEmailAddress.toSet(),
+          hasRequestReadReceipt: hasRequestReadReceipt.value,
+          isMarkAsImportant: isMarkAsImportant.value,
+          identity: identitySelected.value,
+          attachments: uploadController.attachmentsUploaded,
+          inlineAttachments: uploadController.mapInlineAttachments,
+          sentMailboxId: getSentMailboxIdForComposer(),
+          templateMailboxId: templateMailboxId,
+          templateEmailId: templateEmailId,
+          answerForwardEmailId: composerArguments.value!.presentationEmail?.id,
+          unsubscribeEmailId: composerArguments.value!.previousEmailId,
+          messageId: composerArguments.value!.messageId,
+          references: composerArguments.value!.references,
+          emailSendingQueue: composerArguments.value!.sendingEmail,
+          displayMode: screenDisplayMode.value
+        ),
+        saveTemplateEmailInteractor: _saveTemplateEmailInteractor,
+        createNewMailboxRequest: createNewMailboxRequest,
+        onCancel: (cancelToken) => cancelToken?.cancel(),
+        cancelToken: cancelToken,
+      ),
+    );
+    return Get.dialog(
+      PlatformInfo.isMobile
+        ? PopScope(canPop: false, child: childWidget)
+        : childWidget,
+      barrierDismissible: false,
+      barrierColor: AppColor.colorDefaultCupertinoActionSheet,
+    );
+  }
+
   void _handleCancelSavingMessageToDrafts({CancelToken? cancelToken}) {
     cancelToken?.cancel([SavingEmailToDraftsCanceledException()]);
   }
@@ -2037,40 +2242,64 @@ class ComposerController extends BaseController
   Future<void> _showConfirmDialogWhenSaveMessageToDraftsFailure({
     required BuildContext context,
     required FeatureFailure failure,
-    VoidCallback? onConfirmAction,
-    VoidCallback? onCancelAction,
+    Function(bool)? onConfirmAction,
+    Function(bool)? onCancelAction,
   }) async {
-    final errorMessage = getMessageFailure(
+    final messageRecord = getMessageFailure(
       appLocalizations: AppLocalizations.of(context),
       exception: failure.exception,
       isDraft: true,
     );
-    await showConfirmDialogAction(
+
+    final isIncreaseMySpaceIsDisabled =
+        !mailboxDashBoardController.validatePremiumIsAvailable() ||
+            mailboxDashBoardController.validateUserHasIsAlreadyHighestSubscription();
+
+    final needIncreaseMySpace = !isIncreaseMySpaceIsDisabled &&
+        messageRecord.errorType == SetError.overQuota;
+
+    await MessageDialogActionManager().showConfirmDialogAction(
       context,
       title: '',
-      errorMessage,
-      AppLocalizations.of(context).edit,
-      cancelTitle: AppLocalizations.of(context).closeAnyway,
+      messageRecord.message,
+      needIncreaseMySpace
+        ? AppLocalizations.of(context).increaseYourSpace
+        : AppLocalizations.of(context).edit,
+      cancelTitle: needIncreaseMySpace
+        ? AppLocalizations.of(context).edit
+        : AppLocalizations.of(context).closeAnyway,
       alignCenter: true,
       outsideDismissible: false,
       autoPerformPopBack: false,
-      onConfirmAction: onConfirmAction ?? () {
-        _closeComposerButtonState = ButtonState.enabled;
-        popBack();
-        _autoFocusFieldWhenLauncher();
+      onConfirmAction: () {
+        if (onConfirmAction != null) {
+          onConfirmAction(needIncreaseMySpace);
+        } else {
+          _closeComposerButtonState = ButtonState.enabled;
+          popBack();
+
+          if (needIncreaseMySpace) {
+            mailboxDashBoardController.paywallController?.navigateToPaywall();
+          } else {
+            _autoFocusFieldWhenLauncher();
+          }
+        }
       },
-      onCancelAction: onCancelAction ?? () {
-        _closeComposerButtonState = ButtonState.enabled;
-        _closeComposerAction(closeOverlays: true);
+      onCancelAction: () {
+        if (onCancelAction != null) {
+          onCancelAction(needIncreaseMySpace);
+        } else {
+          _closeComposerButtonState = ButtonState.enabled;
+
+          if (needIncreaseMySpace) {
+            popBack();
+            _autoFocusFieldWhenLauncher();
+          } else {
+            _closeComposerAction(closeOverlays: true);
+          }
+        }
       },
     );
-  }
-
-  void handleEnableRecipientsInputAction(bool isEnabled) {
-    fromRecipientState.value = isEnabled ? PrefixRecipientState.disabled : PrefixRecipientState.enabled;
-    ccRecipientState.value = isEnabled ? PrefixRecipientState.disabled : PrefixRecipientState.enabled;
-    bccRecipientState.value = isEnabled ? PrefixRecipientState.disabled : PrefixRecipientState.enabled;
-    replyToRecipientState.value = isEnabled ? PrefixRecipientState.disabled : PrefixRecipientState.enabled;
   }
 
   @override
@@ -2086,7 +2315,7 @@ class ComposerController extends BaseController
     required BuildContext context,
     required double maxWidth
   }) {
-    if (responsiveUtils.isMobile(context)) {
+    if (context.mounted && responsiveUtils.isMobile(context)) {
       maxWithEditor = maxWidth - 40;
     } else {
       maxWithEditor = maxWidth - 70;
@@ -2116,6 +2345,8 @@ class ComposerController extends BaseController
     required UploadError uploadError
   }) {
     logError('ComposerController::handleOnPasteImageFailureAction: $uploadError');
+    if (!context.mounted) return;
+
     appToast.showToastErrorMessage(
       context,
       AppLocalizations.of(context).thisImageCannotBePastedIntoTheEditor);
@@ -2123,5 +2354,12 @@ class ComposerController extends BaseController
 
   void onCompleteSetupComposer() {
     initEmailDraftHash();
+  }
+
+  void onPopupMenuChanged(bool isShowing) {
+    if (isShowing) {
+      clearFocusRecipients();
+      clearFocusSubject();
+    }
   }
 }

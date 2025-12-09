@@ -3,6 +3,7 @@ import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
 import 'package:core/presentation/utils/style_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -12,12 +13,12 @@ import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 class EventTimeInformationWidget extends StatelessWidget {
 
   final String timeEvent;
-  final bool isFree;
+  final bool isFreeBusyEnabled;
 
   const EventTimeInformationWidget({
     super.key,
     required this.timeEvent,
-    required this.isFree,
+    required this.isFreeBusyEnabled,
   });
 
   @override
@@ -32,7 +33,7 @@ class EventTimeInformationWidget extends StatelessWidget {
           width: EventTimeInformationWidgetStyles.maxWidth,
           child: Text(
             AppLocalizations.of(context).when,
-            style: const TextStyle(
+            style: ThemeUtils.defaultTextStyleInterFont.copyWith(
               fontSize: EventTimeInformationWidgetStyles.textSize,
               fontWeight: FontWeight.w500,
               color: EventTimeInformationWidgetStyles.labelColor
@@ -44,13 +45,13 @@ class EventTimeInformationWidget extends StatelessWidget {
           overflow: responsiveUtils.isPortraitMobile(context) ? null : CommonTextStyle.defaultTextOverFlow,
           softWrap: responsiveUtils.isPortraitMobile(context) ? null : CommonTextStyle.defaultSoftWrap,
           maxLines: responsiveUtils.isPortraitMobile(context) ? null : 1,
-          style: const TextStyle(
+          style: ThemeUtils.defaultTextStyleInterFont.copyWith(
             fontSize: EventTimeInformationWidgetStyles.textSize,
             fontWeight: FontWeight.w500,
             color: EventTimeInformationWidgetStyles.valueColor
           ),
         )),
-        if (!isFree)
+        if (isFreeBusyEnabled)
           ...[
             const SizedBox(width: EventTimeInformationWidgetStyles.horizontalSpacing),
             Tooltip(

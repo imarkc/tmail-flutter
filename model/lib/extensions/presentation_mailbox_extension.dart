@@ -34,6 +34,8 @@ extension PresentationMailboxExtension on PresentationMailbox {
 
   bool get isSpam => role == PresentationMailbox.roleSpam || role == PresentationMailbox.roleJunk;
 
+  bool get isFavorite => role == PresentationMailbox.roleFavorite;
+
   bool get isTrash => role == PresentationMailbox.roleTrash;
 
   bool get isDrafts => role == PresentationMailbox.roleDrafts;
@@ -57,6 +59,9 @@ extension PresentationMailboxExtension on PresentationMailbox {
   bool get allowedToDisplayCountOfTotalEmails => (isTrash || isSpam || isDrafts) && countTotalEmails > 0;
 
   bool get allowedHasEmptyAction => (isTrash || isSpam) && countTotalEmails > 0;
+
+  bool get isDeletePermanentlyEnabled =>
+      isTrash == true || isDrafts == true || isSpam == true;
 
   String get countTotalEmailsAsString {
     if (countTotalEmails <= 0) return '';

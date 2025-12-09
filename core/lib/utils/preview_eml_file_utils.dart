@@ -134,7 +134,7 @@ class PreviewEmlFileUtils {
 
   String generatePreviewEml({
     required String appName,
-    required String userName,
+    required String ownEmailAddress,
     required String subjectPrefix,
     required String subject,
     required String emailContent,
@@ -154,7 +154,7 @@ class PreviewEmlFileUtils {
     String? replyToAddress,
     List<PreviewAttachment>? listAttachment,
   }) {
-    Document document = parse(HtmlUtils.createTemplateHtmlDocument(title: '$subject - $userName'));
+    Document document = parse(HtmlUtils.createTemplateHtmlDocument(title: '$subject - $ownEmailAddress'));
 
     Element? emailElement = _createEmailElement(
       subjectPrefix: subjectPrefix,
@@ -176,9 +176,6 @@ class PreviewEmlFileUtils {
       titleAttachment: titleAttachment,
       listAttachment: listAttachment,
     );
-
-    Element linkFontElement = Element.html(HtmlTemplate.fontLink);
-    document.head?.append(linkFontElement);
 
     Element styleElement = Element.html(HtmlTemplate.previewEMLFileCssStyle);
     document.head?.append(styleElement);

@@ -21,6 +21,7 @@ import 'package:tmail_ui_user/features/mailbox/data/model/mailbox_change_respons
 import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/get_mailbox_by_role_response.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/jmap_mailbox_response.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/model/move_folder_content_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/move_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/rename_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_right_request.dart';
@@ -158,7 +159,22 @@ class MailboxCacheDataSourceImpl extends MailboxDataSource {
   @override
   Future<void> clearAllMailboxCache(AccountId accountId, UserName userName) {
     return Future.sync(() async {
-      return await _mailboxCacheManager.clearAll(accountId, userName);
+      return await _mailboxCacheManager.deleteByKey(accountId, userName);
     }).catchError(_exceptionThrower.throwException);
+  }
+
+  @override
+  Future<UnsignedInt> clearMailbox(Session session, AccountId accountId, MailboxId mailboxId) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<EmailId>> moveFolderContent({
+    required Session session,
+    required AccountId accountId,
+    required MoveFolderContentRequest request,
+    StreamController<dartz.Either<Failure, Success>>? onProgressController,
+  }) {
+    throw UnimplementedError();
   }
 }

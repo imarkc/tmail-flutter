@@ -1,4 +1,5 @@
 import 'package:core/presentation/extensions/color_extension.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -11,108 +12,106 @@ import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 
 class QuotasView extends GetWidget<QuotasController> {
 
-  final EdgeInsetsGeometry? padding;
-
-  const QuotasView({Key? key, this.padding}) : super(key: key);
+  const QuotasView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.octetsQuota.value != null && controller.octetsQuota.value!.storageAvailable) {
-        final octetQuota = controller.octetsQuota.value!;
-        return LayoutBuilder(builder: (context, constraints) {
-          return Container(
-            padding: padding ?? const EdgeInsetsDirectional.only(
-              start: QuotasViewStyles.padding,
-              top: QuotasViewStyles.padding,
-              bottom: QuotasViewStyles.bottomPadding
-            ),
-            margin: controller.responsiveUtils.isWebDesktop(context)
-              ? const EdgeInsetsDirectional.only(end: QuotasViewStyles.margin)
-              : null,
-            decoration: BoxDecoration(
-              color: controller.responsiveUtils.isWebDesktop(context)
-                ? QuotasViewStyles.webBackgroundColor
-                : QuotasViewStyles.mobileBackgroundColor,
-            ),
-            alignment: AlignmentDirectional.centerStart,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    SvgPicture.asset(
-                      controller.imagePaths.icQuotas,
-                      width: QuotasViewStyles.iconSize,
-                      height: QuotasViewStyles.iconSize,
-                      colorFilter: AppColor.steelGray400.asFilter(),
-                      fit: BoxFit.fill,
-                    ),
-                    const SizedBox(width: QuotasViewStyles.iconPadding),
-                    Flexible(
-                      child: Text(
-                        AppLocalizations.of(context).storageQuotas,
-                        style: const TextStyle(
-                          fontSize: QuotasViewStyles.labelTextSize,
-                          fontWeight: QuotasViewStyles.labelFontWeight,
-                          color: QuotasViewStyles.labelTextColor
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: QuotasViewStyles.iconPadding),
-                    Obx(() {
-                      final isLoading = controller.viewState.value.fold(
-                        (failure) => false,
-                        (success) => success is GetQuotasLoading,
-                      );
+      final octetQuota = controller.mailboxDashBoardController.octetsQuota.value;
+      bool isDesktop = controller.responsiveUtils.isDesktop(context);
 
-                      return QuotaReloadButton(
-                        icon: controller.imagePaths.icRefresh,
-                        isLoading: isLoading,
-                        onTap: controller.reloadQuota,
-                      );
-                    }),
-                  ],
-                ),
-                const SizedBox(height: QuotasViewStyles.space),
-                SizedBox(
-                  width: _getProgressBarMaxWith(constraints.maxWidth),
-                  child: LinearProgressIndicator(
-                    color: octetQuota.getQuotasStateProgressBarColor(),
-                    minHeight: QuotasViewStyles.progressBarHeight,
-                    backgroundColor: QuotasViewStyles.progressBarBackgroundColor,
-                    value: octetQuota.usedStoragePercent,
-                  ),
-                ),
-                const SizedBox(height: QuotasViewStyles.space),
-                Text(
-                  octetQuota.getQuotasStateTitle(context),
-                  style: TextStyle(
-                    fontSize: QuotasViewStyles.progressStateTextSize,
-                    fontWeight: QuotasViewStyles.progressStateFontWeight,
-                    color: octetQuota.getQuotasStateTitleColor()
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+      if (octetQuota != null && octetQuota.isStorageUsageIndicatorAppear) {
+        return Container(
+          padding: isDesktop
+            ? const EdgeInsetsDirectional.only(
+                  start: 10,
+                  end: 16,
+                  top: 16,
+                  bottom: 16,
                 )
-              ],
-            ),
-          );
-        });
+              : const EdgeInsets.symmetric(vertical: 16),
+          margin: isDesktop
+            ? const EdgeInsetsDirectional.only(start: 16)
+            : const EdgeInsetsDirectional.symmetric(horizontal: 24),
+          width: isDesktop ? 224 : double.infinity,
+          alignment: AlignmentDirectional.centerStart,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    controller.imagePaths.icQuotas,
+                    width: QuotasViewStyles.iconSize,
+                    height: QuotasViewStyles.iconSize,
+                    colorFilter: AppColor.steelGray400.asFilter(),
+                    fit: BoxFit.fill,
+                  ),
+                  const SizedBox(width: QuotasViewStyles.iconPadding),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context).storageQuotas,
+                      style: ThemeUtils.textStyleInter500().copyWith(
+                        color: AppColor.steelGray400,
+                        fontSize: 12,
+                        height: 15.76 / 12,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: QuotasViewStyles.iconPadding),
+                  Obx(() {
+                    final isLoading = controller.viewState.value.fold(
+                      (failure) => false,
+                      (success) => success is GetQuotasLoading,
+                    );
+
+                    return QuotaReloadButton(
+                      icon: controller.imagePaths.icRefreshQuotas,
+                      isLoading: isLoading,
+                      onTap: controller.reloadQuota,
+                    );
+                  }),
+                ],
+              ),
+              const SizedBox(height: QuotasViewStyles.space),
+              SizedBox(
+                width: isDesktop
+                    ? QuotasViewStyles.progressBarMaxWidth
+                    : double.infinity,
+                child: LinearProgressIndicator(
+                  color: octetQuota.getQuotasStateProgressBarColor(),
+                  minHeight: QuotasViewStyles.progressBarHeight,
+                  backgroundColor: QuotasViewStyles.progressBarBackgroundColor,
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(
+                      QuotasViewStyles.progressBarBorderRadius,
+                    ),
+                  ),
+                  value: octetQuota.usedStoragePercent,
+                ),
+              ),
+              const SizedBox(height: QuotasViewStyles.space),
+              Text(
+                octetQuota.getQuotasStateTitle(context),
+                style: ThemeUtils.textStyleInter500().copyWith(
+                  color: octetQuota.getQuotasStateTitleColor(),
+                  fontSize: 12,
+                  height: 15.76 / 12,
+                  letterSpacing: 0.5,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              )
+            ],
+          ),
+        );
       } else {
-        return const SizedBox.shrink();
+        return const SizedBox(height: 16);
       }
     });
-  }
-
-  double _getProgressBarMaxWith(double maxWith) {
-    if (maxWith > QuotasViewStyles.progressBarMaxWidth) {
-      return QuotasViewStyles.progressBarMaxWidth;
-    } else {
-      return maxWith;
-    }
   }
 }

@@ -19,6 +19,7 @@ import 'package:tmail_ui_user/features/login/data/network/interceptors/authoriza
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_authority_oidc_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_credential_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/get_authenticated_account_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_oidc_user_info_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/update_account_cache_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/data/local/language_cache_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/state/get_all_identities_state.dart';
@@ -29,9 +30,9 @@ import 'package:tmail_ui_user/features/manage_account/domain/usecases/edit_defau
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/edit_identity_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_identities_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/log_out_oidc_interactor.dart';
-import 'package:tmail_ui_user/features/manage_account/domain/usecases/transform_html_signature_interactor.dart';
+import 'package:tmail_ui_user/features/manage_account/domain/usecases/transform_list_signature_interactor.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/identities/identities_controller.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/manage_account_dashboard_controller.dart';
-import 'package:tmail_ui_user/features/manage_account/presentation/profiles/identities/identities_controller.dart';
 import 'package:tmail_ui_user/features/public_asset/domain/usecase/add_identity_to_public_assets_interactor.dart';
 import 'package:tmail_ui_user/features/public_asset/domain/usecase/clean_up_public_assets_interactor.dart';
 import 'package:tmail_ui_user/features/public_asset/domain/usecase/delete_public_assets_interactor.dart';
@@ -72,6 +73,7 @@ const fallbackGenerators = {
   MockSpec<GetSessionInteractor>(),
   MockSpec<GetAuthenticatedAccountInteractor>(),
   MockSpec<UpdateAccountCacheInteractor>(),
+  MockSpec<GetOidcUserInfoInteractor>(),
 
   // Identities controller mockspecs
   MockSpec<GetAllIdentitiesInteractor>(),
@@ -80,7 +82,7 @@ const fallbackGenerators = {
   MockSpec<EditIdentityInteractor>(),
   MockSpec<CreateNewDefaultIdentityInteractor>(),
   MockSpec<EditDefaultIdentityInteractor>(),
-  MockSpec<TransformHtmlSignatureInteractor>(),
+  MockSpec<TransformListSignatureInteractor>(),
   MockSpec<ManageAccountDashBoardController>(fallbackGenerators: fallbackGenerators),
   MockSpec<SaveIdentityCacheOnWebInteractor>(),
   MockSpec<BeforeReconnectManager>(),
@@ -95,7 +97,7 @@ void main() {
   late MockEditIdentityInteractor mockEditIdentityInteractor;
   late MockCreateNewDefaultIdentityInteractor mockCreateNewDefaultIdentityInteractor;
   late MockEditDefaultIdentityInteractor mockEditDefaultIdentityInteractor;
-  late MockTransformHtmlSignatureInteractor mockTransformHtmlSignatureInteractor;
+  late MockTransformListSignatureInteractor mockTransformListSignatureInteractor;
   late MockManageAccountDashBoardController mockManageAccountDashBoardController;
 
   late MockCachingManager mockCachingManager;
@@ -157,6 +159,7 @@ void main() {
     Get.put<GetSessionInteractor>(MockGetSessionInteractor());
     Get.put<GetAuthenticatedAccountInteractor>(MockGetAuthenticatedAccountInteractor());
     Get.put<UpdateAccountCacheInteractor>(MockUpdateAccountCacheInteractor());
+    Get.put<GetOidcUserInfoInteractor>(MockGetOidcUserInfoInteractor());
 
     // mock identities controller
     mockGetAllIdentitiesInteractor = MockGetAllIdentitiesInteractor();
@@ -165,7 +168,7 @@ void main() {
     mockEditIdentityInteractor = MockEditIdentityInteractor();
     mockCreateNewDefaultIdentityInteractor = MockCreateNewDefaultIdentityInteractor();
     mockEditDefaultIdentityInteractor = MockEditDefaultIdentityInteractor();
-    mockTransformHtmlSignatureInteractor = MockTransformHtmlSignatureInteractor();
+    mockTransformListSignatureInteractor = MockTransformListSignatureInteractor();
 
     mockManageAccountDashBoardController = MockManageAccountDashBoardController();
     Get.put<BeforeReconnectManager>(MockBeforeReconnectManager());
@@ -181,7 +184,7 @@ void main() {
       mockEditIdentityInteractor,
       mockCreateNewDefaultIdentityInteractor,
       mockEditDefaultIdentityInteractor,
-      mockTransformHtmlSignatureInteractor,
+      mockTransformListSignatureInteractor,
       mockSaveIdentityCacheOnWebInteractor);
   });
 
@@ -243,6 +246,7 @@ void main() {
         .thenAnswer((_) => Stream.value(Right(GetAllIdentitiesSuccess(
           [identity1, identity2, identity3, identity4],
           null))));
+      when(mockManageAccountDashBoardController.ownEmailAddress).thenReturn(RxString(''));
       when(mockManageAccountDashBoardController.accountId).thenReturn(Rxn());
       when(mockManageAccountDashBoardController.sessionCurrent).thenReturn(SessionFixtures.aliceSession);
         

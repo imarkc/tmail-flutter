@@ -40,8 +40,8 @@ import 'package:tmail_ui_user/features/mailbox_creator/domain/usecases/verify_na
 import 'package:tmail_ui_user/features/manage_account/data/local/language_cache_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_identities_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/log_out_oidc_interactor.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/identities/utils/identity_utils.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/model/identity_action_type.dart';
-import 'package:tmail_ui_user/features/manage_account/presentation/profiles/identities/utils/identity_utils.dart';
 import 'package:tmail_ui_user/features/public_asset/domain/model/public_assets_in_identity_arguments.dart';
 import 'package:tmail_ui_user/features/public_asset/domain/usecase/create_public_asset_interactor.dart';
 import 'package:tmail_ui_user/features/public_asset/domain/usecase/delete_public_assets_interactor.dart';
@@ -196,6 +196,7 @@ void main() {
       {},
       {accountId: account},
       {}, UserName('value'), Uri(), Uri(), Uri(), Uri(), State('value'));
+    String ownEmailAddress = 'user@example.com';
 
     test(
       'should call deletePublicAssetsInteractor.execute() '
@@ -213,7 +214,11 @@ void main() {
         {}, 
         {accountId: account},
         {}, UserName('value'), Uri(), Uri(), Uri(), Uri(), State('value'));
-      identityCreatorController.arguments = IdentityCreatorArguments(accountId, session);
+      identityCreatorController.arguments = IdentityCreatorArguments(
+        accountId,
+        session,
+        ownEmailAddress,
+      );
 
       // act
       identityCreatorController.onReady();
@@ -242,7 +247,11 @@ void main() {
       'and user has not picked any image',
     () {
       // arrange
-      identityCreatorController.arguments = IdentityCreatorArguments(accountId, session);
+      identityCreatorController.arguments = IdentityCreatorArguments(
+        accountId,
+        session,
+        ownEmailAddress,
+      );
 
       // act
       identityCreatorController.onReady();
@@ -272,7 +281,11 @@ void main() {
       PlatformInfo.isTestingForWeb = true;
       const htmlContent = '<p>test</p>';
       const identityName = 'test';
-      identityCreatorController.arguments = IdentityCreatorArguments(accountId, session);
+      identityCreatorController.arguments = IdentityCreatorArguments(
+        accountId,
+        session,
+        ownEmailAddress,
+      );
       when(mockVerifyNameInteractor.execute(any, any)).thenAnswer((_) => Right(VerifyNameViewState()));
 
       // act
@@ -322,7 +335,11 @@ void main() {
       PlatformInfo.isTestingForWeb = true;
       const htmlContent = '<p>test</p>';
       const identityName = 'test';
-      identityCreatorController.arguments = IdentityCreatorArguments(accountId, session);
+      identityCreatorController.arguments = IdentityCreatorArguments(
+        accountId,
+        session,
+        ownEmailAddress,
+      );
       when(mockVerifyNameInteractor.execute(any, any)).thenAnswer((_) => Right(VerifyNameViewState()));
 
       // act

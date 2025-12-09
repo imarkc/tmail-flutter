@@ -10,7 +10,6 @@ import 'package:jmap_dart_client/jmap/mail/mailbox/mailbox.dart';
 import 'package:model/email/email_action_type.dart';
 import 'package:model/email/mail_priority_header.dart';
 import 'package:model/extensions/email_address_extension.dart';
-import 'package:model/extensions/session_extension.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:tmail_ui_user/features/composer/domain/model/email_request.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/identity_extension.dart';
@@ -26,29 +25,35 @@ extension CreateEmailRequestExtension on CreateEmailRequest {
   Set<EmailAddress> createSenders() {
     if (identity?.email?.isNotEmpty == true) {
       return { identity!.toEmailAddress() };
+    } else if (ownEmailAddress.isNotEmpty) {
+      return { EmailAddress(null, ownEmailAddress) };
     } else {
-      return { EmailAddress(null, session.getOwnEmailAddress()) };
+      return {};
     }
   }
 
   String createMdnEmailAddress() {
     if (emailActionType == EmailActionType.editDraft && fromSender?.isNotEmpty == true) {
       return fromSender!.first.emailAddress;
+    } else if (ownEmailAddress.isNotEmpty) {
+      return ownEmailAddress;
     } else {
-      return session.getOwnEmailAddress();
+      return '';
     }
   }
 
-  Set<EmailAddress>? createReplyToRecipients({bool isDraft = false}) {
+  Set<EmailAddress>? createReplyToRecipients({bool isNotReplyTo = false}) {
     if (replyToRecipients?.isNotEmpty == true) {
       return replyToRecipients;
     }
 
-    if (isDraft) return null;
+    if (isNotReplyTo) return null;
 
     return identity?.replyTo?.isNotEmpty == true
       ? identity!.replyTo!
-      : {EmailAddress(null, session.getOwnEmailAddress())};
+      : ownEmailAddress.isNotEmpty
+        ? {EmailAddress(null, ownEmailAddress)}
+        : null;
   }
 
 
@@ -60,18 +65,27 @@ extension CreateEmailRequestExtension on CreateEmailRequest {
         KeyWordIdentifier.emailDraft: true,
         KeyWordIdentifier.emailSeen: true,
       };
+    } else if (templateMailboxId != null) {
+      return {
+        KeyWordIdentifier.emailSeen: true,
+      };
     } else {
       return null;
     }
   }
 
   Map<MailboxId, bool>? createMailboxIds() {
-    if (draftsMailboxId != null || outboxMailboxId != null) {
+    if (draftsMailboxId != null
+      || outboxMailboxId != null
+      || templateMailboxId != null
+    ) {
       return {
         if (draftsMailboxId != null)
           draftsMailboxId!: true,
         if (outboxMailboxId != null)
           outboxMailboxId!: true,
+        if (templateMailboxId != null)
+          templateMailboxId!: true,
       };
     } else {
       return null;
@@ -115,6 +129,7 @@ extension CreateEmailRequestExtension on CreateEmailRequest {
     required PartId partId,
     bool withIdentityHeader = false,
     bool isDraft = false,
+    bool isTemplate = false,
   }) {
     return Email(
       mailboxIds: createMailboxIds(),
@@ -122,7 +137,7 @@ extension CreateEmailRequestExtension on CreateEmailRequest {
       to: toRecipients,
       cc: ccRecipients,
       bcc: bccRecipients,
-      replyTo: createReplyToRecipients(isDraft: isDraft),
+      replyTo: createReplyToRecipients(isNotReplyTo: isDraft || isTemplate),
       inReplyTo: createInReplyTo(),
       references: createReferences(),
       keywords: createKeywords(),
@@ -142,7 +157,7 @@ extension CreateEmailRequestExtension on CreateEmailRequest {
             IndividualHeaderIdentifier.acceptLanguageHeader: LocalizationService.supportedLocalesToLanguageTags()
           },
           contentLanguageHeader: {
-            IndividualHeaderIdentifier.contentLanguageHeader: LocalizationService.getLocaleFromLanguage().toLanguageTag()
+            IndividualHeaderIdentifier.contentLanguageHeader: LocalizationService.getInitialLocale().toLanguageTag()
           },
         )
       },
@@ -154,6 +169,9 @@ extension CreateEmailRequestExtension on CreateEmailRequest {
         : null,
       headerMdn: hasRequestReadReceipt
         ? { IndividualHeaderIdentifier.headerMdn: createMdnEmailAddress() }
+        : null,
+      headerReturnPath: hasRequestReadReceipt
+        ? { IndividualHeaderIdentifier.headerReturnPath: createMdnEmailAddress() }
         : null,
       identityHeader: withIdentityHeader
         ? {IndividualHeaderIdentifier.identityHeader: identity?.id?.id.value}

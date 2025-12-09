@@ -1,11 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
 
-import 'package:core/data/network/download/downloaded_response.dart';
-import 'package:core/presentation/state/failure.dart';
-import 'package:core/presentation/state/success.dart';
 import 'package:core/presentation/utils/html_transformer/transform_configuration.dart';
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action_id.dart';
@@ -16,9 +11,6 @@ import 'package:jmap_dart_client/jmap/core/properties/properties.dart';
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/core/state.dart' as jmap;
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
-import 'package:model/account/account_request.dart';
-import 'package:model/download/download_task_id.dart';
-import 'package:model/email/attachment.dart';
 import 'package:model/email/email_content.dart';
 import 'package:model/email/mark_star_action.dart';
 import 'package:model/email/read_actions.dart';
@@ -26,10 +18,8 @@ import 'package:tmail_ui_user/features/composer/domain/model/email_request.dart'
 import 'package:tmail_ui_user/features/email/domain/model/detailed_email.dart';
 import 'package:tmail_ui_user/features/email/domain/model/email_print.dart';
 import 'package:tmail_ui_user/features/email/domain/model/move_to_mailbox_request.dart';
-import 'package:tmail_ui_user/features/email/domain/model/preview_email_eml_request.dart';
 import 'package:tmail_ui_user/features/email/domain/model/restore_deleted_message_request.dart';
 import 'package:tmail_ui_user/features/email/domain/model/view_entire_message_request.dart';
-import 'package:tmail_ui_user/features/email/presentation/model/eml_previewer.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
 
 abstract class EmailRepository {
@@ -57,31 +47,6 @@ abstract class EmailRepository {
     AccountId accountId,
     List<EmailId> emailIds,
     ReadActions readActions,
-  );
-
-  Future<List<DownloadTaskId>> downloadAttachments(
-    List<Attachment> attachments,
-    AccountId accountId,
-    String baseDownloadUrl,
-    AccountRequest accountRequest
-  );
-
-  Future<DownloadedResponse> exportAttachment(
-    Attachment attachment,
-    AccountId accountId,
-    String baseDownloadUrl,
-    AccountRequest accountRequest,
-    CancelToken cancelToken
-  );
-
-  Future<Uint8List> downloadAttachmentForWeb(
-    DownloadTaskId taskId,
-    Attachment attachment,
-    AccountId accountId,
-    String baseDownloadUrl,
-    AccountRequest accountRequest,
-    StreamController<Either<Failure, Success>> onReceiveController,
-    {CancelToken? cancelToken}
   );
 
   Future<({
@@ -124,6 +89,24 @@ abstract class EmailRepository {
   );
 
   Future<Email> updateEmailDrafts(
+    Session session,
+    AccountId accountId,
+    Email newEmail,
+    EmailId oldEmailId,
+    {CancelToken? cancelToken}
+  );
+
+  Future<Email> saveEmailAsTemplate(
+    Session session,
+    AccountId accountId,
+    Email email,
+    {
+      CreateNewMailboxRequest? createNewMailboxRequest,
+      CancelToken? cancelToken
+    }
+  );
+
+  Future<Email> updateEmailTemplate(
     Session session,
     AccountId accountId,
     Email newEmail,
@@ -175,44 +158,6 @@ abstract class EmailRepository {
   Future<EmailRecoveryAction> getRestoredDeletedMessage(EmailRecoveryActionId emailRecoveryActionId);
 
   Future<void> printEmail(EmailPrint emailPrint);
-
-  Future<List<Email>> parseEmailByBlobIds(AccountId accountId, Set<Id> blobIds);
-
-  Future<String> generatePreviewEmailEMLContent(PreviewEmailEMLRequest previewEmailEMLRequest);
-
-  Future<void> sharePreviewEmailEMLContent(EMLPreviewer emlPreviewer);
-
-  Future<EMLPreviewer> getPreviewEmailEMLContentShared(String keyStored);
-
-  Future<void> removePreviewEmailEMLContentShared(String keyStored);
-
-  Future<void> storePreviewEMLContentToSessionStorage(EMLPreviewer emlPreviewer);
-
-  Future<EMLPreviewer> getPreviewEMLContentInMemory(String keyStored);
-
-  Future<String> sanitizeHtmlContent(
-    String htmlContent,
-    TransformConfiguration configuration);
-
-  Future<void> downloadAllAttachmentsForWeb(
-    AccountId accountId,
-    EmailId emailId,
-    String baseDownloadAllUrl,
-    String outputFileName,
-    AccountRequest accountRequest,
-    DownloadTaskId taskId,
-    StreamController<Either<Failure, Success>> onReceiveController,
-    {CancelToken? cancelToken}
-  );
-
-  Future<DownloadedResponse> exportAllAttachments(
-    AccountId accountId,
-    EmailId emailId,
-    String baseDownloadAllUrl,
-    String outputFileName,
-    AccountRequest accountRequest,
-    {CancelToken? cancelToken}
-  );
 
   Future<String> generateEntireMessageAsDocument(ViewEntireMessageRequest entireMessageRequest);
 }

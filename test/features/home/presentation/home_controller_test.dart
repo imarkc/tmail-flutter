@@ -15,14 +15,18 @@ import 'package:tmail_ui_user/features/caching/caching_manager.dart';
 import 'package:tmail_ui_user/features/cleanup/domain/usecases/cleanup_email_cache_interactor.dart';
 import 'package:tmail_ui_user/features/cleanup/domain/usecases/cleanup_recent_login_url_cache_interactor.dart';
 import 'package:tmail_ui_user/features/cleanup/domain/usecases/cleanup_recent_login_username_interactor.dart';
-import 'package:tmail_ui_user/features/cleanup/domain/usecases/cleanup_recent_search_cache_interactor.dart';
 import 'package:tmail_ui_user/features/home/domain/usecases/get_session_interactor.dart';
 import 'package:tmail_ui_user/features/home/presentation/home_controller.dart';
 import 'package:tmail_ui_user/features/login/data/network/interceptors/authorization_interceptors.dart';
 import 'package:tmail_ui_user/features/login/domain/state/get_stored_token_oidc_state.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/authenticate_oidc_on_browser_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/check_oidc_is_available_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_authority_oidc_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_credential_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/get_authenticated_account_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_oidc_configuration_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/get_oidc_user_info_interactor.dart';
+import 'package:tmail_ui_user/features/login/domain/usecases/remove_auth_destination_url_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/update_account_cache_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/data/local/language_cache_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/log_out_oidc_interactor.dart';
@@ -45,13 +49,17 @@ import 'home_controller_test.mocks.dart';
   MockSpec<ResponsiveUtils>(),
   MockSpec<Uuid>(),
   MockSpec<CleanupEmailCacheInteractor>(),
-  MockSpec<CleanupRecentSearchCacheInteractor>(),
   MockSpec<CleanupRecentLoginUrlCacheInteractor>(),
   MockSpec<CleanupRecentLoginUsernameCacheInteractor>(),
+  MockSpec<CheckOIDCIsAvailableInteractor>(),
+  MockSpec<GetOIDCConfigurationInteractor>(),
+  MockSpec<AuthenticateOidcOnBrowserInteractor>(),
+  MockSpec<RemoveAuthDestinationUrlInteractor>(),
   MockSpec<EmailReceiveManager>(),
   MockSpec<GetSessionInteractor>(),
   MockSpec<GetAuthenticatedAccountInteractor>(),
   MockSpec<UpdateAccountCacheInteractor>(),
+  MockSpec<GetOidcUserInfoInteractor>(),
   MockSpec<CachingManager>(),
   MockSpec<LanguageCacheManager>(),
   MockSpec<ApplicationManager>(),
@@ -64,13 +72,17 @@ void main() {
   late HomeController homeController;
   late MockCleanupEmailCacheInteractor cleanupEmailCacheInteractor;
   late MockEmailReceiveManager emailReceiveManager;
-  late MockCleanupRecentSearchCacheInteractor cleanupRecentSearchCacheInteractor;
   late MockCleanupRecentLoginUrlCacheInteractor cleanupRecentLoginUrlCacheInteractor;
   late MockCleanupRecentLoginUsernameCacheInteractor cleanupRecentLoginUsernameCacheInteractor;
+  late MockCheckOIDCIsAvailableInteractor checkOIDCIsAvailableInteractor;
+  late MockGetOIDCConfigurationInteractor getOIDCConfigurationInteractor;
+  late MockAuthenticateOidcOnBrowserInteractor authenticateOidcOnBrowserInteractor;
+  late MockRemoveAuthDestinationUrlInteractor removeAuthDestinationUrlInteractor;
 
   late MockGetSessionInteractor mockGetSessionInteractor;
   late MockGetAuthenticatedAccountInteractor mockGetAuthenticatedAccountInteractor;
   late MockUpdateAccountCacheInteractor mockUpdateAccountCacheInteractor;
+  late MockGetOidcUserInfoInteractor mockGetOidcUserInfoInteractor;
 
   late MockCachingManager mockCachingManager;
   late MockLanguageCacheManager mockLanguageCacheManager;
@@ -90,14 +102,17 @@ void main() {
   setUpAll(() {
     cleanupEmailCacheInteractor = MockCleanupEmailCacheInteractor();
     emailReceiveManager = MockEmailReceiveManager();
-    cleanupRecentSearchCacheInteractor = MockCleanupRecentSearchCacheInteractor();
     cleanupRecentLoginUrlCacheInteractor = MockCleanupRecentLoginUrlCacheInteractor();
     cleanupRecentLoginUsernameCacheInteractor = MockCleanupRecentLoginUsernameCacheInteractor();
-
+    checkOIDCIsAvailableInteractor = MockCheckOIDCIsAvailableInteractor();
+    getOIDCConfigurationInteractor = MockGetOIDCConfigurationInteractor();
+    authenticateOidcOnBrowserInteractor = MockAuthenticateOidcOnBrowserInteractor();
+    removeAuthDestinationUrlInteractor = MockRemoveAuthDestinationUrlInteractor();
     // mock reloadable controller
     mockGetSessionInteractor = MockGetSessionInteractor();
     mockGetAuthenticatedAccountInteractor = MockGetAuthenticatedAccountInteractor();
     mockUpdateAccountCacheInteractor = MockUpdateAccountCacheInteractor();
+    mockGetOidcUserInfoInteractor = MockGetOidcUserInfoInteractor();
 
     //mock base controller
     mockCachingManager = MockCachingManager();
@@ -118,6 +133,7 @@ void main() {
     Get.put<GetSessionInteractor>(mockGetSessionInteractor);
     Get.put<GetAuthenticatedAccountInteractor>(mockGetAuthenticatedAccountInteractor);
     Get.put<UpdateAccountCacheInteractor>(mockUpdateAccountCacheInteractor);
+    Get.put<GetOidcUserInfoInteractor>(mockGetOidcUserInfoInteractor);
 
     Get.put<CachingManager>(mockCachingManager);
     Get.put<LanguageCacheManager>(mockLanguageCacheManager);
@@ -142,9 +158,12 @@ void main() {
     homeController = HomeController(
       cleanupEmailCacheInteractor,
       emailReceiveManager,
-      cleanupRecentSearchCacheInteractor,
       cleanupRecentLoginUrlCacheInteractor,
-      cleanupRecentLoginUsernameCacheInteractor
+      cleanupRecentLoginUsernameCacheInteractor,
+      checkOIDCIsAvailableInteractor,
+      getOIDCConfigurationInteractor,
+      authenticateOidcOnBrowserInteractor,
+      removeAuthDestinationUrlInteractor,
     );
   });
 

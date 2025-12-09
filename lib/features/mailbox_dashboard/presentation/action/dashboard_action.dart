@@ -6,6 +6,7 @@ import 'package:model/email/presentation_email.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:tmail_ui_user/features/base/action/ui_action.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_receive_time_type.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_sort_order_type.dart';
 import 'package:tmail_ui_user/features/thread/domain/model/filter_message_option.dart';
 import 'package:tmail_ui_user/features/thread/domain/model/search_query.dart';
 
@@ -56,8 +57,6 @@ class OpenEmailDetailedFromSuggestionQuickSearchAction extends DashBoardAction {
 class StartSearchEmailAction extends DashBoardAction {}
 
 class EmptyTrashAction extends DashBoardAction {}
-
-class ClearSearchEmailAction extends DashBoardAction {}
 
 class ClearAllFieldOfAdvancedSearchAction extends DashBoardAction {}
 
@@ -148,3 +147,16 @@ class OpenAdvancedSearchViewAction extends DashBoardAction {}
 class ClearSearchFilterAppliedAction extends DashBoardAction {}
 
 class ClearAdvancedSearchFilterEmailAction extends DashBoardAction {}
+
+class SynchronizeEmailSortOrderAction extends DashBoardAction {
+  final EmailSortOrderType emailSortOrderType;
+
+  SynchronizeEmailSortOrderAction(this.emailSortOrderType);
+
+  @override
+  List<Object?> get props => [emailSortOrderType];
+}
+
+class ReclaimMailListKeyboardShortcutFocusAction extends DashBoardAction {}
+
+class ClearMailListKeyboardShortcutFocusAction extends DashBoardAction {}

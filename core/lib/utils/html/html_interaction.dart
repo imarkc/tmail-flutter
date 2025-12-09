@@ -60,7 +60,7 @@ class HtmlInteraction {
   ''';
 
   static const String scriptsHandleContentSizeChanged = '''
-    <script>
+    <script type="text/javascript">
       const bodyResizeObserver = new ResizeObserver(entries => {
         window.flutter_inappwebview.callHandler('$contentSizeChangedEventJSChannelName', '');
       })
@@ -70,7 +70,7 @@ class HtmlInteraction {
   ''';
 
   static const String scriptsHandleLazyLoadingBackgroundImage = '''
-    <script>
+    <script type="text/javascript">
       const lazyImages = document.querySelectorAll('[lazy]');
       const lazyImageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach((entry) => {
@@ -278,4 +278,180 @@ class HtmlInteraction {
       </script>
     ''';
   }
+
+  static const scriptsDisableZoom = '''
+    <script type="text/javascript">
+      document.addEventListener('wheel', function(e) {
+        e.ctrlKey && e.preventDefault();
+      }, {
+        passive: false,
+      });
+      window.addEventListener('keydown', disableZoomControl);
+      
+      window.addEventListener('pagehide', (event) => {
+        window.removeEventListener('keydown', disableZoomControl);
+      });
+      
+      function disableZoomControl(event) {
+        if (event.metaKey || event.ctrlKey) {
+          switch (event.key) {
+            case '=':
+            case '-':
+              event.preventDefault();
+              break;
+          }
+        }
+      }
+    </script>
+  ''';
+
+  static String scriptsWheelEventListener({
+    required String viewId,
+    required String onScrollChangedEvent,
+  }) => '''
+    <script type="text/javascript">
+      function onWheel(e) { 
+        const deltaY = event.deltaY;
+        window.parent.postMessage(JSON.stringify({
+          "view": "$viewId",
+          "type": "toDart: $onScrollChangedEvent",
+          "deltaY": deltaY
+        }), "*");
+      }
+      
+      window.addEventListener('wheel', onWheel, { passive: true });
+      
+      window.addEventListener('pagehide', (event) => {
+        window.removeEventListener('wheel', onWheel);
+      });
+    </script>
+  ''';
+
+  static String scriptsTouchEventListener({
+    required String viewId,
+    required String onScrollChangedEvent,
+    required String onScrollEndEvent,
+  }) => '''
+    <script type="text/javascript">
+      let lastY = 0;
+      let lastTime = 0;
+      let velocity = 0;
+    
+      function onTouchStart(e) { 
+        lastY = e.touches[0].clientY;
+        lastTime = performance.now();
+        velocity = 0;
+      }
+    
+      function onTouchMove(e) { 
+        const now = performance.now();
+        const y = e.touches[0].clientY;
+        const dy = lastY - y;
+        const dt = now - lastTime;
+    
+        if (dt > 0) {
+          velocity = dy / dt; // px per ms
+          velocity = Math.max(Math.min(velocity, 2), -2); // clamp velocity
+        }
+    
+        lastY = y;
+        lastTime = now;
+    
+        window.parent.postMessage(JSON.stringify({
+          view: "$viewId",
+          type: "toDart: $onScrollChangedEvent",
+          deltaY: dy,
+        }), '*');
+      }
+    
+      function onTouchEnd(e) { 
+        window.parent.postMessage(JSON.stringify({
+          view: "$viewId",
+          type: "toDart: $onScrollEndEvent",
+          velocity: velocity,
+        }), '*');
+      }
+    
+      window.addEventListener('touchstart', onTouchStart, { passive: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      window.addEventListener('touchend', onTouchEnd, { passive: true });
+    
+      window.addEventListener('pagehide', () => {
+        window.removeEventListener('touchstart', onTouchStart);
+        window.removeEventListener('touchmove', onTouchMove);
+        window.removeEventListener('touchend', onTouchEnd);
+      });
+    </script>
+
+  ''';
+
+  static String scriptHandleIframeKeyboardListener(String viewId) => '''
+    <script type="text/javascript">
+      window.addEventListener('keydown', handleIframeKeydown);
+      
+      window.addEventListener('pagehide', (event) => {
+        window.removeEventListener('keydown', handleIframeKeydown);
+      });
+      
+      function handleIframeKeydown(event) {
+        const payload = {
+          view: '$viewId',
+          type: 'toDart: iframeKeydown',
+          key: event.key,
+          code: event.code,
+          shift: event.shiftKey
+        };
+        window.parent.postMessage(JSON.stringify(payload), "*");
+      }
+    </script>
+  ''';
+
+  static String scriptsHandleIframeClickListener(String viewId) => '''
+    <script type="text/javascript">
+      document.addEventListener('click', function (e) {
+        try {
+          const payload = {
+            view: '$viewId',
+            type: 'toDart: iframeClick',
+          };
+          window.parent.postMessage(JSON.stringify(payload), "*");
+        } catch (_) {}
+      });
+    </script>
+  ''';
+
+  static String scriptsHandleIframeLinkHoverListener(String viewId) => '''
+    <script type="text/javascript">
+      document.addEventListener("mouseover", function (e) {
+        const target = e.target;
+        if (target.tagName.toLowerCase() === "a") {
+          const rect = target.getBoundingClientRect();
+          
+          const payload = {
+            view: '$viewId',
+            type: 'toDart: iframeLinkHover',
+            url: target.href,
+            rect: {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height
+            }
+          };
+          window.parent.postMessage(JSON.stringify(payload), "*");
+        }
+      });
+    
+      document.addEventListener("mouseout", function (e) {
+        const target = e.target;
+        if (target.tagName.toLowerCase() === "a") {
+          const payload = {
+            view: '$viewId',
+            type: 'toDart: iframeLinkOut'
+          };
+          window.parent.postMessage(JSON.stringify(payload), "*");
+        }
+      });
+    </script>
+  ''';
 }

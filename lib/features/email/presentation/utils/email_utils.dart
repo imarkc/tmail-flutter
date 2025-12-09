@@ -1,7 +1,5 @@
-import 'package:collection/collection.dart';
 import 'package:core/presentation/state/failure.dart';
 import 'package:core/presentation/state/success.dart';
-import 'package:core/presentation/utils/responsive_utils.dart';
 import 'package:core/utils/app_logger.dart';
 import 'package:core/utils/mail/mail_address.dart';
 import 'package:flutter/material.dart';
@@ -16,16 +14,22 @@ import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/core/unsigned_int.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email_address.dart';
 import 'package:model/email/attachment.dart';
-import 'package:tmail_ui_user/features/email/domain/state/download_attachment_for_web_state.dart';
-import 'package:tmail_ui_user/features/email/domain/state/get_html_content_from_attachment_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/download_attachment_for_web_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/download_and_get_html_content_from_attachment_state.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/email_unsubscribe.dart';
-import 'package:tmail_ui_user/features/email/presentation/styles/attachment/attachment_item_widget_style.dart';
-import 'package:tmail_ui_user/features/email/presentation/styles/email_attachments_styles.dart';
 import 'package:tmail_ui_user/features/thread/domain/constants/thread_constants.dart';
 import 'package:tmail_ui_user/main/error/capability_validator.dart';
 import 'package:tmail_ui_user/main/routes/route_utils.dart';
+import 'package:tmail_ui_user/main/utils/app_utils.dart';
 
 class EmailUtils {
+  static const double desktopItemMaxWidth = 260;
+  static const double desktopMoreButtonMaxWidth = 150;
+  static const double attachmentItemSpacing = 8;
+  static const double attachmentItemHeight = 36;
+  static const double attachmentIcon = 20;
+  static const int maxMobileVisibleAttachments = 3;
+
   EmailUtils._();
 
   static Properties getPropertiesForEmailGetMethod(Session session, AccountId accountId) {
@@ -33,6 +37,14 @@ class EmailUtils {
       return ThreadConstants.propertiesCalendarEvent;
     } else {
       return ThreadConstants.propertiesDefault;
+    }
+  }
+
+  static Properties getPropertiesForEmailChangeMethod(Session session, AccountId accountId) {
+    if (CapabilityIdentifier.jamesCalendarEvent.isSupported(session, accountId)) {
+      return ThreadConstants.propertiesCalendarEvent;
+    } else {
+      return ThreadConstants.propertiesUpdatedDefault;
     }
   }
 
@@ -45,7 +57,7 @@ class EmailUtils {
     final allMatchesMailtoLinks = regExpMailtoLinks.allMatches(listUnsubscribe);
     final listMailtoLinks = allMatchesMailtoLinks
       .map((match) => match.group(0))
-      .whereNotNull()
+      .nonNulls
       .toList();
     log('EmailUtils::parsingUnsubscribe:listMailtoLinks: $listMailtoLinks');
 
@@ -53,7 +65,7 @@ class EmailUtils {
     final allMatchesHttpLinks = regExpHttpLinks.allMatches(listUnsubscribe);
     final listHttpLinks = allMatchesHttpLinks
       .map((match) => match.group(0))
-      .whereNotNull()
+      .nonNulls
       .toList();
     log('EmailUtils::parsingUnsubscribe:listHttpLinks: $listHttpLinks');
 
@@ -71,11 +83,11 @@ class EmailUtils {
     return state?.fold(
       (failure) {
         return failure is DownloadAttachmentForWebFailure
-          || failure is GetHtmlContentFromAttachmentFailure;
+          || failure is DownloadAndGetHtmlContentFromAttachmentFailure;
       },
       (success) {
         return success is DownloadAttachmentForWebSuccess
-          || success is GetHtmlContentFromAttachmentSuccess
+          || success is DownloadAndGetHtmlContentFromAttachmentSuccess
           || success is IdleDownloadAttachmentForWeb;
       }) ?? false;
   }
@@ -95,6 +107,15 @@ class EmailUtils {
       return GetUtils.isEmail(mailAddress.stripDetails().asString()) && mailAddress.asString().isNotEmpty;
     } catch(e) {
       logError('EmailUtils::isEmailAddressValid: Exception = $e');
+      return false;
+    }
+  }
+
+  static bool isValidEmail(String address) {
+    try {
+      return isEmailAddressValid(address) ||
+          AppUtils.isEmailLocalhost(address);
+    } catch (_) {
       return false;
     }
   }
@@ -232,36 +253,84 @@ class EmailUtils {
   }
 
   static List<Attachment> getAttachmentDisplayed({
-    required BuildContext context,
     required double maxWidth,
-    required bool platformIsMobile,
     required List<Attachment> attachments,
-    required ResponsiveUtils responsiveUtils,
+    required bool isMobile,
+    int maxVisibleAttachments = EmailUtils.maxMobileVisibleAttachments,
+    double attachmentItemWidth = EmailUtils.desktopItemMaxWidth,
+    double attachmentItemSpacing = EmailUtils.attachmentItemSpacing,
+    double showMoreButtonMaxWidth = EmailUtils.desktopMoreButtonMaxWidth,
+    double attachmentIcon = EmailUtils.attachmentIcon,
   }) {
     if (attachments.isEmpty) return [];
 
-    final bool isMobile = responsiveUtils.isMobile(context);
-    log('EmailUtils::getAttachmentDisplayed:isMobile = $isMobile:');
-
     if (isMobile) {
-      return attachments.length < 3 ? attachments : attachments.sublist(0, 2);
+      return attachments.length <= maxVisibleAttachments
+          ? attachments
+          : attachments.sublist(0, maxVisibleAttachments);
     }
 
-    final double maxWidthItem = AttachmentItemWidgetStyle.getMaxWidthItem(
-      platformIsMobile: platformIsMobile,
-      responsiveIsMobile: isMobile,
-      responsiveIsTablet: responsiveUtils.isTablet(context),
-      responsiveIsTabletLarge: responsiveUtils.isTabletLarge(context),
-    );
-    log('EmailUtils::getAttachmentDisplayed:maxWidthItem = $maxWidthItem:');
+    final totalNeededWidth = attachments.length * attachmentItemWidth +
+        (attachments.length - 1) * attachmentItemSpacing;
+    if (totalNeededWidth <= maxWidth) {
+      return attachments;
+    }
 
-    final int possibleDisplayedCount =
-        ((maxWidth - EmailAttachmentsStyles.buttonMoreMaxWidth) ~/ maxWidthItem)
-            .clamp(0, attachments.length);
-    log('EmailUtils::getAttachmentDisplayed:possibleDisplayedCount = $possibleDisplayedCount:');
+    final availableWidth = maxWidth -
+        showMoreButtonMaxWidth -
+        attachmentIcon -
+        attachmentItemSpacing * 4;
 
-    return possibleDisplayedCount == 0
-        ? [attachments.first]
-        : attachments.sublist(0, possibleDisplayedCount);
+    log('EmailUtils::getAttachmentDisplayed: availableWidth = $availableWidth, maxWidth = $maxWidth, showMoreButtonMaxWidth = $showMoreButtonMaxWidth, attachmentIcon = $attachmentIcon, attachmentItemSpacing = $attachmentItemSpacing');
+    double usedWidth = 0;
+    int visibleCount = 0;
+
+    for (int i = 0; i < attachments.length; i++) {
+      final nextWidth =
+          attachmentItemWidth + (i > 0 ? attachmentItemSpacing : 0);
+      if (usedWidth + nextWidth <= availableWidth) {
+        usedWidth += nextWidth;
+        visibleCount++;
+      } else {
+        break;
+      }
+    }
+
+    if (visibleCount == 0) visibleCount = 1;
+
+    return attachments.sublist(0, visibleCount);
+  }
+
+  static double estimateTextWidth({
+    required BuildContext context,
+    required String text,
+    TextStyle? textStyle,
+    Locale? locale,
+  }) {
+    try {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: textStyle ?? DefaultTextStyle.of(context).style,
+          locale: locale,
+        ),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      return textPainter.width;
+    } catch (e) {
+      return desktopMoreButtonMaxWidth;
+    }
+  }
+
+  static String getDomainByEmailAddress(String emailAddress) {
+    try {
+      MailAddress mailAddress = MailAddress.validateAddress(emailAddress);
+      return mailAddress.domain.asString();
+    } catch (e) {
+      logError('EmailUtils::getDomainByEmailAddress:Exception is $e');
+      return '';
+    }
   }
 }

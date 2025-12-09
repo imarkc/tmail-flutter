@@ -79,16 +79,16 @@ extension FilterMessageOptionExtension on FilterMessageOption {
     }
   }
 
-  String getName(BuildContext context) {
+  String getName(AppLocalizations appLocalizations) {
     switch(this) {
       case FilterMessageOption.all:
         return '';
       case FilterMessageOption.unread:
-        return AppLocalizations.of(context).unread;
+        return appLocalizations.unread;
       case FilterMessageOption.attachments:
-        return AppLocalizations.of(context).with_attachments;
+        return appLocalizations.with_attachments;
       case FilterMessageOption.starred:
-        return AppLocalizations.of(context).starred;
+        return appLocalizations.starred;
     }
   }
 
@@ -101,7 +101,7 @@ extension FilterMessageOptionExtension on FilterMessageOption {
       case FilterMessageOption.attachments:
         return imagePaths.icAttachment;
       case FilterMessageOption.starred:
-        return imagePaths.icStar;
+        return imagePaths.icUnStar;
     }
   }
 
@@ -129,23 +129,23 @@ extension FilterMessageOptionExtension on FilterMessageOption {
 
   Color getBackgroundColor({bool isSelected = false}) {
     if (isSelected) {
-      return AppColor.primaryColor.withOpacity(0.06);
+      return AppColor.primaryColor.withValues(alpha: 0.06);
     } else {
-      return AppColor.colorFilterMessageButton.withOpacity(0.6);
+      return AppColor.colorFilterMessageButton.withValues(alpha: 0.6);
     }
   }
 
   TextStyle getTextStyle() {
     switch(this) {
       case FilterMessageOption.all:
-        return const TextStyle(
+        return ThemeUtils.defaultTextStyleInterFont.copyWith(
           fontSize: 13,
           fontWeight: FontWeight.normal,
           color: AppColor.colorFilterMessageTitle);
       case FilterMessageOption.unread:
       case FilterMessageOption.attachments:
       case FilterMessageOption.starred:
-        return const TextStyle(
+        return ThemeUtils.defaultTextStyleInterFont.copyWith(
           fontSize: 13,
           fontWeight: FontWeight.normal,
           color: AppColor.primaryColor);

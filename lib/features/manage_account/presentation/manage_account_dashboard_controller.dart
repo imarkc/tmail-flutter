@@ -1,4 +1,3 @@
-
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:core/core.dart';
 import 'package:dartz/dartz.dart';
@@ -10,20 +9,31 @@ import 'package:jmap_dart_client/jmap/account_id.dart';
 import 'package:jmap_dart_client/jmap/core/capability/capability_identifier.dart';
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/mail/vacation/vacation_response.dart';
+import 'package:jmap_dart_client/jmap/quotas/quota.dart';
 import 'package:model/model.dart';
 import 'package:rule_filter/rule_filter/capability_rule_filter.dart';
 import 'package:server_settings/server_settings/capability_server_settings.dart';
 import 'package:tmail_ui_user/features/base/action/ui_action.dart';
+import 'package:tmail_ui_user/features/base/mixin/own_email_address_mixin.dart';
 import 'package:tmail_ui_user/features/base/reloadable/reloadable_controller.dart';
-import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/mixin/user_setting_popup_menu_mixin.dart';
+import 'package:tmail_ui_user/features/base/widget/dialog_picker/color_dialog_picker.dart';
+import 'package:tmail_ui_user/features/base/widget/dialog_picker/date_time_dialog_picker.dart';
+import 'package:tmail_ui_user/features/home/data/exceptions/session_exceptions.dart';
+import 'package:tmail_ui_user/features/home/domain/extensions/session_extensions.dart';
+import 'package:tmail_ui_user/features/manage_account/domain/state/export_trace_log_state.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/state/get_all_vacation_state.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/state/update_vacation_state.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_vacation_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/update_vacation_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/action/dashboard_setting_action.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/email_rules/bindings/email_rules_bindings.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/extensions/export_trace_log_extension.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/extensions/handle_vacation_response_extension.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/extensions/vacation_response_extension.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/extensions/validate_setting_capability_supported_extension.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/extensions/validate_storage_menu_visible_extension.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/forward/bindings/forward_bindings.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/identities/identity_bindings.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/language_and_region/language_and_region_bindings.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/mailbox_visibility/bindings/mailbox_visibility_bindings.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/model/account_menu_item.dart';
@@ -31,8 +41,11 @@ import 'package:tmail_ui_user/features/manage_account/presentation/model/manage_
 import 'package:tmail_ui_user/features/manage_account/presentation/model/settings_page_level.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/notification/bindings/notification_binding.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/preferences/bindings/preferences_bindings.dart';
-import 'package:tmail_ui_user/features/manage_account/presentation/profiles/profiles_bindings.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/storage/storage_bindings.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/vacation/vacation_controller_bindings.dart';
+import 'package:tmail_ui_user/features/paywall/presentation/paywall_controller.dart';
+import 'package:tmail_ui_user/features/quotas/domain/state/get_quotas_state.dart';
+import 'package:tmail_ui_user/features/quotas/domain/use_case/get_quotas_interactor.dart';
 import 'package:tmail_ui_user/main/error/capability_validator.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 import 'package:tmail_ui_user/main/routes/app_routes.dart';
@@ -41,25 +54,32 @@ import 'package:tmail_ui_user/main/routes/route_navigation.dart';
 import 'package:tmail_ui_user/main/routes/route_utils.dart';
 import 'package:tmail_ui_user/main/utils/app_config.dart';
 
-class ManageAccountDashBoardController extends ReloadableController with UserSettingPopupMenuMixin {
+class ManageAccountDashBoardController extends ReloadableController
+  with OwnEmailAddressMixin {
 
   GetAllVacationInteractor? _getAllVacationInteractor;
   UpdateVacationInteractor? _updateVacationInteractor;
+  PaywallController? paywallController;
+  GetQuotasInteractor? getQuotasInteractor;
 
   final accountId = Rxn<AccountId>();
   final accountMenuItemSelected = AccountMenuItem.profiles.obs;
   final settingsPageLevel = SettingsPageLevel.universal.obs;
   final vacationResponse = Rxn<VacationResponse>();
   final dashboardSettingAction = Rxn<UIAction>();
+  final octetsQuota = Rxn<Quota>();
 
-  Session? sessionCurrent;
-  bool? isVacationDateDialogDisplayed;
   Uri? previousUri;
+  AccountMenuItem? selectedMenu;
+  int minInputLengthAutocomplete = AppConfig.defaultMinInputLengthAutocomplete;
 
   @override
   void onInit() {
     BackButtonInterceptor.add(_onBackButtonInterceptor, name: AppRoutes.settings);
     super.onInit();
+    if (LogTracking().isEnabled) {
+      injectTraceLogDependencies();
+    }
   }
 
   @override
@@ -72,39 +92,74 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
   @override
   void handleSuccessViewState(Success success) {
     if (success is GetAllVacationSuccess) {
-      if (success.listVacationResponse.isNotEmpty) {
-        vacationResponse.value = success.listVacationResponse.first;
-      }
+      syncVacationResponse(success.listVacationResponse.firstOrNull);
     } else if (success is UpdateVacationSuccess) {
       _handleUpdateVacationSuccess(success);
+    } else if (success is ExportTraceLogSuccess) {
+      handleExportTraceLogSuccess(success);
+    } else if (success is GetQuotasSuccess) {
+      handleGetQuotasSuccess(success);
     } else {
       super.handleSuccessViewState(success);
     }
   }
 
   @override
+  void handleFailureViewState(Failure failure) {
+    if (failure is ExportTraceLogFailure) {
+      handleExportTraceLogFailure(failure);
+    } else if (failure is UpdateVacationFailure) {
+      setUpVacation(null);
+    } else if (failure is GetQuotasFailure) {
+      handleGetQuotasFailure();
+    } else {
+      super.handleFailureViewState(failure);
+    }
+  }
+
+  @override
   void handleReloaded(Session session) {
     log('ManageAccountDashBoardController::handleReloaded:');
-    sessionCurrent = session;
-    accountId.value = session.accountId;
-    _bindingInteractorForMenuItemView(sessionCurrent, accountId.value);
-    _getVacationResponse();
+    _setUpComponentsFromSession(session: session);
     _getParametersRouter();
   }
 
   void _getArguments() {
     final arguments = Get.arguments;
     if (arguments is ManageAccountArguments) {
-      sessionCurrent = arguments.session;
-      accountId.value = arguments.session?.personalAccount.accountId;
       previousUri = arguments.previousUri;
-      _bindingInteractorForMenuItemView(sessionCurrent, accountId.value);
-      _getVacationResponse();
-      if (arguments.menuSettingCurrent != null) {
-        selectAccountMenuItem(arguments.menuSettingCurrent!);
+      _setUpComponentsFromSession(
+        session: arguments.session,
+        quota: arguments.quota,
+      );
+      selectedMenu = arguments.menuSettingCurrent;
+      if (selectedMenu != null && selectedMenu != AccountMenuItem.storage) {
+        selectAccountMenuItem(selectedMenu!);
       }
     } else if (PlatformInfo.isWeb) {
+      selectedMenu = null;
       reload();
+    }
+  }
+
+  void _setUpComponentsFromSession({
+    Session? session,
+    Quota? quota,
+  }) {
+    sessionCurrent = session;
+    accountId.value = session?.accountId;
+    synchronizeOwnEmailAddress(session?.getOwnEmailAddressOrEmpty() ?? '');
+    _setUpMinInputLengthAutocomplete();
+    _bindingInteractorForMenuItemView(sessionCurrent, accountId.value);
+    _getVacationResponse();
+    paywallController = PaywallController(
+      ownEmailAddress: ownEmailAddress.value,
+    );
+
+    if (quota != null) {
+      octetsQuota.value = quota;
+    } else if (isStorageCapabilitySupported) {
+      getQuotas(accountId.value);
     }
   }
 
@@ -119,7 +174,10 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
     ) {
       selectAccountMenuItem(AccountMenuItem.profiles);
     } else {
-      selectAccountMenuItem(navigationRouter.accountMenuItem);
+      selectedMenu = navigationRouter.accountMenuItem;
+      if (selectedMenu != null && selectedMenu != AccountMenuItem.storage) {
+        selectAccountMenuItem(selectedMenu!);
+      }
     }
   }
 
@@ -136,6 +194,9 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
     injectVacationBindings(session, accountId);
     injectForwardBindings(session, accountId);
     injectRuleFilterBindings(session, accountId);
+    if (isStorageCapabilitySupported) {
+      injectQuotaBindings();
+    }
   }
 
   @override
@@ -156,10 +217,6 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
     }
   }
 
-  void updateVacationResponse(VacationResponse? newVacation) {
-    vacationResponse.value = newVacation;
-  }
-
   void selectAccountMenuItem(AccountMenuItem newAccountMenuItem) {
     settingsPageLevel.value = newAccountMenuItem == AccountMenuItem.none
       ? SettingsPageLevel.universal
@@ -174,7 +231,7 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
   void _bindingControllerMenuItemView(AccountMenuItem item) {
     switch (item) {
       case AccountMenuItem.profiles:
-        ProfileBindings().dependencies();
+        IdentityBindings().dependencies();
         break;
       case AccountMenuItem.languageAndRegion:
         LanguageAndRegionBindings().dependencies();
@@ -193,6 +250,9 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
         break;
       case AccountMenuItem.notification:
         NotificationBinding().dependencies();
+        break;
+      case AccountMenuItem.storage:
+        StorageBindings().dependencies();
         break;
       default:
         break;
@@ -218,6 +278,16 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
         RouteUtils.generateNavigationRoute(AppRoutes.dashboard),
         arguments: sessionCurrent);
     }
+  }
+
+  bool get isLanguageSettingDisplayed {
+    if (!isServerSettingsCapabilitySupported) return true;
+
+    if (accountId.value == null || sessionCurrent == null) {
+      return false;
+    }
+
+    return !sessionCurrent!.isLanguageReadOnly(accountId.value!);
   }
 
   bool get isVacationCapabilitySupported {
@@ -260,25 +330,34 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
     }
   }
 
-  void disableVacationResponder() {
+  void disableVacationResponder(
+    VacationResponse vacation, {
+    bool isAuto = false,
+  }) {
     if (accountId.value != null && _updateVacationInteractor != null) {
-      final vacationDisabled = vacationResponse.value != null
-          ? vacationResponse.value!.copyWith(isEnabled: false)
-          : VacationResponse(isEnabled: false);
-      consumeState(_updateVacationInteractor!.execute(accountId.value!, vacationDisabled));
+      consumeState(_updateVacationInteractor!.execute(
+        accountId.value!,
+        vacation.clearAllExceptHtmlBody(),
+        isAuto: isAuto,
+      ));
+    } else {
+      consumeState(
+        Stream.value(Left(UpdateVacationFailure(ParametersIsNullException()))),
+      );
     }
   }
 
   void _handleUpdateVacationSuccess(UpdateVacationSuccess success) {
-    if (success.listVacationResponse.isNotEmpty) {
-      if (currentContext != null && currentOverlayContext != null) {
-        appToast.showToastSuccessMessage(
-          currentOverlayContext!,
-          AppLocalizations.of(currentContext!).yourVacationResponderIsDisabledSuccessfully);
-      }
-      vacationResponse.value = success.listVacationResponse.first;
-      log('ManageAccountDashBoardController::_handleUpdateVacationSuccess(): $vacationResponse');
+    if (success.listVacationResponse.isNotEmpty &&
+        !success.isAuto &&
+        currentContext != null &&
+        currentOverlayContext != null) {
+      appToast.showToastSuccessMessage(
+        currentOverlayContext!,
+        AppLocalizations.of(currentContext!).yourVacationResponderIsDisabledSuccessfully,
+      );
     }
+    setUpVacation(success.listVacationResponse.firstOrNull);
   }
 
   bool inVacationSettings() {
@@ -351,7 +430,9 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
 
   bool _onBackButtonInterceptor(bool stopDefaultButtonEvent, RouteInfo routeInfo) {
     log('ManageAccountDashBoardController::_onBackButtonInterceptor:currentRoute: ${Get.currentRoute} | _isDialogViewOpen: $_isDialogViewOpen');
-    if (_isDialogViewOpen || isVacationDateDialogDisplayed == true) {
+    if (_isDialogViewOpen ||
+        DateTimeDialogPicker().isOpened.isTrue ||
+        ColorDialogPicker().isOpened.isTrue) {
       popBack();
       _replaceBrowserHistory();
       return true;
@@ -364,42 +445,26 @@ class ManageAccountDashBoardController extends ReloadableController with UserSet
     return false;
   }
 
-  void handleClickAvatarAction(BuildContext context, RelativeRect position) {
-    openPopupMenuAction(
-      context,
-      position,
-      popupMenuUserSettingActionTile(
-        context,
-        getOwnEmailAddress(),
-        onLogoutAction: () {
-          popBack();
-          logout(context, sessionCurrent, accountId.value);
-        }
-      )
-    );
-  }
-
-  int get minInputLengthAutocomplete {
+  void _setUpMinInputLengthAutocomplete() {
     if (sessionCurrent == null || accountId.value == null) {
-      return AppConfig.defaultMinInputLengthAutocomplete;
+      minInputLengthAutocomplete = AppConfig.defaultMinInputLengthAutocomplete;
     }
-    return getMinInputLengthAutocomplete(
+    minInputLengthAutocomplete = getMinInputLengthAutocomplete(
       session: sessionCurrent!,
-      accountId: accountId.value!);
-  }
-
-  String getOwnEmailAddress() {
-    try {
-      return sessionCurrent?.getOwnEmailAddress() ?? '';
-    } catch (e) {
-      logError('ManageAccountDashBoardController::getOwnEmailAddress:Exception: $e');
-      return '';
-    }
+      accountId: accountId.value!,
+    );
   }
 
   @override
   void onClose() {
     BackButtonInterceptor.removeByName(AppRoutes.settings);
+    if (LogTracking().isEnabled) {
+      disposeTraceLogDependencies();
+    }
+    paywallController?.onClose();
+    paywallController = null;
+    previousUri = null;
+    selectedMenu = null;
     super.onClose();
   }
 }

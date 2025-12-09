@@ -22,6 +22,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:model/email/attachment.dart';
 import 'package:model/email/email_action_type.dart';
+import 'package:model/extensions/session_extension.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:rich_text_composer/rich_text_composer.dart';
 import 'package:tmail_ui_user/features/base/before_reconnect_manager.dart';
@@ -39,10 +40,11 @@ import 'package:tmail_ui_user/features/composer/presentation/controller/rich_tex
 import 'package:tmail_ui_user/features/composer/presentation/controller/rich_text_web_controller.dart';
 import 'package:tmail_ui_user/features/composer/presentation/extensions/setup_selected_identity_extension.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/formatting_options_state.dart';
-import 'package:tmail_ui_user/features/composer/presentation/model/saved_email_draft.dart';
+import 'package:tmail_ui_user/features/composer/presentation/model/saved_composing_email.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/screen_display_mode.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/get_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/print_email_interactor.dart';
+import 'package:tmail_ui_user/features/email/domain/usecases/save_template_email_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/transform_html_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/composer_arguments.dart';
 import 'package:tmail_ui_user/features/login/data/network/interceptors/authorization_interceptors.dart';
@@ -106,6 +108,9 @@ class MockMailboxDashBoardController extends Mock implements MailboxDashBoardCon
   Session? get sessionCurrent => SessionFixtures.aliceSession;
 
   @override
+  RxString get ownEmailAddress => SessionFixtures.aliceSession.getOwnEmailAddressOrEmpty().obs;
+
+  @override
   Rxn<DraggableAppState> get attachmentDraggableAppState => Rxn(DraggableAppState.inActive);
   @override
   bool get isAttachmentDraggableAppActive => attachmentDraggableAppState.value == DraggableAppState.active;
@@ -126,6 +131,18 @@ class MockMailboxDashBoardController extends Mock implements MailboxDashBoardCon
 
   @override
   Map<MailboxId, PresentationMailbox> get mapMailboxById => {};
+
+  @override
+  RxBool get isAppGridDialogDisplayed => false.obs;
+
+  @override
+  RxBool get isDrawerOpened => false.obs;
+
+  @override
+  RxBool get isContextMenuOpened => false.obs;
+
+  @override
+  RxBool get isPopupMenuOpened => false.obs;
 }
 
 @GenerateNiceMocks([
@@ -160,6 +177,7 @@ class MockMailboxDashBoardController extends Mock implements MailboxDashBoardCon
   MockSpec<CreateNewAndSaveEmailToDraftsInteractor>(),
   MockSpec<PrintEmailInteractor>(),
   MockSpec<ComposerRepository>(),
+  MockSpec<SaveTemplateEmailInteractor>(),
 
   // Additional Getx dependencies mock specs
   MockSpec<NetworkConnectionController>(fallbackGenerators: fallbackGenerators),
@@ -204,6 +222,7 @@ void main() {
   late MockCreateNewAndSaveEmailToDraftsInteractor mockCreateNewAndSaveEmailToDraftsInteractor;
   late MockPrintEmailInteractor mockPrintEmailInteractor;
   late MockComposerRepository mockComposerRepository;
+  late MockSaveTemplateEmailInteractor mockSaveTemplateEmailInteractor;
 
   // Declaration Getx dependencies
   final mockMailboxDashBoardController = MockMailboxDashBoardController();
@@ -273,6 +292,7 @@ void main() {
     mockCreateNewAndSaveEmailToDraftsInteractor = MockCreateNewAndSaveEmailToDraftsInteractor();
     mockPrintEmailInteractor = MockPrintEmailInteractor();
     mockComposerRepository = MockComposerRepository();
+    mockSaveTemplateEmailInteractor = MockSaveTemplateEmailInteractor();
 
     composerController = ComposerController(
       mockLocalFilePickerInteractor,
@@ -289,6 +309,7 @@ void main() {
       mockCreateNewAndSaveEmailToDraftsInteractor,
       mockPrintEmailInteractor,
       mockComposerRepository,
+      mockSaveTemplateEmailInteractor,
     );
 
     mockHtmlEditorApi = MockHtmlEditorApi();
@@ -344,7 +365,7 @@ void main() {
             emailContent: anyNamed('emailContent'),
           )).thenAnswer((_) async => emailContent);
 
-          final savedEmailDraft = SavedEmailDraft(
+          final savedEmailDraft = SavedComposingEmail(
             content: emailContent,
             subject: emailSubject,
             toRecipients: {toRecipient},
@@ -404,7 +425,7 @@ void main() {
             emailContent: anyNamed('emailContent'),
           )).thenAnswer((_) async => emailContent);
 
-          final savedEmailDraft = SavedEmailDraft(
+          final savedEmailDraft = SavedComposingEmail(
             content: emailContent,
             subject: emailSubject,
             toRecipients: {toRecipient},
@@ -471,7 +492,7 @@ void main() {
               .thenAnswer((_) => Stream.value(
                 Right(SaveEmailAsDraftsSuccess(EmailId(Id('123')), null))));
 
-            final savedEmailDraft = SavedEmailDraft(
+            final savedEmailDraft = SavedComposingEmail(
               content: emailContent,
               subject: emailSubject,
               toRecipients: {toRecipient},
@@ -551,7 +572,7 @@ void main() {
               .thenAnswer((_) => Stream.value(
                 Right(UpdateEmailDraftsSuccess(EmailId(Id('123'))))));
 
-            final savedEmailDraft = SavedEmailDraft(
+            final savedEmailDraft = SavedComposingEmail(
               content: emailContent,
               subject: emailSubject,
               toRecipients: {toRecipient},
@@ -626,7 +647,7 @@ void main() {
             emailContent: anyNamed('emailContent'),
           )).thenAnswer((_) async => emailContent);
 
-          final savedEmailDraft = SavedEmailDraft(
+          final savedEmailDraft = SavedComposingEmail(
             content: emailContent,
             subject: emailSubject,
             toRecipients: {toRecipient},
@@ -686,7 +707,7 @@ void main() {
             emailContent: anyNamed('emailContent'),
           )).thenAnswer((_) async => emailContent);
 
-          final savedEmailDraft = SavedEmailDraft(
+          final savedEmailDraft = SavedComposingEmail(
             content: emailContent,
             subject: emailSubject,
             toRecipients: {toRecipient},

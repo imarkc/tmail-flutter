@@ -1,4 +1,4 @@
-import 'package:core/utils/app_logger.dart';
+import 'package:core/core.dart';
 import 'package:date_format/date_format.dart' as date_format;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,19 +9,19 @@ import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 import 'package:tmail_ui_user/main/localizations/language_code_constants.dart';
 import 'package:tmail_ui_user/main/utils/app_config.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:tmail_ui_user/main/universal_import/html_stub.dart' as html;
 
 class AppUtils {
-
-  static const String envFileName = 'env.file';
+  const AppUtils._();
 
   static Future<void> loadEnvFile() async {
-    await dotenv.load(fileName: envFileName);
+    await dotenv.load(fileName: AppConfig.envFileName);
     final mapEnvData = Map<String, String>.from(dotenv.env);
    try {
-     await AppUtils.loadFcmConfigFileToEnv(currentMapEnvData: mapEnvData);
+     await loadFcmConfigFileToEnv(currentMapEnvData: mapEnvData);
    } catch (e) {
      logError('AppUtils::loadEnvFile:loadFcmConfigFileToEnv: Exception = $e');
-     await dotenv.load(fileName: envFileName);
+     await dotenv.load(fileName: AppConfig.envFileName);
    }
   }
 
@@ -32,12 +32,17 @@ class AppUtils {
     );
   }
 
-  static Future<bool> launchLink(String url, {bool isNewTab = true}) async {
-    return await launchUrl(
-      Uri.parse(url),
-      webOnlyWindowName: isNewTab ? '_blank' : '_self',
-      mode: LaunchMode.externalApplication
-    );
+  static void launchLink(String url, {bool isNewTab = true}) {
+    log('AppUtils::launchLink: url = $url');
+    if (PlatformInfo.isWeb && HtmlUtils.isSafariBelow17()) {
+      html.window.open(url, isNewTab ? '_blank' : '_self');
+    } else {
+      launchUrl(
+        Uri.parse(url),
+        webOnlyWindowName: isNewTab ? '_blank' : '_self',
+        mode: LaunchMode.externalApplication,
+      );
+    }
   }
 
   static bool isDirectionRTL(BuildContext context) {
@@ -47,7 +52,10 @@ class AppUtils {
   static TextDirection getCurrentDirection(BuildContext context) => Directionality.maybeOf(context) ?? TextDirection.ltr;
 
   static bool isEmailLocalhost(String email) {
-    return  RegExp(r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@localhost$').hasMatch(email);
+    final normalized = email.trim();
+    return RegExp(
+        r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@localhost$'
+    ).hasMatch(normalized);
   }
 
   static void copyEmailAddressToClipboard(BuildContext context, String emailAddress) {

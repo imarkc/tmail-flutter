@@ -1,5 +1,4 @@
 
-import 'package:collection/collection.dart';
 import 'package:core/utils/app_logger.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
 import 'package:jmap_dart_client/jmap/mail/mailbox/mailbox.dart';
@@ -8,10 +7,16 @@ import 'package:model/model.dart';
 extension ListPresentationEmailExtension on List<PresentationEmail> {
   bool get isAllEmailRead => every((email) => email.hasRead);
 
+  bool get isAllEmailUnread => every((email) => !email.hasRead);
+
   bool get isAllEmailStarred => every((email) => email.hasStarred);
 
   bool get isAllSelectionInActive {
     return every((email) => email.selectMode == SelectMode.INACTIVE);
+  }
+
+  bool get isAnySelectionInActive {
+    return any((email) => email.selectMode == SelectMode.INACTIVE);
   }
 
   List<Email> get listEmail => map((presentationEmail) => presentationEmail.toEmail()).toList();
@@ -20,7 +25,10 @@ extension ListPresentationEmailExtension on List<PresentationEmail> {
     return where((email) => email.selectMode == SelectMode.ACTIVE).toList();
   }
 
-  List<EmailId> get listEmailIds => map((email) => email.id).whereNotNull().toList();
+  List<EmailId> get listEmailIds => map((email) => email.id).nonNulls.toList();
+
+  List<ThreadId> get uniqueThreadIds =>
+      map((email) => email.threadId).toSet().nonNulls.toList();
 
   Map<MailboxId, List<EmailId>> get emailIdsByMailboxId {
     final Map<MailboxId, List<EmailId>> result = {};
@@ -34,45 +42,31 @@ extension ListPresentationEmailExtension on List<PresentationEmail> {
     return result;
   }
 
-  bool isAllCanDeletePermanently(Map<MailboxId, PresentationMailbox> mapMailbox) {
-    final listMailboxContain = map((email) => email.findMailboxContain(mapMailbox))
-        .whereType<PresentationMailbox>()
-        .toList();
-    final stateDelete = listMailboxContain.every((mailbox) => mailbox.isTrash) ||
-        listMailboxContain.every((mailbox) => mailbox.isDrafts) ||
-        listMailboxContain.every((mailbox) => mailbox.isSpam);
-    return stateDelete;
+  bool isDeletePermanentlyDisabled(
+    Map<MailboxId, PresentationMailbox> mapMailbox,
+  ) {
+    return any((email) {
+      final mailboxContain = email.findMailboxContain(mapMailbox);
+      return mailboxContain?.isDeletePermanentlyEnabled != true;
+    });
   }
 
-  bool isAllCanSpamAndMove(Map<MailboxId, PresentationMailbox> mapMailbox) {
-    final listMailboxContain = map((email) => email.findMailboxContain(mapMailbox))
-        .whereType<PresentationMailbox>()
-        .toList();
-    return listMailboxContain.every((mailbox) => !mailbox.isDrafts) &&
-        isAllBelongToTheSameMailbox(mapMailbox);
+  bool isArchiveMessageEnabled(
+    Map<MailboxId, PresentationMailbox> mapMailbox,
+  ) {
+    return any((email) {
+      final mailboxContain = email.findMailboxContain(mapMailbox);
+      return mailboxContain?.isArchive != true;
+    });
   }
 
-  bool isAllSpam(Map<MailboxId, PresentationMailbox> mapMailbox) {
-    final listMailboxContain = map((email) => email.findMailboxContain(mapMailbox))
-        .whereType<PresentationMailbox>()
-        .toList();
-    return listMailboxContain.every((mailbox) => mailbox.isSpam);
-  }
-
-  bool isAllBelongToTheSameMailbox(Map<MailboxId, PresentationMailbox> mapMailbox) {
-    if (isEmpty) {
-      return false;
-    }
-    final firstEmail = first;
-    final firstMailboxContain = firstEmail.findMailboxContain(mapMailbox);
-    if (firstMailboxContain != null) {
-      return every((email) {
-        final mailboxContain = email.findMailboxContain(mapMailbox);
-        return mailboxContain?.id == firstMailboxContain.id;
-      });
-    } else {
-      return false;
-    }
+  bool isMarkAsSpamEnabled(
+    Map<MailboxId, PresentationMailbox> mapMailbox,
+  ) {
+    return any((email) {
+      final mailboxContain = email.findMailboxContain(mapMailbox);
+      return mailboxContain?.isSpam != true;
+    });
   }
 
   PresentationMailbox? getCurrentMailboxContain(Map<MailboxId, PresentationMailbox> mapMailbox) {
@@ -82,7 +76,7 @@ extension ListPresentationEmailExtension on List<PresentationEmail> {
   List<PresentationEmail> listEmailCanSpam(Map<MailboxId, PresentationMailbox> mapMailbox) {
     final newListEmails = map((email) {
       final mailboxContain = email.findMailboxContain(mapMailbox);
-      if (mailboxContain?.isSpam == false) {
+      if (mailboxContain?.isSpam != true) {
         return email;
       } else {
         return null;

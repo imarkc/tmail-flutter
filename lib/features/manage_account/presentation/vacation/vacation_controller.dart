@@ -3,16 +3,19 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jmap_dart_client/jmap/mail/vacation/vacation_response.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:rich_text_composer/rich_text_composer.dart';
 import 'package:rich_text_composer/views/commons/constants.dart';
 import 'package:tmail_ui_user/features/base/base_controller.dart';
+import 'package:tmail_ui_user/features/base/widget/dialog_picker/date_time_dialog_picker.dart';
 import 'package:tmail_ui_user/features/composer/presentation/controller/rich_text_web_controller.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/exceptions/null_session_or_accountid_exception.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/state/update_vacation_state.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/update_vacation_interactor.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/extensions/handle_vacation_response_extension.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/extensions/vacation_response_extension.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/manage_account_dashboard_controller.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/menu/settings/settings_controller.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/model/account_menu_item.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/model/vacation/date_type.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/model/vacation/vacation_presentation.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/model/vacation/vacation_responder_status.dart';
@@ -25,33 +28,35 @@ class VacationController extends BaseController {
   final _settingController = Get.find<SettingsController>();
 
   final UpdateVacationInteractor _updateVacationInteractor;
-  final RichTextWebController _richTextControllerForWeb;
 
   final vacationPresentation = VacationPresentation.initialize().obs;
   final errorMessageBody = Rxn<String>();
 
   final subjectTextController = TextEditingController();
   final subjectTextFocusNode = FocusNode();
-  final richTextControllerForMobile = RichTextController();
 
   final GlobalKey htmlKey = GlobalKey();
 
   VacationResponse? currentVacation;
   String? _vacationMessageHtmlText;
 
-  final ScrollController scrollController = ScrollController();
+  RichTextController? richTextControllerForMobile;
+  RichTextWebController? richTextControllerForWeb;
 
-  VacationController(
-    this._updateVacationInteractor,
-    this._richTextControllerForWeb
-  );
+  final ScrollController scrollController = ScrollController();
+  final ScrollController richTextButtonScrollController = ScrollController();
+
+  VacationController(this._updateVacationInteractor);
 
   String? get vacationMessageHtmlText => _vacationMessageHtmlText;
 
-  RichTextWebController get richTextControllerForWeb => _richTextControllerForWeb;
-
   @override
   void onInit() {
+    if (PlatformInfo.isWeb) {
+      richTextControllerForWeb = RichTextWebController();
+    } else {
+      richTextControllerForMobile = RichTextController();
+    }
     _initWorker();
     _initFocusListener();
     super.onInit();
@@ -82,7 +87,7 @@ class VacationController extends BaseController {
 
   void _onSubjectTextListener() {
     if (subjectTextFocusNode.hasFocus && PlatformInfo.isMobile) {
-      richTextControllerForMobile.hideRichTextView();
+      richTextControllerForMobile?.hideRichTextView();
     }
   }
 
@@ -91,9 +96,9 @@ class VacationController extends BaseController {
     subjectTextController.text = newVacation.subject ?? '';
     updateMessageHtmlText(newVacation.messageHtmlText ?? '');
     if (PlatformInfo.isWeb) {
-      _richTextControllerForWeb.editorController.setText(newVacation.messageHtmlText ?? '');
+      richTextControllerForWeb?.editorController.setText(newVacation.messageHtmlText ?? '');
     } else {
-      richTextControllerForMobile.htmlEditorApi?.setText(newVacation.messageHtmlText ?? '');
+      richTextControllerForMobile?.htmlEditorApi?.setText(newVacation.messageHtmlText ?? '');
     }
   }
 
@@ -131,38 +136,14 @@ class VacationController extends BaseController {
 
   void selectDate(BuildContext context, DateType dateType, DateTime? currentDate) async {
     if (PlatformInfo.isMobile) {
-      richTextControllerForMobile.htmlEditorApi?.unfocus();
+      richTextControllerForMobile?.htmlEditorApi?.unfocus();
     }
     FocusScope.of(context).unfocus();
 
-    _accountDashBoardController.isVacationDateDialogDisplayed = true;
-    final datePicked = await showDatePicker(
-        context: context,
-        initialDate: currentDate ?? DateTime.now(),
-        initialDatePickerMode: DatePickerMode.day,
-        firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
-        locale: Localizations.localeOf(context),
-        builder: (context, child) {
-          return PointerInterceptor(
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.light(
-                  primary: AppColor.primaryColor,
-                  onPrimary: Colors.white,
-                  onSurface: Colors.black
-                ),
-                textButtonTheme: TextButtonThemeData(
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColor.primaryColor
-                  )
-                )
-              ),
-              child: child!
-            ),
-          );
-        }
-    ).whenComplete(() => _accountDashBoardController.isVacationDateDialogDisplayed = false);
+    final datePicked = await DateTimeDialogPicker().showTwakeDatePicker(
+      context: context,
+      initialDate: currentDate ?? DateTime.now(),
+    );
 
     if (datePicked == null) {
       return;
@@ -177,31 +158,14 @@ class VacationController extends BaseController {
 
   void selectTime(BuildContext context, DateType dateType, TimeOfDay? currentTime) async {
     if (PlatformInfo.isMobile) {
-      richTextControllerForMobile.htmlEditorApi?.unfocus();
+      richTextControllerForMobile?.htmlEditorApi?.unfocus();
     }
     FocusScope.of(context).unfocus();
 
-    _accountDashBoardController.isVacationDateDialogDisplayed = true;
-    final timePicked = await showTimePicker(
+    final timePicked = await DateTimeDialogPicker().showTwakeTimePicker(
       context: context,
       initialTime: currentTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return PointerInterceptor(
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: const ColorScheme.light(
-                primary: AppColor.primaryColor,
-                onPrimary: Colors.white,
-                onSurface: Colors.black),
-              textButtonTheme: TextButtonThemeData(
-                style: TextButton.styleFrom(foregroundColor: AppColor.primaryColor))),
-            child: MediaQuery(
-                data: const MediaQueryData(alwaysUse24HourFormat: false),
-                child: child!),
-          ),
-        );
-      }
-    ).whenComplete(() => _accountDashBoardController.isVacationDateDialogDisplayed = false);
+    );
 
     if (timePicked == null) {
       return;
@@ -261,7 +225,7 @@ class VacationController extends BaseController {
       _updateVacationAction(newVacationResponse);
     } else {
       final vacationDisabled = currentVacation != null
-          ? currentVacation!.copyWith(isEnabled: false)
+          ? currentVacation!.clearAllExceptHtmlBody()
           : VacationResponse(isEnabled: false);
       log('VacationController::saveVacation(): vacationDisabled: $vacationDisabled');
       _updateVacationAction(vacationDisabled);
@@ -272,41 +236,44 @@ class VacationController extends BaseController {
     final accountId = _accountDashBoardController.accountId.value;
     if (accountId != null) {
       consumeState(_updateVacationInteractor.execute(accountId, vacationResponse));
+    } else {
+      consumeState(
+        Stream.value(Left(UpdateVacationFailure(NullSessionOrAccountIdException()))),
+      );
     }
   }
 
   void _handleUpdateVacationSuccess(UpdateVacationSuccess success) {
-    if (success.listVacationResponse.isNotEmpty) {
-      if (currentOverlayContext != null && currentContext != null) {
-        appToast.showToastSuccessMessage(
-          currentOverlayContext!,
-          AppLocalizations.of(currentContext!).vacationSettingSaved);
-      }
-      currentVacation = success.listVacationResponse.first;
-      log('VacationController::_handleUpdateVacationSuccess(): $currentVacation');
-
-      if (currentVacation != null) {
-        final newVacationPresentation = currentVacation!.toVacationPresentation();
-        _initializeValueForVacation(newVacationPresentation);
-      }
-
-      _accountDashBoardController.updateVacationResponse(currentVacation);
+    if (success.listVacationResponse.isNotEmpty &&
+        !success.isAuto &&
+        currentOverlayContext != null &&
+        currentContext != null) {
+      appToast.showToastSuccessMessage(
+        currentOverlayContext!,
+        AppLocalizations.of(currentContext!).vacationSettingSaved);
     }
+
+    currentVacation = success.listVacationResponse.firstOrNull;
+    if (currentVacation != null) {
+      final newVacationPresentation = currentVacation!.toVacationPresentation();
+      _initializeValueForVacation(newVacationPresentation);
+    }
+    _accountDashBoardController.setUpVacation(currentVacation);
   }
 
   void updateMessageHtmlText(String? text) => _vacationMessageHtmlText = text;
 
   Future<String>? _getMessageHtmlText() {
     if (PlatformInfo.isWeb) {
-      return _richTextControllerForWeb.editorController.getText();
+      return richTextControllerForWeb?.editorController.getText();
     } else {
-      return richTextControllerForMobile.htmlEditorApi?.getText();
+      return richTextControllerForMobile?.htmlEditorApi?.getText();
     }
   }
 
   void clearFocusEditor(BuildContext context) {
     if (PlatformInfo.isMobile) {
-      richTextControllerForMobile.htmlEditorApi?.unfocus();
+      richTextControllerForMobile?.htmlEditorApi?.unfocus();
     }
     KeyboardUtils.hideKeyboard(context);
   }
@@ -317,7 +284,7 @@ class VacationController extends BaseController {
   }
 
   void initRichTextForMobile(BuildContext context, HtmlEditorApi editorApi) {
-    richTextControllerForMobile.onCreateHTMLEditor(
+    richTextControllerForMobile?.onCreateHTMLEditor(
       editorApi,
       onFocus: () => onFocusHTMLEditor(context),
       onEnterKeyDown: onEnterKeyDown,
@@ -329,7 +296,7 @@ class VacationController extends BaseController {
       FocusScope.of(context).unfocus();
       await Future.delayed(
         const Duration(milliseconds: 300),
-        richTextControllerForMobile.showDeviceKeyboard);
+        richTextControllerForMobile?.showDeviceKeyboard);
     }
 
     subjectTextFocusNode.unfocus();
@@ -354,13 +321,22 @@ class VacationController extends BaseController {
     }
   }
 
+  void switchProfileSetting() {
+    _accountDashBoardController.selectAccountMenuItem(AccountMenuItem.profiles);
+  }
+
   @override
   void onClose() {
     subjectTextFocusNode.removeListener(_onSubjectTextListener);
     subjectTextFocusNode.dispose();
     subjectTextController.dispose();
-    richTextControllerForMobile.dispose();
     scrollController.dispose();
+    richTextButtonScrollController.dispose();
+    if (PlatformInfo.isWeb) {
+      richTextControllerForWeb?.onClose();
+    } else {
+      richTextControllerForMobile?.dispose();
+    }
     super.onClose();
   }
 }

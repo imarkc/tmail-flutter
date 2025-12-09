@@ -5,12 +5,14 @@ import 'package:universal_html/html.dart' as html;
 
 class SessionStorageManager {
 
+  final html.Storage sessionStorage = html.window.sessionStorage;
+
   void save(String key, String value) {
-    html.window.sessionStorage.addAll({key: value});
+    sessionStorage.addAll({key: value});
   }
 
   String get(String key) {
-    final entry = html.window.sessionStorage
+    final entry = sessionStorage
       .entries
       .firstWhereOrNull((entry) => entry.key == key);
 
@@ -22,6 +24,8 @@ class SessionStorageManager {
   }
 
   void remove(String key) {
-    html.window.sessionStorage.remove(key);
+    if (sessionStorage.containsKey(key)) {
+      sessionStorage.remove(key);
+    }
   }
 }

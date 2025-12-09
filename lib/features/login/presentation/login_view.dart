@@ -87,7 +87,7 @@ class LoginView extends BaseLoginView {
                 top: controller.responsiveUtils.isHeightShortest(context) ? 64 : 0),
               child: Text(
                 AppLocalizations.of(context).login,
-                style: const TextStyle(fontSize: 32, color: AppColor.colorNameEmail, fontWeight: FontWeight.w900)
+                style: ThemeUtils.defaultTextStyleInterFont.copyWith(fontSize: 32, color: AppColor.colorNameEmail, fontWeight: FontWeight.w900)
               )
             ),
             Obx(() => LoginMessageWidget(
@@ -127,7 +127,7 @@ class LoginView extends BaseLoginView {
               padding: EdgeInsets.only(top: 16),
               child: PrivacyLinkWidget(),
             ),
-            const ApplicationVersionWidget(),
+            const ApplicationVersionWidget(padding: EdgeInsets.only(top: 8)),
           ]
         ),
       )
@@ -184,7 +184,7 @@ class LoginView extends BaseLoginView {
           )
         ),
         child: Text(AppLocalizations.of(context).next,
-          style: const TextStyle(fontSize: 16, color: Colors.white)
+          style: ThemeUtils.defaultTextStyleInterFont.copyWith(fontSize: 16, color: Colors.white)
         ),
         onPressed: () {
           if (controller.loginFormType.value == LoginFormType.retry) {

@@ -13,9 +13,9 @@ import 'package:get/get.dart';
 import 'package:jmap_dart_client/jmap/account_id.dart';
 import 'package:model/download/download_task_id.dart';
 import 'package:model/email/attachment.dart';
-import 'package:tmail_ui_user/features/email/domain/exceptions/download_attachment_exceptions.dart';
-import 'package:tmail_ui_user/features/email/domain/state/download_attachment_for_web_state.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/download_attachment_for_web_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/exceptions/download_attachment_exceptions.dart';
+import 'package:tmail_ui_user/features/download/domain/state/download_attachment_for_web_state.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/download_attachment_for_web_interactor.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 import 'package:tmail_ui_user/main/routes/route_navigation.dart';
 import 'package:twake_previewer_flutter/core/previewer_options/options/loading_options.dart';
@@ -91,7 +91,7 @@ class _PDFViewerState extends State<PDFViewer> {
       widget.attachment, 
       widget.accountId,
       widget.downloadUrl,
-      _downloadAttachmentStreamController,
+      onReceiveController: _downloadAttachmentStreamController,
       cancelToken: _downloadAttachmentCancelToken
     ).listen((viewState) {
       viewState.fold(

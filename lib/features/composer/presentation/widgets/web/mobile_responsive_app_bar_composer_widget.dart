@@ -1,3 +1,4 @@
+import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/views/button/tmail_button_widget.dart';
 import 'package:core/utils/platform_info.dart';
@@ -28,6 +29,7 @@ class MobileResponsiveAppBarComposerWidget extends StatelessWidget {
   final VoidCallback toggleRequestReadReceiptAction;
   final VoidCallback printDraftAction;
   final VoidCallback saveToDraftsAction;
+  final VoidCallback saveToTemplateAction;
   final VoidCallback deleteComposerAction;
   final VoidCallback toggleMarkAsImportantAction;
 
@@ -50,6 +52,7 @@ class MobileResponsiveAppBarComposerWidget extends StatelessWidget {
     required this.toggleRequestReadReceiptAction,
     required this.printDraftAction,
     required this.saveToDraftsAction,
+    required this.saveToTemplateAction,
     required this.deleteComposerAction,
     required this.toggleMarkAsImportantAction,
   });
@@ -187,10 +190,23 @@ class MobileResponsiveAppBarComposerWidget extends StatelessWidget {
                   },
               ),
               PopupItemWidget(
-                iconAction: imagePaths.icDeleteMailbox,
-                nameAction: AppLocalizations.of(context).delete,
+                iconAction: imagePaths.icSaveToDraft,
+                nameAction: AppLocalizations.of(context).saveAsTemplate,
                 colorIcon: MobileAppBarComposerWidgetStyle.popupItemIconColor,
                 styleName: MobileAppBarComposerWidgetStyle.popupItemTextStyle,
+                padding: MobileAppBarComposerWidgetStyle.popupItemPadding,
+                onCallbackAction: () {
+                  menuMoreOptionController.hideMenu();
+                  saveToTemplateAction();
+                },
+              ),
+              PopupItemWidget(
+                iconAction: imagePaths.icDeleteMailbox,
+                nameAction: AppLocalizations.of(context).delete,
+                colorIcon: AppColor.redFF3347,
+                styleName: MobileAppBarComposerWidgetStyle
+                  .popupItemTextStyle
+                  .copyWith(color: AppColor.redFF3347),
                 padding: MobileAppBarComposerWidgetStyle.popupItemPadding,
                 onCallbackAction: () {
                   menuMoreOptionController.hideMenu();

@@ -2,6 +2,7 @@ import 'package:model/oidc/oidc_configuration.dart';
 import 'package:model/oidc/request/oidc_request.dart';
 import 'package:model/oidc/response/oidc_discovery_response.dart';
 import 'package:model/oidc/response/oidc_response.dart';
+import 'package:model/oidc/response/oidc_user_info.dart';
 import 'package:model/oidc/token_id.dart';
 import 'package:model/oidc/token_oidc.dart';
 import 'package:tmail_ui_user/features/login/data/datasource/authentication_oidc_datasource.dart';
@@ -28,8 +29,20 @@ class AuthenticationOIDCRepositoryImpl extends AuthenticationOIDCRepository {
   }
 
   @override
-  Future<TokenOIDC> getTokenOIDC(String clientId, String redirectUrl, String discoveryUrl, List<String> scopes) {
-    return _oidcDataSource.getTokenOIDC(clientId, redirectUrl, discoveryUrl, scopes);
+  Future<TokenOIDC> getTokenOIDC(
+    String clientId,
+    String redirectUrl,
+    String discoveryUrl,
+    List<String> scopes, {
+    String? loginHint,
+  }) {
+    return _oidcDataSource.getTokenOIDC(
+      clientId,
+      redirectUrl,
+      discoveryUrl,
+      scopes,
+      loginHint: loginHint,
+    );
   }
 
   @override
@@ -92,5 +105,15 @@ class AuthenticationOIDCRepositoryImpl extends AuthenticationOIDCRepository {
   @override
   Future<void> deleteTokenOIDC() {
     return _oidcDataSource.deleteTokenOIDC();
+  }
+
+  @override
+  Future<void> removeAuthDestinationUrl() {
+    return _oidcDataSource.removeAuthDestinationUrl();
+  }
+
+  @override
+  Future<OidcUserInfo> fetchUserInfo(String userInfoEndpoint) {
+    return _oidcDataSource.fetchUserInfo(userInfoEndpoint);
   }
 }

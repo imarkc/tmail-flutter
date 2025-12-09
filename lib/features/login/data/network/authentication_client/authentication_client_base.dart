@@ -1,4 +1,3 @@
-
 import 'package:model/oidc/oidc_configuration.dart';
 import 'package:model/oidc/response/oidc_discovery_response.dart';
 import 'package:model/oidc/token_id.dart';
@@ -13,13 +12,13 @@ abstract class AuthenticationClientBase {
       String discoveryUrl,
       List<String> scopes);
 
-  Future<String> getAuthenticationInfo();
-
   Future<TokenOIDC> getTokenOIDC(
-      String clientId,
-      String redirectUrl,
-      String discoveryUrl,
-      List<String> scopes);
+    String clientId,
+    String redirectUrl,
+    String discoveryUrl,
+    List<String> scopes, {
+    String? loginHint,
+  });
 
   Future<TokenOIDC> refreshingTokensOIDC(
       String clientId,

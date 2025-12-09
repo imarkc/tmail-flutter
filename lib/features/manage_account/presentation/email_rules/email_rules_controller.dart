@@ -1,16 +1,14 @@
-import 'package:core/presentation/extensions/color_extension.dart';
+import 'package:core/presentation/state/failure.dart';
 import 'package:core/presentation/state/success.dart';
-import 'package:core/presentation/views/bottom_popup/confirmation_dialog_action_sheet_builder.dart';
-import 'package:core/presentation/views/dialog/confirmation_dialog_builder.dart';
 import 'package:core/utils/app_logger.dart';
 import 'package:core/utils/platform_info.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:jmap_dart_client/jmap/account_id.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:rule_filter/rule_filter/tmail_rule.dart';
 import 'package:tmail_ui_user/features/base/base_controller.dart';
+import 'package:tmail_ui_user/features/base/mixin/message_dialog_action_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/model/create_new_email_rule_filter_request.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/model/delete_email_rule_request.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/model/edit_email_rule_filter_request.dart';
@@ -22,8 +20,9 @@ import 'package:tmail_ui_user/features/manage_account/domain/usecases/create_new
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/delete_email_rule_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/edit_email_rule_filter_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_rules_interactor.dart';
-import 'package:tmail_ui_user/features/manage_account/presentation/email_rules/widgets/email_rule_bottom_sheet_action_tile_builder.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/manage_account_dashboard_controller.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/model/context_item_email_rule_type_action.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/model/email_rule_action_type.dart';
 import 'package:tmail_ui_user/features/rules_filter_creator/presentation/model/creator_action_type.dart';
 import 'package:tmail_ui_user/features/rules_filter_creator/presentation/model/rules_filter_creator_arguments.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
@@ -41,6 +40,11 @@ class EmailRulesController extends BaseController {
   final _accountDashBoardController = Get.find<ManageAccountDashBoardController>();
 
   final listEmailRule = <TMailRule>[].obs;
+
+  bool get isLoading => viewState.value.fold(
+    (failure) => false,
+    (success) => success is GettingAllRules,
+  );
 
   @override
   void onInit() {
@@ -63,7 +67,6 @@ class EmailRulesController extends BaseController {
 
   @override
   void handleSuccessViewState(Success success) {
-    super.handleSuccessViewState(success);
     if (success is GetAllRulesSuccess) {
       if (success.rules?.isNotEmpty == true) {
         listEmailRule.addAll(success.rules!);
@@ -74,10 +77,21 @@ class EmailRulesController extends BaseController {
       _createNewRuleFilterSuccess(success);
     } else if (success is EditEmailRuleFilterSuccess) {
       _editEmailRuleFilterSuccess(success);
+    } else {
+      super.handleSuccessViewState(success);
     }
   }
 
-  void goToCreateNewRule(BuildContext context) async {
+  @override
+  void handleFailureViewState(Failure failure) {
+    if (failure is GetAllRulesFailure) {
+      listEmailRule.clear();
+    } else {
+      super.handleFailureViewState(failure);
+    }
+  }
+
+  Future<void> goToCreateNewRule() async {
     final accountId = _accountDashBoardController.accountId.value;
     final session = _accountDashBoardController.sessionCurrent;
     if (accountId != null && session != null) {
@@ -155,38 +169,20 @@ class EmailRulesController extends BaseController {
     }
   }
 
-  void deleteEmailRule(BuildContext context, TMailRule emailRule) {
-    if (responsiveUtils.isMobile(context)) {
-      (ConfirmationDialogActionSheetBuilder(context)
-        ..messageText(AppLocalizations.of(context).messageConfirmationDialogDeleteEmailRule(emailRule.name))
-        ..onCancelAction(AppLocalizations.of(context).cancel, () =>
-            popBack())
-        ..onConfirmAction(AppLocalizations.of(context).delete, () {
-          _handleDeleteEmailRuleAction(emailRule);
-        }))
-      .show();
-    } else {
-      Get.dialog(
-        PointerInterceptor(
-          child: ConfirmationDialogBuilder(
-            imagePath: imagePaths,
-            title: AppLocalizations.of(context).deleteEmailRule,
-            textContent: AppLocalizations.of(context).messageConfirmationDialogDeleteEmailRule(emailRule.name),
-            cancelText: AppLocalizations.of(context).delete,
-            confirmText: AppLocalizations.of(context).cancel,
-            onCancelButtonAction: () => _handleDeleteEmailRuleAction(emailRule),
-            onConfirmButtonAction: popBack,
-            onCloseButtonAction: popBack,
-          ),
-        ),
-        barrierColor: AppColor.colorDefaultCupertinoActionSheet,
-      );
-    }
+  void _deleteEmailRule(BuildContext context, TMailRule emailRule) {
+    MessageDialogActionManager().showConfirmDialogAction(
+      context,
+      title: AppLocalizations.of(context).deleteEmailRule,
+      AppLocalizations.of(context).messageConfirmationDialogDeleteEmailRule(emailRule.name),
+      AppLocalizations.of(context).delete,
+      alignCenter: true,
+      cancelTitle: AppLocalizations.of(context).cancel,
+      onConfirmAction: () => _handleDeleteEmailRuleAction(emailRule),
+      onCloseButtonAction: popBack,
+    );
   }
 
   void _handleDeleteEmailRuleAction(TMailRule emailRule) {
-    popBack();
-
     if (emailRule.conditionGroup != null) {
       emailRule = TMailRule(
         id: emailRule.id,
@@ -237,49 +233,47 @@ class EmailRulesController extends BaseController {
   void _getAllRules() {
     if (_getAllRulesInteractor != null) {
       consumeState(_getAllRulesInteractor!.execute(_accountDashBoardController.accountId.value!));
+    } else {
+      consumeState(Stream.value(Left(GetAllRulesFailure(null))));
     }
   }
 
   void openEditRuleMenuAction(BuildContext context, TMailRule rule) {
-    openContextMenuAction(
-      context,
-      [
-        _editEmailRuleActionTile(context, rule),
-        _deleteEmailRuleActionTile(context, rule),
-      ],
+    final contextMenuActions = [
+      EmailRuleActionType.edit,
+      EmailRuleActionType.delete,
+    ].map((filter) {
+      return ContextItemEmailRuleTypeAction(
+        filter,
+        AppLocalizations.of(context),
+        imagePaths,
+      );
+    }).toList();
+
+    openBottomSheetContextMenuAction(
+      context: context,
+      itemActions: contextMenuActions,
+      onContextMenuActionClick: (action) {
+        popBack();
+        handleRuleFilterActionType(context, rule, action.action);
+      },
     );
   }
 
-  Widget _deleteEmailRuleActionTile(BuildContext context, TMailRule rule) {
-    return (EmailRuleBottomSheetActionTileBuilder(
-      const Key('delete_emailRule_action'),
-      SvgPicture.asset(
-        imagePaths.icDeleteComposer,
-        colorFilter: AppColor.colorActionDeleteConfirmDialog.asFilter()),
-      AppLocalizations.of(context).deleteRule,
-      rule,
-      iconLeftPadding: const EdgeInsets.only(left: 12, right: 16),
-      iconRightPadding: const EdgeInsets.only(right: 12),
-      textStyleAction: const TextStyle(
-          fontSize: 17, color: AppColor.colorActionDeleteConfirmDialog),
-    )..onActionClick((rule) {
-      popBack();
-      deleteEmailRule(context, rule);
-    })).build();
-  }
-
-  Widget _editEmailRuleActionTile(BuildContext context, TMailRule rule) {
-    return (EmailRuleBottomSheetActionTileBuilder(
-          const Key('edit_emailRule_action'),
-          SvgPicture.asset(imagePaths.icEdit),
-          AppLocalizations.of(context).editRule,
-          rule,
-          iconLeftPadding: const EdgeInsets.only(left: 12, right: 16),
-          iconRightPadding: const EdgeInsets.only(right: 12))
-      ..onActionClick((rule) {
-        popBack();
+  void handleRuleFilterActionType(
+    BuildContext context,
+    TMailRule rule,
+    EmailRuleActionType actionType,
+  ) {
+    switch (actionType) {
+      case EmailRuleActionType.edit:
         editEmailRule(context, rule);
-      }))
-    .build();
+        break;
+      case EmailRuleActionType.delete:
+        _deleteEmailRule(context, rule);
+        break;
+      case EmailRuleActionType.add:
+        break;
+    }
   }
 }

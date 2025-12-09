@@ -13,7 +13,9 @@ import 'package:jmap_dart_client/jmap/core/capability/capability_properties.dart
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/core/unsigned_int.dart';
 import 'package:model/download_all/download_all_capability.dart';
+import 'package:model/mailbox/mailbox_constants.dart';
 import 'package:model/model.dart';
+import 'package:server_settings/server_settings/capability_server_settings.dart';
 import 'package:tmail_ui_user/features/home/data/model/session_hive_obj.dart';
 import 'package:tmail_ui_user/features/home/domain/converter/session_account_converter.dart';
 import 'package:tmail_ui_user/features/home/domain/converter/session_capabilities_converter.dart';
@@ -23,11 +25,14 @@ import 'package:tmail_ui_user/main/error/capability_validator.dart';
 extension SessionExtensions on Session {
   static final CapabilityIdentifier linagoraContactSupportCapability = CapabilityIdentifier(Uri.parse('com:linagora:params:jmap:contact:support'));
   static final CapabilityIdentifier linagoraDownloadAllCapability = CapabilityIdentifier(Uri.parse('com:linagora:params:downloadAll'));
+  static final CapabilityIdentifier linagoraSaaSCapability = CapabilityIdentifier(Uri.parse('com:linagora:params:saas'));
 
   static final Map<CapabilityIdentifier, CapabilityProperties Function(Map<String, dynamic>)> customMapCapabilitiesConverter = {
     linagoraContactSupportCapability: ContactSupportCapability.deserialize,
     tmailContactCapabilityIdentifier: AutocompleteCapability.deserialize,
     linagoraDownloadAllCapability: DownloadAllCapability.deserialize,
+    capabilityServerSettings: SettingsCapability.deserialize,
+    linagoraSaaSCapability: SaaSAccountCapability.deserialize,
   };
 
   Map<String, dynamic> toJson() {
@@ -64,7 +69,7 @@ extension SessionExtensions on Session {
 
   String get internalDomain {
     try {
-      return getOwnEmailAddress().split('@').last;
+      return getOwnEmailAddressOrEmpty().split('@').last;
     } catch (e) {
       logError('SessionExtensions::internalDomain: Exception: $e');
       return '';
@@ -114,5 +119,50 @@ extension SessionExtensions on Session {
       accountId,
       linagoraDownloadAllCapability,
     );
+  }
+
+  bool isSubAddressingSupported(AccountId? accountId) {
+    try {
+      if (accountId == null) {
+        return false;
+      }
+
+      if (!CapabilityIdentifier.jmapTeamMailboxes.isSupported(this, accountId)) {
+        return false;
+      }
+
+      final capability = getCapabilityProperties(
+        accountId,
+        CapabilityIdentifier.jmapTeamMailboxes,
+      );
+
+      final props = capability?.props[0] as Map<String, dynamic>?;
+      return props?[subaddressingSupported] ?? false;
+    } catch (e) {
+      logError('SessionExtensions::isSubAddressingSupported:Exception = $e');
+      return false;
+    }
+  }
+
+  bool isLanguageReadOnly(AccountId accountId) {
+    final settingsCapability = getCapabilityProperties<SettingsCapability>(
+      accountId,
+      capabilityServerSettings,
+    );
+    return settingsCapability?.readOnlyProperties?.contains('language') == true;
+  }
+
+  SaaSAccountCapability? getSaaSAccountCapability(AccountId accountId) {
+    try {
+      final saaSAccountCapability = getCapabilityProperties<SaaSAccountCapability>(
+        accountId,
+        linagoraSaaSCapability,
+      );
+      log('SessionExtensions::getSaaSAccountCapability:saaSAccountCapability = $saaSAccountCapability');
+      return saaSAccountCapability;
+    } catch (e) {
+      logError('SessionExtensions::getSaaSAccountCapability():[Exception] $e');
+      return null;
+    }
   }
 }

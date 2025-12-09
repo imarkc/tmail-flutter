@@ -1,6 +1,6 @@
 
 import 'package:equatable/equatable.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:tmail_ui_user/features/caching/utils/caching_constants.dart';
 import 'package:tmail_ui_user/features/thread/data/model/email_address_hive_cache.dart';
 
@@ -66,6 +66,18 @@ class EmailCache extends HiveObject with EquatableMixin {
   @HiveField(18)
   Map<String, String?>? priorityHeader;
 
+  @HiveField(19)
+  String? threadId;
+
+  @HiveField(20)
+  Map<String, String?>? unsubscribeHeader;
+
+  @HiveField(21)
+  final List<String>? messageId;
+
+  @HiveField(22)
+  final List<String>? references;
+
   EmailCache(
     this.id,
     {
@@ -87,6 +99,10 @@ class EmailCache extends HiveObject with EquatableMixin {
       this.xPriorityHeader,
       this.importanceHeader,
       this.priorityHeader,
+      this.threadId,
+      this.unsubscribeHeader,
+      this.messageId,
+      this.references,
     }
   );
 
@@ -111,5 +127,9 @@ class EmailCache extends HiveObject with EquatableMixin {
     xPriorityHeader,
     importanceHeader,
     priorityHeader,
+    threadId,
+    unsubscribeHeader,
+    messageId,
+    references,
   ];
 }

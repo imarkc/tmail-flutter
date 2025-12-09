@@ -351,8 +351,20 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "titleHeaderAttachment": "{count} Attachments ({totalSize}):",
+  "titleHeaderAttachment": "{count} Attachments ({totalSize})",
   "@titleHeaderAttachment": {
+    "type": "text",
+    "placeholders_order": [
+      "count",
+      "totalSize"
+    ],
+    "placeholders": {
+      "count": {},
+      "totalSize": {}
+    }
+  },
+  "singularAttachmentTitleHeader": "{count} Attachment ({totalSize})",
+  "@singularAttachmentTitleHeader": {
     "type": "text",
     "placeholders_order": [
       "count",
@@ -783,6 +795,12 @@
   },
   "attachments": "Attachments",
   "@attachments": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "attachment": "Attachment",
+  "@attachment": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
@@ -2579,13 +2597,13 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noEmailInYourCurrentFolder": "We're sorry, there are no emails in your current folder",
+  "noEmailInYourCurrentFolder": "There are no emails in your current folder",
   "@noEmailInYourCurrentFolder": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noEmailMatchYourCurrentFilter": "We're sorry, there are no emails that match your current filter.",
+  "noEmailMatchYourCurrentFilter": "There are no emails that match your current filter.",
   "@noEmailMatchYourCurrentFilter": {
     "type": "text",
     "placeholders_order": [],

@@ -1,6 +1,5 @@
 
 import 'package:core/presentation/extensions/color_extension.dart';
-import 'package:core/presentation/resources/image_paths.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
 import 'package:jmap_dart_client/jmap/core/unsigned_int.dart';
@@ -15,16 +14,23 @@ extension QuotasExtensions on Quota {
 
   String get hardLimitStorageAsString => presentationHardLimit != null ? filesize(presentationHardLimit!.value) : '';
 
+  String get quotaAvailableStorageAsString {
+    if (storageAvailable && presentationHardLimit!.value > used!.value) {
+      return filesize(presentationHardLimit!.value - used!.value);
+    }
+    return '0 B';
+  }
+
   bool get isWarnLimitReached {
     if (used != null && warnLimit != null) {
-      return used!.value >= warnLimit!.value * 0.9;
+      return used!.value >= warnLimit!.value;
     } else {
       return false;
     }
   }
 
   bool get isHardLimitReached {
-    if (used != null && presentationHardLimit != null) {
+    if (storageAvailable) {
       return used!.value >= presentationHardLimit!.value;
     } else {
       return false;
@@ -32,8 +38,8 @@ extension QuotasExtensions on Quota {
   }
 
   double get usedStoragePercent {
-    if (used != null && hardLimit != null && hardLimit!.value > 0) {
-      return used!.value / hardLimit!.value;
+    if (storageAvailable && presentationHardLimit!.value > 0) {
+      return used!.value / presentationHardLimit!.value;
     } else {
       return 0;
     }
@@ -43,12 +49,20 @@ extension QuotasExtensions on Quota {
 
   bool get storageAvailable => used != null && presentationHardLimit != null;
 
+  bool get isStorageUsageIndicatorAppear {
+    if (storageAvailable) {
+      return used!.value > presentationHardLimit!.value * 0.8;
+    } else {
+      return false;
+    }
+  }
+
   String getQuotasStateTitle(BuildContext context) {
     if (isHardLimitReached) {
       return '${AppLocalizations.of(context).textQuotasOutOfStorage}'
         '\n${AppLocalizations.of(context).quotaStateLabel(usedStorageAsString, hardLimitStorageAsString)}';
     } else {
-      return AppLocalizations.of(context).quotaStateLabel(usedStorageAsString, hardLimitStorageAsString);
+      return AppLocalizations.of(context).quotaAvailableLabel(quotaAvailableStorageAsString);
     }
   }
 
@@ -60,33 +74,13 @@ extension QuotasExtensions on Quota {
     }
   }
 
-  Color getQuotasStateProgressBarColor() {
+  Color getQuotasStateProgressBarColor({bool fromSetting = false}) {
     if (isHardLimitReached) {
       return AppColor.colorQuotaError;
     } else if (isWarnLimitReached) {
       return AppColor.colorBackgroundQuotasWarning;
     } else {
-      return AppColor.blue400;
-    }
-  }
-
-  Color getQuotaBannerBackgroundColor() {
-    if (isHardLimitReached) {
-      return AppColor.colorQuotaError.withOpacity(0.12);
-    } else if (isWarnLimitReached) {
-      return AppColor.colorBackgroundQuotasWarning.withOpacity(0.12);
-    } else {
-      return AppColor.colorNetworkConnectionBannerBackground;
-    }
-  }
-
-  String getQuotaBannerIcon(ImagePaths imagePaths) {
-    if (isHardLimitReached) {
-      return imagePaths.icQuotasOutOfStorage;
-    } else if (isWarnLimitReached) {
-      return imagePaths.icQuotasWarning;
-    } else {
-      return '';
+      return fromSetting ? AppColor.blue25AEFE : AppColor.blue400;
     }
   }
 
@@ -94,39 +88,9 @@ extension QuotasExtensions on Quota {
     if (isHardLimitReached) {
       return AppLocalizations.of(context).quotaErrorBannerTitle;
     } else if (isWarnLimitReached) {
-      return AppLocalizations.of(context).quotaWarningBannerTitle;
+      return AppLocalizations.of(context).quotaBannerWarningTitle;
     } else {
       return '';
-    }
-  }
-
-  String getQuotaBannerMessage(BuildContext context) {
-    if (isHardLimitReached) {
-      return AppLocalizations.of(context).quotaErrorBannerMessage;
-    } else if (isWarnLimitReached) {
-      return AppLocalizations.of(context).quotaWarningBannerMessage;
-    } else {
-      return '';
-    }
-  }
-
-  Color getQuotaBannerTitleColor() {
-    if (isHardLimitReached) {
-      return AppColor.colorQuotaError;
-    } else if (isWarnLimitReached) {
-      return AppColor.colorQuotaWarning;
-    } else {
-      return Colors.black;
-    }
-  }
-
-  Color getQuotaBannerMessageColor() {
-    if (isHardLimitReached) {
-      return AppColor.colorQuotaError;
-    } else if (isWarnLimitReached) {
-      return AppColor.colorQuotaWarning;
-    } else {
-      return Colors.black;
     }
   }
 }

@@ -20,18 +20,18 @@ import 'package:tmail_ui_user/features/base/reloadable/reloadable_controller.dar
 import 'package:tmail_ui_user/features/caching/exceptions/local_storage_exception.dart';
 import 'package:tmail_ui_user/features/email/domain/exceptions/email_exceptions.dart';
 import 'package:tmail_ui_user/features/email/domain/model/preview_email_eml_request.dart';
-import 'package:tmail_ui_user/features/email/domain/state/download_attachment_for_web_state.dart';
-import 'package:tmail_ui_user/features/email/domain/state/get_preview_email_eml_content_shared_state.dart';
-import 'package:tmail_ui_user/features/email/domain/state/get_preview_eml_content_in_memory_state.dart';
-import 'package:tmail_ui_user/features/email/domain/state/parse_email_by_blob_id_state.dart';
-import 'package:tmail_ui_user/features/email/domain/state/preview_email_from_eml_file_state.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/download_attachment_for_web_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/get_preview_email_eml_content_shared_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/get_preview_eml_content_in_memory_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/move_preview_eml_content_from_persistent_to_memory_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/parse_email_by_blob_id_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/preview_email_from_eml_file_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/remove_preview_email_eml_content_shared_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/state/download_attachment_for_web_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/get_preview_email_eml_content_shared_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/get_preview_eml_content_in_memory_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/parse_email_by_blob_id_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/preview_email_from_eml_file_state.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/download_attachment_for_web_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/get_preview_email_eml_content_shared_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/get_preview_eml_content_in_memory_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/move_preview_eml_content_from_persistent_to_memory_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/parse_email_by_blob_id_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/preview_email_from_eml_file_interactor.dart';
+import 'package:tmail_ui_user/features/download/domain/usecase/remove_preview_email_eml_content_shared_interactor.dart';
 import 'package:tmail_ui_user/features/email/presentation/extensions/attachment_extension.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/eml_previewer.dart';
 import 'package:tmail_ui_user/features/email/presentation/utils/email_utils.dart';
@@ -169,7 +169,12 @@ class EmailPreviewerController extends ReloadableController {
     _accountId = session.accountId;
 
     if (_keyStored != null) {
-      _parseEmailByBlobId(session.accountId, _keyStored!);
+      _parseEmailByBlobId(
+        accountId: _accountId!,
+        session: _session!,
+        ownEmailAddress: session.getOwnEmailAddressOrEmpty(),
+        blobId: _keyStored!,
+      );
     }
   }
 
@@ -244,9 +249,16 @@ class EmailPreviewerController extends ReloadableController {
     return uri.toString();
   }
 
-  void _parseEmailByBlobId(AccountId accountId, String blobId) {
+  void _parseEmailByBlobId({
+    required AccountId accountId,
+    required Session session,
+    required String ownEmailAddress,
+    required String blobId,
+  }) {
     consumeState(_parseEmailByBlobIdInteractor.execute(
       accountId,
+      session,
+      ownEmailAddress,
       Id(blobId),
     ));
   }
@@ -271,7 +283,8 @@ class EmailPreviewerController extends ReloadableController {
       consumeState(_previewEmailFromEmlFileInteractor.execute(
         PreviewEmailEMLRequest(
           accountId: _accountId!,
-          userName: _session!.username,
+          session: _session!,
+          ownEmailAddress: _session!.getOwnEmailAddressOrUsername(),
           blobId: success.blobId,
           email: success.email,
           locale: Localizations.localeOf(currentContext!),
@@ -320,7 +333,7 @@ class EmailPreviewerController extends ReloadableController {
               attachment,
               _accountId!,
               _session!.getDownloadUrl(jmapUrl: dynamicUrlInterceptors.jmapUrl),
-              _downloadAttachmentStreamController!)
+              onReceiveController: _downloadAttachmentStreamController!)
           .listen(_handleDownloadAttachmentViewState);
     } catch (e) {
       logError('EmailPreviewerController::_handleParseEmailByBlobIdSuccess(): $e');

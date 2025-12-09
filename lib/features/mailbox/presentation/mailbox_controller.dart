@@ -5,7 +5,6 @@ import 'package:core/core.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:jmap_dart_client/jmap/account_id.dart';
@@ -16,10 +15,11 @@ import 'package:jmap_dart_client/jmap/core/state.dart' as jmap;
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
 import 'package:jmap_dart_client/jmap/mail/mailbox/mailbox.dart';
 import 'package:model/model.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:rxdart/transformers.dart';
 import 'package:tmail_ui_user/features/base/base_mailbox_controller.dart';
+import 'package:tmail_ui_user/features/base/extensions/handle_mailbox_action_type_extension.dart';
 import 'package:tmail_ui_user/features/base/mixin/contact_support_mixin.dart';
+import 'package:tmail_ui_user/features/base/mixin/launcher_application_mixin.dart';
 import 'package:tmail_ui_user/features/base/mixin/mailbox_action_handler_mixin.dart';
 import 'package:tmail_ui_user/features/composer/domain/state/save_email_as_drafts_state.dart';
 import 'package:tmail_ui_user/features/email/domain/model/move_action.dart';
@@ -30,27 +30,26 @@ import 'package:tmail_ui_user/features/email/domain/state/mark_as_email_read_sta
 import 'package:tmail_ui_user/features/email/domain/state/move_to_mailbox_state.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/composer_arguments.dart';
 import 'package:tmail_ui_user/features/home/data/exceptions/session_exceptions.dart';
-import 'package:tmail_ui_user/features/home/domain/extensions/session_extensions.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/constants/mailbox_constants.dart';
-import 'package:tmail_ui_user/features/mailbox/domain/exceptions/empty_folder_name_exception.dart';
-import 'package:tmail_ui_user/features/mailbox/domain/exceptions/invalid_mail_format_exception.dart';
-import 'package:tmail_ui_user/features/mailbox/domain/exceptions/set_mailbox_name_exception.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/exceptions/null_session_or_accountid_exception.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/exceptions/set_mailbox_name_exception.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_right_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subaddressing_action.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subscribe_action_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subscribe_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/move_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/rename_mailbox_request.dart';
-import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_right_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/subscribe_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/subscribe_multiple_mailbox_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/subscribe_request.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/state/clear_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/create_default_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/create_new_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/delete_multiple_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/get_all_mailboxes_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/mark_as_mailbox_read_state.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/state/move_folder_content_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/move_mailbox_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/refresh_all_mailboxes_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/state/refresh_changes_all_mailboxes_state.dart';
@@ -62,6 +61,7 @@ import 'package:tmail_ui_user/features/mailbox/domain/usecases/create_new_defaul
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/create_new_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/delete_multiple_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/get_all_mailbox_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox/domain/usecases/move_folder_content_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/move_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/refresh_all_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/rename_mailbox_interactor.dart';
@@ -69,21 +69,23 @@ import 'package:tmail_ui_user/features/mailbox/domain/usecases/subaddressing_int
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/subscribe_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/subscribe_multiple_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/action/mailbox_ui_action.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/extensions/handle_favorite_tab_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/extensions/presentation_mailbox_extension.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/mixin/mailbox_widget_mixin.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_actions.dart';
-import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_categories.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_categories_expand_mode.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_node.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_tree_builder.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/open_mailbox_view_event.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/utils/mailbox_action_reactor.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/utils/mailbox_utils.dart';
-import 'package:tmail_ui_user/features/mailbox/presentation/widgets/copy_subaddress_widget.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/domain/usecases/verify_name_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/presentation/model/mailbox_creator_arguments.dart';
 import 'package:tmail_ui_user/features/mailbox_creator/presentation/model/new_mailbox_arguments.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/state/remove_email_drafts_state.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/action/dashboard_action.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/handle_create_new_rule_filter.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/extensions/open_and_close_composer_extension.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/dashboard_routes.dart';
 import 'package:tmail_ui_user/features/push_notification/presentation/websocket/web_socket_message.dart';
@@ -103,7 +105,10 @@ import 'package:tmail_ui_user/main/routes/route_utils.dart';
 import 'package:tmail_ui_user/main/utils/ios_sharing_manager.dart';
 
 class MailboxController extends BaseMailboxController
-    with MailboxActionHandlerMixin, ContactSupportMixin {
+    with MailboxActionHandlerMixin,
+        ContactSupportMixin,
+        LauncherApplicationMixin,
+        MailboxWidgetMixin {
 
   final mailboxDashBoardController = Get.find<MailboxDashBoardController>();
   final isMailboxListScrollable = false.obs;
@@ -115,18 +120,21 @@ class MailboxController extends BaseMailboxController
   final SubscribeMultipleMailboxInteractor _subscribeMultipleMailboxInteractor;
   final SubaddressingInteractor _subaddressingInteractor;
   final CreateDefaultMailboxInteractor _createDefaultMailboxInteractor;
+  final MoveFolderContentInteractor _moveFolderContentInteractor;
 
   IOSSharingManager? _iosSharingManager;
+  late MailboxActionReactor mailboxActionReactor;
 
-  final currentSelectMode = SelectMode.INACTIVE.obs;
   final _activeScrollTop = RxBool(false);
   final _activeScrollBottom = RxBool(true);
+  final foldersExpandMode = Rx(ExpandMode.EXPAND);
 
   MailboxId? _newFolderId;
   NavigationRouter? _navigationRouter;
   WebSocketQueueHandler? _webSocketQueueHandler;
 
   final _openMailboxEventController = StreamController<OpenMailboxViewEvent>();
+  StreamSubscription? _openMailboxEventStreamSubscription;
   final mailboxListScrollController = ScrollController();
 
   PresentationMailbox? get selectedMailbox => mailboxDashBoardController.selectedMailbox.value;
@@ -146,6 +154,7 @@ class MailboxController extends BaseMailboxController
     this._subscribeMultipleMailboxInteractor,
     this._subaddressingInteractor,
     this._createDefaultMailboxInteractor,
+    this._moveFolderContentInteractor,
     TreeBuilder treeBuilder,
     VerifyNameInteractor verifyNameInteractor,
     GetAllMailboxInteractor getAllMailboxInteractor,
@@ -161,15 +170,21 @@ class MailboxController extends BaseMailboxController
   void onInit() {
     _registerObxStreamListener();
     _initWebSocketQueueHandler();
+    mailboxActionReactor = MailboxActionReactor(
+      _moveFolderContentInteractor,
+    );
     super.onInit();
   }
 
   @override
   void onReady() {
-    _openMailboxEventController.stream.debounceTime(const Duration(milliseconds: 500)).listen((event) {
-      if (!event.buildContext.mounted) return;
-      _handleOpenMailbox(event.buildContext, event.presentationMailbox);
-    });
+    _openMailboxEventStreamSubscription = _openMailboxEventController
+      .stream
+      .debounceTime(const Duration(milliseconds: 500))
+      .listen((event) {
+        if (!event.buildContext.mounted) return;
+        _handleOpenMailbox(event.buildContext, event.presentationMailbox);
+      });
     _initCollapseMailboxCategories();
     mailboxListScrollController.addListener(_mailboxListScrollControllerListener);
     super.onReady();
@@ -177,6 +192,8 @@ class MailboxController extends BaseMailboxController
 
   @override
   void onClose() {
+    _openMailboxEventStreamSubscription?.cancel();
+    _openMailboxEventStreamSubscription = null;
     _openMailboxEventController.close();
     mailboxListScrollController.dispose();
     _webSocketQueueHandler?.dispose();
@@ -185,7 +202,6 @@ class MailboxController extends BaseMailboxController
 
   @override
   void handleSuccessViewState(Success success) {
-    super.handleSuccessViewState(success);
     if (success is GetAllMailboxSuccess) {
       _handleGetAllMailboxSuccess(success);
     } else if (success is CreateNewMailboxSuccess) {
@@ -205,15 +221,23 @@ class MailboxController extends BaseMailboxController
     } else if (success is SubscribeMultipleMailboxHasSomeSuccess) {
       _handleUnsubscribeMultipleMailboxHasSomeSuccess(success);
     } else if (success is SubaddressingSuccess) {
-      _handleSubaddressingSuccess(success);
+      handleSubAddressingSuccess(success);
     } else if (success is CreateDefaultMailboxAllSuccess) {
       _handleCreateDefaultFolderIfMissingSuccess(success);
+    } else if (success is MoveFolderContentSuccess) {
+      handleMoveFolderContentSuccess(
+        success: success,
+        mailboxActionReactor: mailboxActionReactor,
+        dashboardController: mailboxDashBoardController,
+        baseMailboxController: this,
+      );
+    } else {
+      super.handleSuccessViewState(success);
     }
   }
 
   @override
   void handleFailureViewState(Failure failure) {
-    super.handleFailureViewState(failure);
     if (failure is CreateNewMailboxFailure) {
       _createNewMailboxFailure(failure);
     } else if (failure is RenameMailboxFailure) {
@@ -221,7 +245,15 @@ class MailboxController extends BaseMailboxController
     } else if (failure is DeleteMultipleMailboxFailure) {
       _deleteMailboxFailure(failure);
     } else if (failure is SubaddressingFailure) {
-      _handleSubaddressingFailure(failure);
+      handleSubAddressingFailure(failure);
+    } else if (failure is MoveFolderContentFailure) {
+      handleMoveFolderContentFailure(
+        failure: failure,
+        dashboardController: mailboxDashBoardController,
+        toastManager: toastManager,
+      );
+    } else {
+      super.handleFailureViewState(failure);
     }
   }
 
@@ -231,12 +263,14 @@ class MailboxController extends BaseMailboxController
     viewState.value.fold(
       (failure) {
         if (failure is GetAllMailboxFailure) {
+          addFavoriteFolderToMailboxList();
           mailboxDashBoardController.updateRefreshAllMailboxState(Left(RefreshAllMailboxFailure()));
           showRetryToast(failure);
         }
       },
       (success) {
         if (success is GetAllMailboxSuccess) {
+          addFavoriteFolderToMailboxList();
           mailboxDashBoardController.updateRefreshAllMailboxState(Right(RefreshAllMailboxSuccess()));
           _handleCreateDefaultFolderIfMissing(mailboxDashBoardController.mapDefaultMailboxIdByRole);
           _handleDataFromNavigationRouter();
@@ -244,6 +278,8 @@ class MailboxController extends BaseMailboxController
           if (PlatformInfo.isIOS) {
             _updateMailboxIdsBlockNotificationToKeychain(success.mailboxList);
           }
+        } else if (success is CreateDefaultMailboxAllSuccess) {
+          addFavoriteFolderToMailboxList();
         }
       });
   }
@@ -259,12 +295,6 @@ class MailboxController extends BaseMailboxController
       mailboxDashBoardController.routerParameters,
       _handleNavigationRouteParameters
     );
-
-    ever(mailboxDashBoardController.dashBoardAction, (action) {
-      if (action is ClearSearchEmailAction) {
-        _switchBackToMailboxDefault();
-      }
-    });
 
     ever(mailboxDashBoardController.mailboxUIAction, (action) {
       if (action is SelectMailboxDefaultAction) {
@@ -397,6 +427,11 @@ class MailboxController extends BaseMailboxController
           destinationMailboxId: reactionState.destinationMailboxId,
           emailIdsWithReadStatus: reactionState.moveSucceededEmailIdsWithReadStatus,
         );
+      } else if (reactionState is ClearMailboxSuccess) {
+        _handleDeleteEmailsFromMailbox(
+          affectedMailboxId: reactionState.mailboxId,
+          totalEmailsChanged: -reactionState.totalDeletedMessages.value.toInt(),
+        );
       }
     });
   }
@@ -514,12 +549,12 @@ class MailboxController extends BaseMailboxController
     }
   }
   
-  void _refreshMailboxChanges({jmap.State? newState}) {
+  void _refreshMailboxChanges({required jmap.State newState}) {
     log('MailboxController::_refreshMailboxChanges():newState: $newState');
     if (accountId == null ||
         session == null ||
         currentMailboxState == null ||
-        newState == null) {
+        currentMailboxState == newState) {
       _newFolderId = null;
       return;
     }
@@ -529,11 +564,6 @@ class MailboxController extends BaseMailboxController
 
   Future<void> _handleWebSocketMessage(WebSocketMessage message) async {
     try {
-      if (currentMailboxState == message.newState) {
-        log('MailboxController::_handleWebSocketMessage:Skipping redundant state: ${message.newState}');
-        return Future.value();
-      }
-
       final refreshViewState = await refreshAllMailboxInteractor!.execute(
         session!,
         accountId!,
@@ -571,6 +601,7 @@ class MailboxController extends BaseMailboxController
     if (currentContext != null) {
       syncAllMailboxWithDisplayName(currentContext!);
     }
+    addFavoriteFolderToMailboxList();
     _setMapMailbox();
     _setOutboxMailbox();
     _selectSelectedMailboxDefault();
@@ -841,15 +872,8 @@ class MailboxController extends BaseMailboxController
   }
 
   void goToCreateNewMailboxView(BuildContext context, {PresentationMailbox? parentMailbox}) async {
-    if (session !=null && accountId != null) {
-      final arguments = MailboxCreatorArguments(
-          accountId!,
-          defaultMailboxTree.value,
-          personalMailboxTree.value,
-          teamMailboxesTree.value,
-          mailboxDashBoardController.sessionCurrent!,
-          parentMailbox
-        );
+    if (session != null && accountId != null) {
+      final arguments = MailboxCreatorArguments(allMailboxes, parentMailbox);
 
       final result = PlatformInfo.isWeb
         ? await DialogRouter.pushGeneralDialog(routeName: AppRoutes.mailboxCreator, arguments: arguments)
@@ -922,16 +946,6 @@ class MailboxController extends BaseMailboxController
     closeMailboxScreen(context);
   }
 
-  void enableSelectionMailbox() {
-    currentSelectMode.value = SelectMode.ACTIVE;
-  }
-
-  void disableSelectionMailbox() {
-    _cancelSelectMailbox();
-  }
-
-  bool isSelectionEnabled() => currentSelectMode.value == SelectMode.ACTIVE;
-
   List<MailboxActions> get listActionOfMailboxSelected {
     final currentMailboxesSelected = listMailboxSelected;
 
@@ -957,11 +971,6 @@ class MailboxController extends BaseMailboxController
     }
   }
 
-  void _cancelSelectMailbox() {
-    unAllSelectedMailboxNode();
-    currentSelectMode.value = SelectMode.INACTIVE;
-  }
-
   List<PresentationMailbox> get listMailboxSelected {
     final defaultMailboxSelected = defaultMailboxTree.value
       .findNodes((node) => node.selectMode == SelectMode.ACTIVE);
@@ -976,44 +985,6 @@ class MailboxController extends BaseMailboxController
       .expand((node) => node)
       .map((node) => node.item)
       .toList();
-  }
-
-  void pressMailboxSelectionAction(
-      BuildContext context,
-      MailboxActions actions,
-      List<PresentationMailbox> selectedMailboxList
-  ) {
-    switch(actions) {
-      case MailboxActions.delete:
-        _openConfirmationDialogDeleteMultipleMailboxAction(context, selectedMailboxList);
-        break;
-      case MailboxActions.rename:
-        openDialogRenameMailboxAction(
-          context,
-          selectedMailboxList.first,
-          responsiveUtils,
-          onRenameMailboxAction: _renameMailboxAction
-        );
-        break;
-      case MailboxActions.markAsRead:
-        markAsReadMailboxAction(
-          context,
-          selectedMailboxList.first,
-          mailboxDashBoardController,
-          onCallbackAction: closeMailboxScreen
-        );
-        break;
-      case MailboxActions.move:
-        moveMailboxAction(
-          context,
-          selectedMailboxList.first,
-          mailboxDashBoardController,
-          onMovingMailboxAction: (mailboxSelected, destinationMailbox) => _invokeMovingMailboxAction(context, mailboxSelected, destinationMailbox)
-        );
-        break;
-      default:
-        break;
-    }
   }
 
   void _deleteMailboxAction(PresentationMailbox presentationMailbox) {
@@ -1035,7 +1006,6 @@ class MailboxController extends BaseMailboxController
       _deleteMailboxFailure(DeleteMultipleMailboxFailure(null));
     }
 
-    _cancelSelectMailbox();
     popBack();
   }
 
@@ -1053,60 +1023,6 @@ class MailboxController extends BaseMailboxController
       _switchBackToMailboxDefault();
       _closeEmailViewIfMailboxDisabledOrNotExist(listMailboxIdDeleted);
     }
-  }
-
-  void _openConfirmationDialogDeleteMultipleMailboxAction(
-      BuildContext context,
-      List<PresentationMailbox> selectedMailboxList
-  ) {
-    if (responsiveUtils.isLandscapeMobile(context) ||
-        responsiveUtils.isPortraitMobile(context)) {
-      (ConfirmationDialogActionSheetBuilder(context)
-        ..messageText(AppLocalizations.of(context)
-            .messageConfirmationDialogDeleteMultipleFolder(selectedMailboxList.length))
-        ..onCancelAction(AppLocalizations.of(context).cancel, () =>
-            popBack())
-        ..onConfirmAction(AppLocalizations.of(context).delete, () =>
-            _deleteMultipleMailboxAction(selectedMailboxList)))
-        .show();
-    } else {
-      Get.dialog(
-        PointerInterceptor(child: ConfirmationDialogBuilder(
-          key: const Key('confirm_dialog_delete_multiple_mailbox'),
-          imagePath: imagePaths,
-          title: AppLocalizations.of(context).deleteFolders,
-          textContent: AppLocalizations.of(context).messageConfirmationDialogDeleteMultipleFolder(selectedMailboxList.length),
-          confirmText: AppLocalizations.of(context).cancel,
-          cancelText: AppLocalizations.of(context).delete,
-          onCancelButtonAction: () => _deleteMultipleMailboxAction(selectedMailboxList),
-          onConfirmButtonAction: popBack,
-          onCloseButtonAction: popBack,
-        )),
-        barrierColor: AppColor.colorDefaultCupertinoActionSheet,
-      );
-    }
-  }
-
-  void _deleteMultipleMailboxAction(List<PresentationMailbox> selectedMailboxList) {
-    if (session != null && accountId != null) {
-      final tupleMap = MailboxUtils.generateMapDescendantIdsAndMailboxIdList(
-          selectedMailboxList,
-          defaultMailboxTree.value,
-          personalMailboxTree.value);
-      final mapDescendantIds = tupleMap.value1;
-      final listMailboxId = tupleMap.value2;
-      consumeState(_deleteMultipleMailboxInteractor.execute(
-        session!,
-        accountId!,
-        mapDescendantIds,
-        listMailboxId,
-      ));
-    } else {
-      _deleteMailboxFailure(DeleteMultipleMailboxFailure(null));
-    }
-
-    _cancelSelectMailbox();
-    popBack();
   }
 
   void _switchBackToMailboxDefault() {
@@ -1134,8 +1050,6 @@ class MailboxController extends BaseMailboxController
         RenameMailboxRequest(presentationMailbox.id, newMailboxName))
       );
     }
-
-    _cancelSelectMailbox();
   }
 
   void _handleMovingMailbox(
@@ -1191,40 +1105,6 @@ class MailboxController extends BaseMailboxController
     }
   }
 
-  void toggleMailboxCategories(MailboxCategories categories) async {
-    switch(categories) {
-      case MailboxCategories.exchange:
-        final newExpandMode = mailboxCategoriesExpandMode.value.defaultMailbox == ExpandMode.EXPAND ? ExpandMode.COLLAPSE : ExpandMode.EXPAND;
-        mailboxCategoriesExpandMode.value.defaultMailbox = newExpandMode;
-        mailboxCategoriesExpandMode.refresh();
-        break;
-      case MailboxCategories.personalFolders:
-        final newExpandMode = mailboxCategoriesExpandMode.value.personalFolders == ExpandMode.EXPAND ? ExpandMode.COLLAPSE : ExpandMode.EXPAND;
-        mailboxCategoriesExpandMode.value.personalFolders = newExpandMode;
-        mailboxCategoriesExpandMode.refresh();
-        if (personalMailboxTree.value.root.hasChildren()) {
-          _triggerToggleMailboxCategories();
-        }
-        break;
-      case MailboxCategories.teamMailboxes:
-        final newExpandMode = mailboxCategoriesExpandMode.value.teamMailboxes == ExpandMode.EXPAND ? ExpandMode.COLLAPSE : ExpandMode.EXPAND;
-        mailboxCategoriesExpandMode.value.teamMailboxes = newExpandMode;
-        mailboxCategoriesExpandMode.refresh();
-        if (personalMailboxTree.value.root.hasChildren() && mailboxCategoriesExpandMode.value.teamMailboxes == ExpandMode.COLLAPSE) {
-          _triggerToggleMailboxCategories();
-        }
-        break;
-    }
-  }
-
-  void _triggerToggleMailboxCategories() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    mailboxListScrollController.animateTo(
-      mailboxListScrollController.offset + 100,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInToLinear);
-  }
-
   void _handleNavigationRouteParameters(Map<String, dynamic>? parameters) {
     log('MailboxController::_handleNavigationRouteParameters(): parameters: $parameters');
     if (parameters != null) {
@@ -1239,8 +1119,6 @@ class MailboxController extends BaseMailboxController
       MailboxActions actions,
       PresentationMailbox mailbox
   ) {
-    popBack();
-
     switch(actions) {
       case MailboxActions.delete:
         openConfirmationDialogDeleteMailboxAction(
@@ -1281,11 +1159,11 @@ class MailboxController extends BaseMailboxController
         break;
       case MailboxActions.copySubaddress:
         try{
-          final subaddress = getSubaddress(
-            mailboxDashBoardController.getOwnEmailAddress(),
+          final subaddress = getSubAddress(
+            mailboxDashBoardController.ownEmailAddress.value,
             findNodePathWithSeparator(mailbox.id, '.')!,
           );
-          copySubaddressAction(context, subaddress);
+          copySubAddressAction(context, subaddress);
         } catch (error) {
           appToast.showToastErrorMessage(context, AppLocalizations.of(context).errorWhileFetchingSubaddress);
         }
@@ -1299,19 +1177,17 @@ class MailboxController extends BaseMailboxController
         break;
       case MailboxActions.allowSubaddressing:
         try{
-          final subaddress = getSubaddress(
-            mailboxDashBoardController.getOwnEmailAddress(),
+          final subAddress = getSubAddress(
+            mailboxDashBoardController.ownEmailAddress.value,
             findNodePathWithSeparator(mailbox.id, '.')!,
           );
-          openConfirmationDialogSubaddressingAction(
+          openConfirmationDialogSubAddressingAction(
               context,
-              responsiveUtils,
-              imagePaths,
               mailbox.id,
               mailbox.getDisplayName(context),
-              subaddress,
+              subAddress,
               mailbox.rights,
-              onAllowSubaddressingAction: _handleSubaddressingAction
+              onAllowSubAddressingAction: _handleSubaddressingAction,
           );
         } catch (error) {
           appToast.showToastErrorMessage(context, AppLocalizations.of(context).errorWhileFetchingSubaddress);
@@ -1329,8 +1205,23 @@ class MailboxController extends BaseMailboxController
       case MailboxActions.newSubfolder:
         goToCreateNewMailboxView(context, parentMailbox: mailbox);
         break;
+      case MailboxActions.createFilter:
+        mailboxDashBoardController.openCreateEmailRuleView(
+          presentationMailbox: mailbox,
+        );
+        break;
       case MailboxActions.recoverDeletedMessages:
         mailboxDashBoardController.gotoEmailRecovery();
+        break;
+      case MailboxActions.moveFolderContent:
+        performMoveFolderContent(
+          context: context,
+          mailboxSelected: mailbox,
+          mailboxActionReactor: mailboxActionReactor,
+          dashboardController: mailboxDashBoardController,
+          baseMailboxController: this,
+        );
+        mailboxDashBoardController.closeMailboxMenuDrawer();
         break;
       default:
         break;
@@ -1351,7 +1242,6 @@ class MailboxController extends BaseMailboxController
         mailboxSelected,
         destinationMailbox: destinationMailbox
       );
-      _cancelSelectMailbox();
     }
   }
 
@@ -1379,7 +1269,6 @@ class MailboxController extends BaseMailboxController
   }
 
   void closeMailboxScreen(BuildContext context) {
-    _cancelSelectMailbox();
     mailboxDashBoardController.closeMailboxMenuDrawer();
   }
 
@@ -1584,26 +1473,12 @@ class MailboxController extends BaseMailboxController
 
       consumeState(_subaddressingInteractor.execute(session, accountId, allowSubaddressingRequest));
     } else {
-      _handleSubaddressingFailure(SubaddressingFailure.withException(NullSessionOrAccountIdException()));
+      handleSubAddressingFailure(
+        SubaddressingFailure.withException(NullSessionOrAccountIdException()),
+      );
     }
 
     popBack();
-  }
-
-  void _handleSubaddressingFailure(SubaddressingFailure failure) {
-    if (currentOverlayContext != null && currentContext != null) {
-      final messageError = AppLocalizations.of(currentContext!).toastMessageSubaddressingFailure;
-      appToast.showToastErrorMessage(currentOverlayContext!, messageError);
-    }
-  }
-
-  void _handleSubaddressingSuccess(SubaddressingSuccess success) {
-    appToast.showToastSuccessMessage(
-      currentOverlayContext!,
-      success.subaddressingAction == MailboxSubaddressingAction.allow
-          ? AppLocalizations.of(currentContext!).toastMessageAllowSubaddressingSuccess
-          : AppLocalizations.of(currentContext!).toastMessageDisallowSubaddressingSuccess,
-    );
   }
 
   void _mailboxListScrollControllerListener() {
@@ -1683,77 +1558,5 @@ class MailboxController extends BaseMailboxController
         totalEmails: presentationMailbox.countTotalEmails
       );
     }
-  }
-
-  ContactSupportCapability? get contactSupportCapability {
-    final accountId = mailboxDashBoardController.accountId.value;
-    final session = mailboxDashBoardController.sessionCurrent;
-
-    if (accountId == null || session == null) return null;
-
-    return session.getContactSupportCapability(accountId);
-  }
-  
-  void openConfirmationDialogSubaddressingAction(
-      BuildContext context,
-      ResponsiveUtils responsiveUtils,
-      ImagePaths imagePaths,
-      MailboxId mailboxId,
-      String mailboxName,
-      String subaddress,
-      Map<String, List<String>?>? currentRights, {
-        required AllowSubaddressingActionCallback onAllowSubaddressingAction
-      }) {
-    if (responsiveUtils.isLandscapeMobile(context) || responsiveUtils.isPortraitMobile(context)) {
-      (ConfirmationDialogActionSheetBuilder(context)
-        ..messageText(AppLocalizations.of(context).message_confirmation_dialog_allow_subaddressing_mobile(mailboxName, subaddress))
-        ..onCancelAction(AppLocalizations.of(context).cancel, () => popBack())
-        ..onConfirmAction(AppLocalizations.of(context).allow, () => onAllowSubaddressingAction(mailboxId, currentRights, MailboxActions.allowSubaddressing))
-      ).show();
-    } else {
-      Get.dialog(
-        PointerInterceptor(
-          child: ConfirmationDialogBuilder(
-            key: const Key('confirm_dialog_subaddressing'),
-            imagePath: imagePaths,
-            title: AppLocalizations.of(context).allowSubaddressing,
-            textContent: AppLocalizations.of(context).message_confirmation_dialog_allow_subaddressing(mailboxName),
-            confirmText: AppLocalizations.of(context).allow,
-            cancelText: AppLocalizations.of(context).cancel,
-            additionalWidgetContent: CopySubaddressWidget(
-              imagePath: imagePaths,
-              subaddress: subaddress,
-              onCopyButtonAction: () => copySubaddressAction(context, subaddress),
-            ),
-            onConfirmButtonAction: () => onAllowSubaddressingAction(
-              mailboxId,
-              currentRights,
-              MailboxActions.allowSubaddressing,
-            ),
-            onCancelButtonAction: popBack,
-            onCloseButtonAction: popBack,
-          ),
-        ),
-        barrierColor: AppColor.colorDefaultCupertinoActionSheet,
-      );
-    }
-  }
-  
-  void copySubaddressAction(BuildContext context, String subaddress) {
-    Clipboard.setData(ClipboardData(text: subaddress));
-    appToast.showToastSuccessMessage(context, AppLocalizations.of(context).emailSubaddressCopiedToClipboard);
-  }
-
-  String getSubaddress(String userEmail, String folderName) {
-    if (folderName.isEmpty) {
-      throw EmptyFolderNameException(folderName);
-    }
-
-    final atIndex = userEmail.indexOf('@');
-    if (atIndex <= 0 || atIndex == userEmail.length - 1) {
-      throw InvalidMailFormatException(userEmail);
-    }
-
-    return '${userEmail.substring(0, atIndex)}+$folderName@${userEmail.substring(atIndex + 1)}';
   }
 }

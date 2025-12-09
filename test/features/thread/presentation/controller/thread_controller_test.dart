@@ -4,6 +4,7 @@ import 'package:core/presentation/state/success.dart';
 import 'package:core/presentation/utils/app_toast.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
 import 'package:core/utils/application_manager.dart';
+import 'package:core/utils/platform_info.dart';
 import 'package:dartz/dartz.dart' hide State;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -27,7 +28,6 @@ import 'package:tmail_ui_user/features/login/domain/usecases/delete_credential_i
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/action/dashboard_action.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/search_controller.dart';
-import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_sort_order_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/search_email_filter.dart';
 import 'package:tmail_ui_user/features/manage_account/data/local/language_cache_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/log_out_oidc_interactor.dart';
@@ -279,6 +279,7 @@ void main() {
         'AND `mailboxDashBoardController.emailsInCurrentMailbox` should not be cleared',
       () async {
         // Arrange
+        PlatformInfo.isTestingForWeb = true;
         final emailList = [
           PresentationEmail(
             id: EmailId(Id('email1')),
@@ -332,7 +333,7 @@ void main() {
         threadController.onInit();
 
         mockMailboxDashBoardController.emailUIAction.value =
-            RefreshChangeEmailAction(State('new-state'));
+            RefreshChangeEmailAction(newState: State('new-state'));
 
         await untilCalled(mockSearchEmailInteractor.execute(
           any,
@@ -351,7 +352,7 @@ void main() {
           AccountFixtures.aliceAccountId,
           limit: UnsignedInt(emailList.length),
           position: null,
-          sort: EmailSortOrderType.mostRecent.getSortOrder().toNullable(),
+          sort: SearchEmailFilter.defaultSortOrder.getSortOrder().toNullable(),
           filter: SearchEmailFilter.initial().mappingToEmailFilterCondition(),
           properties: EmailUtils.getPropertiesForEmailGetMethod(
             SessionFixtures.aliceSession,
@@ -361,6 +362,7 @@ void main() {
         expect(mockMailboxDashBoardController.emailsInCurrentMailbox.isNotEmpty, isTrue);
         expect(mockMailboxDashBoardController.emailsInCurrentMailbox.length, emailList.length);
         expect(threadController.isListEmailScrollViewJumping, isFalse);
+        PlatformInfo.isTestingForWeb = false;
       });
 
       test(
@@ -428,7 +430,7 @@ void main() {
           AccountFixtures.aliceAccountId,
           limit: ThreadConstants.defaultLimit,
           position: null,
-          sort: EmailSortOrderType.mostRecent.getSortOrder().toNullable(),
+          sort: SearchEmailFilter.defaultSortOrder.getSortOrder().toNullable(),
           filter: SearchEmailFilter.initial().mappingToEmailFilterCondition(),
           properties: EmailUtils.getPropertiesForEmailGetMethod(
             SessionFixtures.aliceSession,

@@ -52,11 +52,11 @@ class DesktopResponsiveContainerView extends StatelessWidget {
           color: DesktopResponsiveContainerViewStyle.backgroundColor,
           width: composerManager.composerIdsQueue.length > 1
             ? DesktopResponsiveContainerViewStyle.normalScreenMaxWidth
-            : responsiveUtils.getSizeScreenWidth(context) * 0.5,
+            : responsiveUtils.getSizeScreenWidth(context) * 0.55,
           height: composerManager.composerIdsQueue.length > 1
             ? DesktopResponsiveContainerViewStyle.normalScreenMaxHeight
-            : responsiveUtils.getSizeScreenHeight(context) * 0.75,
-          child: LayoutBuilder(builder: (context, constraints) =>
+            : responsiveUtils.getSizeScreenHeight(context) * 0.85,
+          child: LayoutBuilder(builder: (_, constraints) =>
             PointerInterceptor(
               child: childBuilder.call(context, constraints),
             )
@@ -80,7 +80,7 @@ class DesktopResponsiveContainerView extends StatelessWidget {
               color: DesktopResponsiveContainerViewStyle.backgroundColor,
               width: maxWidth,
               height: maxHeight,
-              child: LayoutBuilder(builder: (context, constraints) =>
+              child: LayoutBuilder(builder: (_, constraints) =>
                 PointerInterceptor(
                   child: childBuilder.call(context, constraints)
                 )

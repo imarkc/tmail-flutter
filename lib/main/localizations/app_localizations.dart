@@ -386,8 +386,16 @@ class AppLocalizations {
 
   String titleHeaderAttachment(int count, String totalSize) {
     return Intl.message(
-        '$count Attachments ($totalSize):',
+        '$count Attachments ($totalSize)',
         name: 'titleHeaderAttachment',
+        args: [count, totalSize]
+    );
+  }
+
+  String singularAttachmentTitleHeader(int count, String totalSize) {
+    return Intl.message(
+        '$count Attachment ($totalSize)',
+        name: 'singularAttachmentTitleHeader',
         args: [count, totalSize]
     );
   }
@@ -805,12 +813,6 @@ class AppLocalizations {
         name: 'hide');
   }
 
-  String get copy_email_address {
-    return Intl.message(
-        'Copy email address',
-        name: 'copy_email_address');
-  }
-
   String get compose_email {
     return Intl.message(
         'Compose email',
@@ -859,6 +861,13 @@ class AppLocalizations {
         name: 'attachments');
   }
 
+  String get attachment {
+    return Intl.message(
+      'Attachment',
+      name: 'attachment',
+    );
+  }
+
   String get showAll {
     return Intl.message(
         'Show all',
@@ -887,13 +896,6 @@ class AppLocalizations {
     return Intl.message(
       'Select all',
       name: 'select_all',
-    );
-  }
-
-  String get mark_all_as_read {
-    return Intl.message(
-      'Mark all as read',
-      name: 'mark_all_as_read',
     );
   }
 
@@ -1171,13 +1173,6 @@ class AppLocalizations {
     return Intl.message(
         'Exchange',
         name: 'exchange'
-    );
-  }
-
-  String get move_message {
-    return Intl.message(
-      'Move message',
-      name: 'move_message',
     );
   }
 
@@ -2083,27 +2078,6 @@ class AppLocalizations {
     );
   }
 
-  String get noStartTime {
-    return Intl.message(
-      'No start time',
-      name: 'noStartTime',
-    );
-  }
-
-  String get noEndTime {
-    return Intl.message(
-      'No end time',
-      name: 'noEndTime',
-    );
-  }
-
-  String get noEndDate {
-    return Intl.message(
-      'No end date',
-      name: 'noEndDate',
-    );
-  }
-
   String get errorMessageWhenStartDateVacationIsEmpty {
     return Intl.message(
       'Please enter a valid start date',
@@ -2217,13 +2191,6 @@ class AppLocalizations {
     return Intl.message(
         'Keep local copy disable.',
         name: 'toastMessageLocalCopyDisable');
-  }
-
-  String get keepLocalCopyForwardLabel {
-    return Intl.message(
-      'Keep a copy of the email in Inbox',
-      name: 'keepLocalCopyForwardLabel',
-    );
   }
 
   String get emailRuleSettingExplanation {
@@ -2774,13 +2741,13 @@ class AppLocalizations {
 
   String get noEmailInYourCurrentFolder {
     return Intl.message(
-      'We\'re sorry, there are no emails in your current folder',
+      'There are no emails in your current folder',
       name: 'noEmailInYourCurrentFolder');
   }
 
   String get noEmailMatchYourCurrentFilter {
     return Intl.message(
-      'We\'re sorry, there are no emails that match your current filter.',
+      'There are no emails that match your current filter.',
       name: 'noEmailMatchYourCurrentFilter');
   }
 
@@ -3309,27 +3276,6 @@ class AppLocalizations {
     );
   }
 
-  String get quotaWarningBannerTitle {
-    return Intl.message(
-      'You are running out of storage (90%).',
-      name: 'quotaWarningBannerTitle'
-    );
-  }
-
-  String get quotaWarningBannerMessage {
-    return Intl.message(
-      'Soon you won\'t be able to email in Tmail. Please clean your storage or upgrade your storage to get full features in Tmail.',
-      name: 'quotaWarningBannerMessage'
-    );
-  }
-
-  String get quotaErrorBannerMessage {
-    return Intl.message(
-      'Soon you won\'t be able to email in Tmail. Please clean your storage or upgrade your storage to get full features in Tmail.',
-      name: 'quotaErrorBannerMessage'
-    );
-  }
-
   String createFolderSuccessfullyMessage(String folderName) {
     return Intl.message(
       'You successfully created $folderName folder',
@@ -3470,14 +3416,6 @@ class AppLocalizations {
     return Intl.message(
       'Your messages were not sent due to network issues. They\'re safely stored. When you\'re back online, you can resend, edit, or delete them.',
       name: 'bannerMessageSendingQueueViewOnIOS'
-    );
-  }
-
-  String moreAttachments(int count) {
-    return Intl.message(
-      '+ $count more',
-      name: 'moreAttachments',
-      args: [count]
     );
   }
 
@@ -3883,12 +3821,6 @@ class AppLocalizations {
     );
   }
 
-  String get doYouWantToProceed {
-    return Intl.message(
-      'Do you want to proceed?',
-      name: 'doYouWantToProceed');
-  }
-
   String get messageWarningDialogForForwardsToOtherDomains {
     return Intl.message(
       'You are redirecting emails to another domain. This could be a security threat or considered illegal data extraction.',
@@ -4157,13 +4089,6 @@ class AppLocalizations {
       'Mail to attendees',
       name: 'mailToAttendees'
     );
-  }
-
-  String showMore(int count) {
-    return Intl.message(
-      'Show more (+$count)',
-      name: 'showMore',
-      args: [count]);
   }
 
   String get showLess {
@@ -4643,6 +4568,872 @@ class AppLocalizations {
     return Intl.message(
       'Pull harder for',
       name: 'pullHarderFor',
+    );
+  }
+
+  String get saveAsTemplate {
+    return Intl.message(
+      'Save as template',
+      name: 'saveAsTemplate',
+    );
+  }
+
+  String get savingTemplate {
+    return Intl.message(
+      'Saving template',
+      name: 'savingTemplate',
+    );
+  }
+
+  String get savingMessageToTemplateFolder {
+    return Intl.message(
+      'Saving message to template folder',
+      name: 'savingMessageToTemplateFolder',
+    );
+  }
+
+  String get saveMessageToTemplateSuccess {
+    return Intl.message(
+      'Save message to template folder successfully',
+      name: 'saveMessageToTemplateSuccess',
+    );
+  }
+
+  String get updateMessageToTemplateSuccess {
+    return Intl.message(
+      'Update message to template folder successfully',
+      name: 'updateMessageToTemplateSuccess',
+    );
+  }
+
+  String get saveMessageToTemplateFailed {
+    return Intl.message(
+      'Save message to template folder failed',
+      name: 'saveMessageToTemplateFailed',
+    );
+  }
+
+  String get saveMessageToTemplateCancelled {
+    return Intl.message(
+      'Save message to template folder has been cancelled',
+      name: 'saveMessageToTemplateCancelled',
+    );
+  }
+
+  String invalidArguments(String description) {
+    return Intl.message(
+      'Invalid arguments: "$description"',
+      name: 'invalidArguments',
+      args: [description],
+    );
+  }
+
+  String get exportTraceLog {
+    return Intl.message(
+      'Export trace log',
+      name: 'exportTraceLog',
+    );
+  }
+
+  String get messageExportTraceLogDialog {
+    return Intl.message(
+      'The mobile API error message log has been tracked. Do you want to export it?',
+      name: 'messageExportTraceLogDialog',
+    );
+  }
+
+  String get youNeedToGrantFilesPermissionToExportFile {
+    return Intl.message(
+      'You need to grant files permission to export files',
+      name: 'youNeedToGrantFilesPermissionToExportFile',
+    );
+  }
+
+  String exportTraceLogSuccess(String path) {
+    return Intl.message(
+      'Export successful tracking logs at "$path"',
+      name: 'exportTraceLogSuccess',
+      args: [path],
+    );
+  }
+
+  String get noLogsHaveBeenRecordedYet {
+    return Intl.message(
+      'No logs have been recorded yet.',
+      name: 'noLogsHaveBeenRecordedYet',
+    );
+  }
+
+  String get thread {
+    return Intl.message(
+      'Thread',
+      name: 'thread',
+    );
+  }
+
+  String get threadSettingExplanation {
+    return Intl.message(
+      'View multiple related emails like a conversation',
+      name: 'threadSettingExplanation',
+    );
+  }
+
+  String get threadToggleDescription {
+    return Intl.message(
+      'Enable thread',
+      name: 'threadToggleDescription',
+    );
+  }
+
+  String get exportTraceLogFailed {
+    return Intl.message(
+      'Export trace log failed',
+      name: 'exportTraceLogFailed',
+    );
+  }
+
+  String get support {
+    return Intl.message(
+      'Support',
+      name: 'support',
+    );
+  }
+
+  String get addRecipientsFailed {
+    return Intl.message(
+      'Adding recipient failed.',
+      name: 'addRecipientsFailed',
+    );
+  }
+
+  String get editLocalCopyInForwardFailed {
+    return Intl.message(
+      'Edit local copy in forward failed.',
+      name: 'editLocalCopyInForwardFailed',
+    );
+  }
+
+  String get deleteRecipientsFailed {
+    return Intl.message(
+      'Delete recipients failed.',
+      name: 'deleteRecipientsFailed',
+    );
+  }
+
+  String get youDoNotHaveAnyEmailInYourCurrentFolder {
+    return Intl.message(
+      'You don’t have any emails\n in this folder.',
+      name: 'youDoNotHaveAnyEmailInYourCurrentFolder',
+    );
+  }
+
+  String get startToComposeEmails {
+    return Intl.message(
+      'Start to compose emails.',
+      name: 'startToComposeEmails',
+    );
+  }
+
+  String get createFilter {
+    return Intl.message(
+      'Create filter',
+      name: 'createFilter',
+    );
+  }
+
+  String get createFilterRuleFailed {
+    return Intl.message(
+      'Create filter rule failed',
+      name: 'createFilterRuleFailed',
+    );
+  }
+
+  String get youAreNotInvitedToThisEventPleaseContactTheOrganizer {
+    return Intl.message(
+      'You are not invited to this event. Please contact the organizer.',
+      name: 'youAreNotInvitedToThisEventPleaseContactTheOrganizer',
+    );
+  }
+
+  String countMessageInSpam(String count) {
+    return Intl.message(
+      '$count message in spam',
+      name: 'countMessageInSpam',
+      args: [count],
+    );
+  }
+
+  String get view {
+    return Intl.message(
+      'View',
+      name: 'view',
+    );
+  }
+
+  String daysAgo(int days) {
+    return Intl.plural(
+      days,
+      zero: '',
+      one: ' (1 day ago)',
+      other: ' ($days days ago)',
+      name: 'daysAgo',
+      args: [days],
+    );
+  }
+
+  String get copy {
+    return Intl.message(
+      'Copy',
+      name: 'copy',
+    );
+  }
+
+  String get editEmail {
+    return Intl.message(
+      'Edit email',
+      name: 'editEmail',
+    );
+  }
+
+  String get createARule {
+    return Intl.message(
+      'Create a rule',
+      name: 'createARule',
+    );
+  }
+
+  String get enterSubjectKeywords {
+    return Intl.message(
+      'Enter subject keywords...',
+      name: 'enterSubjectKeywords',
+    );
+  }
+
+  String get addAnEmailAddress {
+    return Intl.message(
+      'Add an email address',
+      name: 'addAnEmailAddress',
+    );
+  }
+
+  String dialogRecoverDeletedMessagesDescription(String period) {
+    return Intl.message(
+      'You can recover messages deleted within the last $period days. Recovered emails will be restored to your recovered folder.',
+      name: 'dialogRecoverDeletedMessagesDescription',
+      args: [period],
+    );
+  }
+
+  String get enterName {
+    return Intl.message(
+      'Enter name',
+      name: 'enterName',
+    );
+  }
+
+  String get enterEmailAddress {
+    return Intl.message(
+      'Enter email address',
+      name: 'enterEmailAddress',
+    );
+  }
+
+  String get creatingAnArchiveForDownloading {
+    return Intl.message(
+      'Creating an archive for downloading',
+      name: 'creatingAnArchiveForDownloading',
+    );
+  }
+
+  String get ok {
+    return Intl.message(
+      'OK',
+      name: 'ok',
+    );
+  }
+
+  String get keepACopyInInbox {
+    return Intl.message(
+      'Keep a copy in Inbox',
+      name: 'keepACopyInInbox',
+    );
+  }
+
+  String get keepACopyInInboxDescription {
+    return Intl.message(
+      'Store forwarded emails in your inbox as well as sending them to recipients',
+      name: 'keepACopyInInboxDescription',
+    );
+  }
+
+  String get dialogWarningTitleForForwardsToOtherDomains {
+    return Intl.message(
+      'You are redirecting emails to another domain.',
+      name: 'dialogWarningTitleForForwardsToOtherDomains',
+    );
+  }
+
+  String get dialogWarningMessageForForwardsToOtherDomains {
+    return Intl.message(
+      'This could be a security threat or considered illegal data extraction. Do you want to proceed?',
+      name: 'dialogWarningMessageForForwardsToOtherDomains',
+    );
+  }
+
+  String get hideSignature {
+    return Intl.message(
+      'Hide signature',
+      name: 'hideSignature',
+    );
+  }
+
+  String get showSignature {
+    return Intl.message(
+      'Show signature',
+      name: 'showSignature',
+    );
+  }
+
+  String get archiveMessagesFailed {
+    return Intl.message(
+      'Archive messages failed',
+      name: 'archiveMessagesFailed',
+    );
+  }
+
+  String get increaseYourSpace {
+    return Intl.message(
+      'Increase your space',
+      name: 'increaseYourSpace',
+    );
+  }
+
+  String quotaAvailableLabel(String count) {
+    return Intl.message(
+      '$count available',
+      name: 'quotaAvailableLabel',
+      args: [count],
+    );
+  }
+
+  String get paywallUrlNotAvailable {
+    return Intl.message(
+      'Paywall url not available',
+      name: 'paywallUrlNotAvailable',
+    );
+  }
+
+  String get quotaBannerWarningTitle {
+    return Intl.message(
+      'You are running low on storage (90%)',
+      name: 'quotaBannerWarningTitle',
+    );
+  }
+
+  String get quotaBannerWarningSubtitleWithPremium {
+    return Intl.message(
+      'To keep sending messages and enjoying all Twake Mail features, please consider cleaning up or upgrading your storage.',
+      name: 'quotaBannerWarningSubtitleWithPremium',
+    );
+  }
+
+  String get quotaBannerWarningSubtitleWithoutPremium {
+    return Intl.message(
+      'To keep sending messages and enjoying all Twake Mail features, please consider cleaning up.',
+      name: 'quotaBannerWarningSubtitleWithoutPremium',
+    );
+  }
+
+  String get manageMyStorage {
+    return Intl.message(
+      'Manage my storage',
+      name: 'manageMyStorage',
+    );
+  }
+
+  String get addARule {
+    return Intl.message(
+      'Add a rule',
+      name: 'addARule',
+    );
+  }
+
+  String get noRulesConfigured {
+    return Intl.message(
+      'No Rules Configured',
+      name: 'noRulesConfigured',
+    );
+  }
+
+  String get messageExplanationNoRulesConfigured {
+    return Intl.message(
+      'Start by creating your first rule to automate\n email management.',
+      name: 'messageExplanationNoRulesConfigured',
+    );
+  }
+
+  String get createMyFirstRule {
+    return Intl.message(
+      'Create My First Rule',
+      name: 'createMyFirstRule',
+    );
+  }
+
+  String get createANewRule {
+    return Intl.message(
+      'Create a New Rule',
+      name: 'createANewRule',
+    );
+  }
+
+  String get ruleName {
+    return Intl.message(
+      'Rule Name',
+      name: 'ruleName',
+    );
+  }
+
+  String get condition {
+    return Intl.message(
+      'Condition',
+      name: 'condition',
+    );
+  }
+
+  String get addACondition {
+    return Intl.message(
+      'Add a condition',
+      name: 'addACondition',
+    );
+  }
+
+  String get actionsToPerform {
+    return Intl.message(
+      'Actions to Perform',
+      name: 'actionsToPerform',
+    );
+  }
+
+  String get addAnAction {
+    return Intl.message(
+      'Add an action',
+      name: 'addAnAction',
+    );
+  }
+
+  String get createRule {
+    return Intl.message(
+      'Create Rule',
+      name: 'createRule',
+    );
+  }
+
+  String get preview {
+    return Intl.message(
+      'Preview',
+      name: 'preview',
+    );
+  }
+
+  String ruleFilterConditionPreviewMessage(String conditionCombinerName, String conditionValue) {
+    return Intl.message(
+      '$conditionCombinerName of the conditions: $conditionValue',
+      name: 'ruleFilterConditionPreviewMessage',
+      args: [
+        conditionCombinerName,
+        conditionValue,
+      ],
+    );
+  }
+
+  String get actions {
+    return Intl.message(
+      'Actions',
+      name: 'actions',
+    );
+  }
+
+  String get createANewFolder {
+    return Intl.message(
+      'Create a New Folder',
+      name: 'createANewFolder',
+    );
+  }
+
+  String subtitleDisplayTheFolderNameLocationInFolderCreationModal(String folderName) {
+    return Intl.message(
+      'New folder will be created inside $folderName',
+      name: 'subtitleDisplayTheFolderNameLocationInFolderCreationModal',
+      args: [folderName]
+    );
+  }
+
+  String get folderName {
+    return Intl.message(
+      'Folder Name',
+      name: 'folderName',
+    );
+  }
+
+  String get enterTheFolderName {
+    return Intl.message(
+      'Enter the folder name',
+      name: 'enterTheFolderName',
+    );
+  }
+
+  String get selectTheFolderLocation {
+    return Intl.message(
+      'Select the folder location',
+      name: 'selectTheFolderLocation',
+    );
+  }
+
+  String get createFolder {
+    return Intl.message(
+      'Create folder',
+      name: 'createFolder',
+    );
+  }
+
+  String get sendMessage {
+    return Intl.message(
+      'Send message',
+      name: 'sendMessage',
+    );
+  }
+
+  String get attachmentReminderModalTitle {
+    return Intl.message(
+      'Forgot to attach a file?',
+      name: 'attachmentReminderModalTitle',
+    );
+  }
+
+  String attachmentReminderModalMessage(String keyword) {
+    return Intl.message(
+      'You wrote $keyword in your message but did not add any attachments. Do you still want to send?',
+      name: 'attachmentReminderModalMessage',
+      args: [keyword],
+    );
+  }
+
+  String get spamReports {
+    return Intl.message(
+      'Spam reports',
+      name: 'spamReports',
+    );
+  }
+
+  String get spamReportsSettingExplanation {
+    return Intl.message(
+      'Reminds you that you need to moderate your spam emails recurringly',
+      name: 'spamReportsSettingExplanation',
+    );
+  }
+
+  String get spamReportToggleDescription {
+    return Intl.message(
+      'Enable spam report',
+      name: 'spamReportToggleDescription',
+    );
+  }
+
+  String showMoreAttachmentButton(int count) {
+    return Intl.message(
+      'Show +$count more',
+      name: 'showMoreAttachmentButton',
+      args: [count],
+    );
+  }
+
+  String hideAttachmentButton(int count) {
+    return Intl.message(
+      'Hide $count',
+      name: 'hideAttachmentButton',
+      args: [count],
+    );
+  }
+
+  String get defaultIdentitySetupSuccessful {
+    return Intl.message(
+      'Default identity setup successful',
+      name: 'defaultIdentitySetupSuccessful',
+    );
+  }
+
+  String get storageSettingExplanation {
+    return Intl.message(
+      'Monitor your available space.',
+      name: 'storageSettingExplanation',
+    );
+  }
+
+  String get storageIsAlmostFullMessage {
+    return Intl.message(
+      'The storage is almost full. You can free up space by deleting unnecessary files or subscribe to get extra space.',
+      name: 'storageIsAlmostFullMessage',
+    );
+  }
+
+  String get upgradeStorage {
+    return Intl.message(
+      'Upgrade storage',
+      name: 'upgradeStorage',
+    );
+  }
+
+  String storageUsedMessage(String limit) {
+    return Intl.message(
+      'of $limit used',
+      name: 'storageUsedMessage',
+      args: [limit],
+    );
+  }
+
+  String storageAvailableMessage(String count) {
+    return Intl.message(
+      'Available: $count',
+      name: 'storageAvailableMessage',
+      args: [count],
+    );
+  }
+
+  String get mailHasBeenStarred {
+    return Intl.message(
+      'Mail has been starred',
+      name: 'mailHasBeenStarred',
+    );
+  }
+
+  String get mailHasBeenUnstarred {
+    return Intl.message(
+      'Mail has been unstarred',
+      name: 'mailHasBeenUnstarred',
+    );
+  }
+
+  String get keyboardShortcuts {
+    return Intl.message(
+      'Keyboard shortcuts',
+      name: 'keyboardShortcuts',
+    );
+  }
+
+  String get keyboardShortcutsSettingExplanation {
+    return Intl.message(
+      'Mailbox & email actions',
+      name: 'keyboardShortcutsSettingExplanation',
+    );
+  }
+
+  String get navigationAndClosing {
+    return Intl.message(
+      'Navigation & Closing',
+      name: 'navigationAndClosing',
+    );
+  }
+
+  String get readingAndReplying {
+    return Intl.message(
+      'Reading & Replying',
+      name: 'readingAndReplying',
+    );
+  }
+
+  String get messageManagementAndSelection {
+    return Intl.message(
+      'Message Management & Selection',
+      name: 'messageManagementAndSelection',
+    );
+  }
+
+  String get navigation {
+    return Intl.message(
+      'Navigation',
+      name: 'navigation',
+    );
+  }
+
+  String get reading {
+    return Intl.message(
+      'Reading',
+      name: 'reading',
+    );
+  }
+
+  String get closeMailComposer {
+    return Intl.message(
+      'Close mail composer',
+      name: 'closeMailComposer',
+    );
+  }
+
+  String get removeFocusFromSearch {
+    return Intl.message(
+      'Remove focus from search',
+      name: 'removeFocusFromSearch',
+    );
+  }
+
+  String get closeModalWindow {
+    return Intl.message(
+      'Close modal window',
+      name: 'closeModalWindow',
+    );
+  }
+
+  String get openNewMessage {
+    return Intl.message(
+      'Open new message',
+      name: 'openNewMessage',
+    );
+  }
+
+  String get mailComposer {
+    return Intl.message(
+      'Mail composer',
+      name: 'mailComposer',
+    );
+  }
+
+  String get focusOnSearch {
+    return Intl.message(
+      'Focus on search',
+      name: 'focusOnSearch',
+    );
+  }
+
+  String get openedModal {
+    return Intl.message(
+      'Opened modal',
+      name: 'openedModal',
+    );
+  }
+
+  String get mailboxList {
+    return Intl.message(
+      'Mailbox list',
+      name: 'mailboxList',
+    );
+  }
+
+  String get openedMailView {
+    return Intl.message(
+      'Opened mail view',
+      name: 'openedMailView',
+    );
+  }
+
+  String get mailboxListWithSelectedMail {
+    return Intl.message(
+      'Mailbox list (selected mail)',
+      name: 'mailboxListWithSelectedMail',
+    );
+  }
+
+  String get replyToAll {
+    return Intl.message(
+      'Reply to all',
+      name: 'replyToAll',
+    );
+  }
+
+  String get deleteMessage {
+    return Intl.message(
+      'Delete message',
+      name: 'deleteMessage',
+    );
+  }
+
+  String get moveFolderContent {
+    return Intl.message(
+      'Move folder content',
+      name: 'moveFolderContent',
+    );
+  }
+
+  String get moveFolderContentToastMessage {
+    return Intl.message(
+      'Failed to move all emails from this folder to another folder.',
+      name: 'moveFolderContentToastMessage',
+    );
+  }
+
+  String get favoriteMailboxDisplayName {
+    return Intl.message(
+      'Starred',
+      name: 'favoriteMailboxDisplayName',
+    );
+  }
+
+  String get insertLink {
+    return Intl.message(
+      'Insert link',
+      name: 'insertLink',
+    );
+  }
+
+  String get goTo {
+    return Intl.message(
+      'Go to',
+      name: 'goTo',
+    );
+  }
+
+  String get change {
+    return Intl.message(
+      'Change',
+      name: 'change',
+    );
+  }
+
+  String get removeLink {
+    return Intl.message(
+      'Remove link',
+      name: 'removeLink',
+    );
+  }
+
+  String get text {
+    return Intl.message(
+      'Text',
+      name: 'text',
+    );
+  }
+
+  String get typeOrPasteLink {
+    return Intl.message(
+      'Type or paste a link',
+      name: 'typeOrPasteLink',
+    );
+  }
+
+  String get apply {
+    return Intl.message(
+      'Apply',
+      name: 'apply',
+    );
+  }
+
+  String get manageYourTwakeAccount {
+    return Intl.message(
+      'Manage your Twake account',
+      name: 'manageYourTwakeAccount',
+    );
+  }
+
+  String get youDoNotHaveAnyFavoritesEmails {
+    return Intl.message(
+      'You don’t have any favorites emails.',
+      name: 'youDoNotHaveAnyFavoritesEmails',
+    );
+  }
+
+  String get startToAddFavoritesEmails {
+    return Intl.message(
+      'Start to add favorites emails',
+      name: 'startToAddFavoritesEmails',
     );
   }
 }

@@ -6,12 +6,12 @@ import 'package:core/presentation/utils/html_transformer/dom/hide_draft_signatur
 import 'package:core/presentation/utils/html_transformer/dom/block_code_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/block_quoted_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/image_transformers.dart';
+import 'package:core/presentation/utils/html_transformer/dom/normalize_line_height_in_style_transformer.dart';
 import 'package:core/presentation/utils/html_transformer/dom/remove_collapsed_signature_button_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/remove_lazy_loading_for_background_image_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/remove_lazy_loading_image_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/remove_max_width_in_image_style_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/remove_style_tag_outside_transformers.dart';
-import 'package:core/presentation/utils/html_transformer/dom/remove_tooltip_link_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/sanitize_hyper_link_tag_in_html_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/script_transformers.dart';
 import 'package:core/presentation/utils/html_transformer/dom/signature_transformers.dart';
@@ -42,19 +42,27 @@ class TransformConfiguration {
   ) => TransformConfiguration([], textTransformers);
 
   factory TransformConfiguration.forReplyForwardEmail() => TransformConfiguration.fromDomTransformers([
-    if (PlatformInfo.isWeb)
-      const RemoveTooltipLinkTransformer(),
     const SignatureTransformer(),
     const RemoveCollapsedSignatureButtonTransformer(),
+    const NormalizeLineHeightInStyleTransformer(),
+  ]);
+
+  factory TransformConfiguration.forReplyForwardEmptyEmail() => TransformConfiguration.fromDomTransformers([
+    ...TransformConfiguration.forReplyForwardEmail().domTransformers,
+    const ImageTransformer(),
   ]);
 
   factory TransformConfiguration.forDraftsEmail() => TransformConfiguration.create(
-    customDomTransformers: [const ImageTransformer()]
+    customDomTransformers: [
+      const ImageTransformer(),
+      const NormalizeLineHeightInStyleTransformer(),
+    ]
   );
   factory TransformConfiguration.forEditDraftsEmail() => TransformConfiguration.create(
     customDomTransformers: [
       ...TransformConfiguration.forDraftsEmail().domTransformers,
-      const HideDraftSignatureTransformer()
+      if (PlatformInfo.isWeb)
+        const HideDraftSignatureTransformer()
     ]
   );
 
@@ -63,10 +71,11 @@ class TransformConfiguration {
       const RemoveScriptTransformer(),
       const BlockQuotedTransformer(),
       const BlockCodeTransformer(),
-      SanitizeHyperLinkTagInHtmlTransformer(useTooltip: true),
+      SanitizeHyperLinkTagInHtmlTransformer(),
       const ImageTransformer(),
       const AddLazyLoadingForBackgroundImageTransformer(),
       const RemoveCollapsedSignatureButtonTransformer(),
+      const NormalizeLineHeightInStyleTransformer(),
     ]
   );
 
@@ -77,14 +86,22 @@ class TransformConfiguration {
   );
 
   factory TransformConfiguration.forPrintEmail() => TransformConfiguration.fromDomTransformers([
-    if (PlatformInfo.isWeb)
-      const RemoveTooltipLinkTransformer(),
     const RemoveLazyLoadingForBackgroundImageTransformer(),
     const RemoveLazyLoadingImageTransformer(),
     const RemoveCollapsedSignatureButtonTransformer(),
     const RemoveStyleTagOutsideTransformer(),
     const RemoveMaxWidthInImageStyleTransformer(),
   ]);
+
+   factory TransformConfiguration.forSignatureIdentity() => TransformConfiguration.create(
+     customDomTransformers: [
+       const RemoveScriptTransformer(),
+       const BlockQuotedTransformer(),
+       const BlockCodeTransformer(),
+       SanitizeHyperLinkTagInHtmlTransformer(),
+       const ImageTransformer(),
+     ],
+   );
 
   /// Provides easy access to a standard configuration that does not block external images.
   static TransformConfiguration standardConfiguration = TransformConfiguration(
@@ -117,10 +134,11 @@ class TransformConfiguration {
     const RemoveScriptTransformer(),
     const BlockQuotedTransformer(),
     const BlockCodeTransformer(),
-    SanitizeHyperLinkTagInHtmlTransformer(useTooltip: PlatformInfo.isWeb),
+    SanitizeHyperLinkTagInHtmlTransformer(),
     const ImageTransformer(),
     const AddLazyLoadingForBackgroundImageTransformer(),
     const RemoveCollapsedSignatureButtonTransformer(),
+    const NormalizeLineHeightInStyleTransformer(),
   ];
 
   static const List<TextTransformer> standardTextTransformers = [

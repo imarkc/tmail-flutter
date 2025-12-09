@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2025-04-14T04:16:15.237055",
+  "@@last_modified": "2025-11-20T14:48:58.635692",
   "initializing_data": "Initializing data...",
   "@initializing_data": {
     "type": "text",
@@ -378,8 +378,20 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "titleHeaderAttachment": "{count} Attachments ({totalSize}):",
+  "titleHeaderAttachment": "{count} Attachments ({totalSize})",
   "@titleHeaderAttachment": {
+    "type": "text",
+    "placeholders_order": [
+      "count",
+      "totalSize"
+    ],
+    "placeholders": {
+      "count": {},
+      "totalSize": {}
+    }
+  },
+  "singularAttachmentTitleHeader": "{count} Attachment ({totalSize})",
+  "@singularAttachmentTitleHeader": {
     "type": "text",
     "placeholders_order": [
       "count",
@@ -794,12 +806,6 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "copy_email_address": "Copy email address",
-  "@copy_email_address": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
   "compose_email": "Compose email",
   "@compose_email": {
     "type": "text",
@@ -848,6 +854,12 @@
     "placeholders_order": [],
     "placeholders": {}
   },
+  "attachment": "Attachment",
+  "@attachment": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
   "showAll": "Show all",
   "@showAll": {
     "type": "text",
@@ -874,12 +886,6 @@
   },
   "select_all": "Select all",
   "@select_all": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "mark_all_as_read": "Mark all as read",
-  "@mark_all_as_read": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
@@ -1156,12 +1162,6 @@
   },
   "exchange": "Exchange",
   "@exchange": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "move_message": "Move message",
-  "@move_message": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
@@ -2040,24 +2040,6 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noStartTime": "No start time",
-  "@noStartTime": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "noEndTime": "No end time",
-  "@noEndTime": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "noEndDate": "No end date",
-  "@noEndDate": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
   "errorMessageWhenStartDateVacationIsEmpty": "Please enter a valid start date",
   "@errorMessageWhenStartDateVacationIsEmpty": {
     "type": "text",
@@ -2168,12 +2150,6 @@
   },
   "toastMessageLocalCopyDisable": "Keep local copy disable.",
   "@toastMessageLocalCopyDisable": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "keepLocalCopyForwardLabel": "Keep a copy of the email in Inbox",
-  "@keepLocalCopyForwardLabel": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
@@ -2712,13 +2688,13 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noEmailInYourCurrentFolder": "We're sorry, there are no emails in your current folder",
+  "noEmailInYourCurrentFolder": "There are no emails in your current folder",
   "@noEmailInYourCurrentFolder": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
   },
-  "noEmailMatchYourCurrentFilter": "We're sorry, there are no emails that match your current filter.",
+  "noEmailMatchYourCurrentFilter": "There are no emails that match your current filter.",
   "@noEmailMatchYourCurrentFilter": {
     "type": "text",
     "placeholders_order": [],
@@ -3218,24 +3194,6 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "quotaWarningBannerTitle": "You are running out of storage (90%).",
-  "@quotaWarningBannerTitle": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "quotaWarningBannerMessage": "Soon you won't be able to email in Tmail. Please clean your storage or upgrade your storage to get full features in Tmail.",
-  "@quotaWarningBannerMessage": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
-  "quotaErrorBannerMessage": "Soon you won't be able to email in Tmail. Please clean your storage or upgrade your storage to get full features in Tmail.",
-  "@quotaErrorBannerMessage": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
   "createFolderSuccessfullyMessage": "You successfully created {folderName} folder",
   "@createFolderSuccessfullyMessage": {
     "type": "text",
@@ -3371,16 +3329,6 @@
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
-  },
-  "moreAttachments": "+ {count} more",
-  "@moreAttachments": {
-    "type": "text",
-    "placeholders_order": [
-      "count"
-    ],
-    "placeholders": {
-      "count": {}
-    }
   },
   "attachmentList": "Attachment list",
   "@attachmentList": {
@@ -3736,12 +3684,6 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-  "doYouWantToProceed": "Do you want to proceed?",
-  "@doYouWantToProceed": {
-    "type": "text",
-    "placeholders_order": [],
-    "placeholders": {}
-  },
   "messageWarningDialogForForwardsToOtherDomains": "You are redirecting emails to another domain. This could be a security threat or considered illegal data extraction.",
   "@messageWarningDialogForForwardsToOtherDomains": {
     "type": "text",
@@ -3987,16 +3929,6 @@
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
-  },
-  "showMore": "Show more (+{count})",
-  "@showMore": {
-    "type": "text",
-    "placeholders_order": [
-      "count"
-    ],
-    "placeholders": {
-      "count": {}
-    }
   },
   "showLess": "Show less",
   "@showLess": {
@@ -4414,6 +4346,786 @@
   },
   "pullHarderFor": "Pull harder for",
   "@pullHarderFor": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveAsTemplate": "Save as template",
+  "@saveAsTemplate": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "savingTemplate": "Saving template",
+  "@savingTemplate": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "savingMessageToTemplateFolder": "Saving message to template folder",
+  "@savingMessageToTemplateFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveMessageToTemplateSuccess": "Save message to template folder successfully",
+  "@saveMessageToTemplateSuccess": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "updateMessageToTemplateSuccess": "Update message to template folder successfully",
+  "@updateMessageToTemplateSuccess": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveMessageToTemplateFailed": "Save message to template folder failed",
+  "@saveMessageToTemplateFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "saveMessageToTemplateCancelled": "Save message to template folder has been cancelled",
+  "@saveMessageToTemplateCancelled": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "invalidArguments": "Invalid arguments: \"{description}\"",
+  "@invalidArguments": {
+    "type": "text",
+    "placeholders_order": [
+      "description"
+    ],
+    "placeholders": {
+      "description": {}
+    }
+  },
+  "exportTraceLog": "Export trace log",
+  "@exportTraceLog": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageExportTraceLogDialog": "The mobile API error message log has been tracked. Do you want to export it?",
+  "@messageExportTraceLogDialog": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youNeedToGrantFilesPermissionToExportFile": "You need to grant files permission to export files",
+  "@youNeedToGrantFilesPermissionToExportFile": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "exportTraceLogSuccess": "Export successful tracking logs at \"{path}\"",
+  "@exportTraceLogSuccess": {
+    "type": "text",
+    "placeholders_order": [
+      "path"
+    ],
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "noLogsHaveBeenRecordedYet": "No logs have been recorded yet.",
+  "@noLogsHaveBeenRecordedYet": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "thread": "Thread",
+  "@thread": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "threadSettingExplanation": "View multiple related emails like a conversation",
+  "@threadSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "threadToggleDescription": "Enable thread",
+  "@threadToggleDescription": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "exportTraceLogFailed": "Export trace log failed",
+  "@exportTraceLogFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "support": "Support",
+  "@support": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addRecipientsFailed": "Adding recipient failed.",
+  "@addRecipientsFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "editLocalCopyInForwardFailed": "Edit local copy in forward failed.",
+  "@editLocalCopyInForwardFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "deleteRecipientsFailed": "Delete recipients failed.",
+  "@deleteRecipientsFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youDoNotHaveAnyEmailInYourCurrentFolder": "You don’t have any emails\n in this folder.",
+  "@youDoNotHaveAnyEmailInYourCurrentFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "startToComposeEmails": "Start to compose emails.",
+  "@startToComposeEmails": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createFilter": "Create filter",
+  "@createFilter": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createFilterRuleFailed": "Create filter rule failed",
+  "@createFilterRuleFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youAreNotInvitedToThisEventPleaseContactTheOrganizer": "You are not invited to this event. Please contact the organizer.",
+  "@youAreNotInvitedToThisEventPleaseContactTheOrganizer": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "countMessageInSpam": "{count} message in spam",
+  "@countMessageInSpam": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "view": "View",
+  "@view": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "daysAgo": "{days,plural, =0{}=1{ (1 day ago)}other{ ({days} days ago)}}",
+  "@daysAgo": {
+    "type": "text",
+    "placeholders_order": [
+      "days"
+    ],
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "copy": "Copy",
+  "@copy": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "editEmail": "Edit email",
+  "@editEmail": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createARule": "Create a rule",
+  "@createARule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "enterSubjectKeywords": "Enter subject keywords...",
+  "@enterSubjectKeywords": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addAnEmailAddress": "Add an email address",
+  "@addAnEmailAddress": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "dialogRecoverDeletedMessagesDescription": "You can recover messages deleted within the last {period} days. Recovered emails will be restored to your recovered folder.",
+  "@dialogRecoverDeletedMessagesDescription": {
+    "type": "text",
+    "placeholders_order": [
+      "period"
+    ],
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "enterName": "Enter name",
+  "@enterName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "enterEmailAddress": "Enter email address",
+  "@enterEmailAddress": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "creatingAnArchiveForDownloading": "Creating an archive for downloading",
+  "@creatingAnArchiveForDownloading": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "ok": "OK",
+  "@ok": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keepACopyInInbox": "Keep a copy in Inbox",
+  "@keepACopyInInbox": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keepACopyInInboxDescription": "Store forwarded emails in your inbox as well as sending them to recipients",
+  "@keepACopyInInboxDescription": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "dialogWarningTitleForForwardsToOtherDomains": "You are redirecting emails to another domain.",
+  "@dialogWarningTitleForForwardsToOtherDomains": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "dialogWarningMessageForForwardsToOtherDomains": "This could be a security threat or considered illegal data extraction. Do you want to proceed?",
+  "@dialogWarningMessageForForwardsToOtherDomains": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "hideSignature": "Hide signature",
+  "@hideSignature": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "showSignature": "Show signature",
+  "@showSignature": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "archiveMessagesFailed": "Archive messages failed",
+  "@archiveMessagesFailed": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "increaseYourSpace": "Increase your space",
+  "@increaseYourSpace": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaAvailableLabel": "{count} available",
+  "@quotaAvailableLabel": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "paywallUrlNotAvailable": "Paywall url not available",
+  "@paywallUrlNotAvailable": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaBannerWarningTitle": "You are running low on storage (90%)",
+  "@quotaBannerWarningTitle": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaBannerWarningSubtitleWithPremium": "To keep sending messages and enjoying all Twake Mail features, please consider cleaning up or upgrading your storage.",
+  "@quotaBannerWarningSubtitleWithPremium": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "quotaBannerWarningSubtitleWithoutPremium": "To keep sending messages and enjoying all Twake Mail features, please consider cleaning up.",
+  "@quotaBannerWarningSubtitleWithoutPremium": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "manageMyStorage": "Manage my storage",
+  "@manageMyStorage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addARule": "Add a rule",
+  "@addARule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "noRulesConfigured": "No Rules Configured",
+  "@noRulesConfigured": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageExplanationNoRulesConfigured": "Start by creating your first rule to automate\n email management.",
+  "@messageExplanationNoRulesConfigured": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createMyFirstRule": "Create My First Rule",
+  "@createMyFirstRule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createANewRule": "Create a New Rule",
+  "@createANewRule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "ruleName": "Rule Name",
+  "@ruleName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "condition": "Condition",
+  "@condition": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addACondition": "Add a condition",
+  "@addACondition": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "actionsToPerform": "Actions to Perform",
+  "@actionsToPerform": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "addAnAction": "Add an action",
+  "@addAnAction": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createRule": "Create Rule",
+  "@createRule": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "preview": "Preview",
+  "@preview": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "ruleFilterConditionPreviewMessage": "{conditionCombinerName} of the conditions: {conditionValue}",
+  "@ruleFilterConditionPreviewMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "conditionCombinerName",
+      "conditionValue"
+    ],
+    "placeholders": {
+      "conditionCombinerName": {},
+      "conditionValue": {}
+    }
+  },
+  "actions": "Actions",
+  "@actions": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createANewFolder": "Create a New Folder",
+  "@createANewFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "subtitleDisplayTheFolderNameLocationInFolderCreationModal": "New folder will be created inside {folderName}",
+  "@subtitleDisplayTheFolderNameLocationInFolderCreationModal": {
+    "type": "text",
+    "placeholders_order": [
+      "folderName"
+    ],
+    "placeholders": {
+      "folderName": {}
+    }
+  },
+  "folderName": "Folder Name",
+  "@folderName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "enterTheFolderName": "Enter the folder name",
+  "@enterTheFolderName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "selectTheFolderLocation": "Select the folder location",
+  "@selectTheFolderLocation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "createFolder": "Create folder",
+  "@createFolder": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "sendMessage": "Send message",
+  "@sendMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "attachmentReminderModalTitle": "Forgot to attach a file?",
+  "@attachmentReminderModalTitle": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "attachmentReminderModalMessage": "You wrote {keyword} in your message but did not add any attachments. Do you still want to send?",
+  "@attachmentReminderModalMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "keyword"
+    ],
+    "placeholders": {
+      "keyword": {}
+    }
+  },
+  "spamReports": "Spam reports",
+  "@spamReports": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "spamReportsSettingExplanation": "Reminds you that you need to moderate your spam emails recurringly",
+  "@spamReportsSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "spamReportToggleDescription": "Enable spam report",
+  "@spamReportToggleDescription": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "showMoreAttachmentButton": "Show +{count} more",
+  "@showMoreAttachmentButton": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hideAttachmentButton": "Hide {count}",
+  "@hideAttachmentButton": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "defaultIdentitySetupSuccessful": "Default identity setup successful",
+  "@defaultIdentitySetupSuccessful": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "storageSettingExplanation": "Monitor your available space.",
+  "@storageSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "storageIsAlmostFullMessage": "The storage is almost full. You can free up space by deleting unnecessary files or subscribe to get extra space.",
+  "@storageIsAlmostFullMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "upgradeStorage": "Upgrade storage",
+  "@upgradeStorage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "storageUsedMessage": "of {limit} used",
+  "@storageUsedMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "limit"
+    ],
+    "placeholders": {
+      "limit": {}
+    }
+  },
+  "storageAvailableMessage": "Available: {count}",
+  "@storageAvailableMessage": {
+    "type": "text",
+    "placeholders_order": [
+      "count"
+    ],
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mailHasBeenStarred": "Mail has been starred",
+  "@mailHasBeenStarred": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailHasBeenUnstarred": "Mail has been unstarred",
+  "@mailHasBeenUnstarred": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keyboardShortcuts": "Keyboard shortcuts",
+  "@keyboardShortcuts": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "keyboardShortcutsSettingExplanation": "Mailbox & email actions",
+  "@keyboardShortcutsSettingExplanation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "navigationAndClosing": "Navigation & Closing",
+  "@navigationAndClosing": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "readingAndReplying": "Reading & Replying",
+  "@readingAndReplying": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "messageManagementAndSelection": "Message Management & Selection",
+  "@messageManagementAndSelection": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "navigation": "Navigation",
+  "@navigation": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "reading": "Reading",
+  "@reading": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "closeMailComposer": "Close mail composer",
+  "@closeMailComposer": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "removeFocusFromSearch": "Remove focus from search",
+  "@removeFocusFromSearch": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "closeModalWindow": "Close modal window",
+  "@closeModalWindow": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "openNewMessage": "Open new message",
+  "@openNewMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailComposer": "Mail composer",
+  "@mailComposer": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "focusOnSearch": "Focus on search",
+  "@focusOnSearch": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "openedModal": "Opened modal",
+  "@openedModal": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailboxList": "Mailbox list",
+  "@mailboxList": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "openedMailView": "Opened mail view",
+  "@openedMailView": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "mailboxListWithSelectedMail": "Mailbox list (selected mail)",
+  "@mailboxListWithSelectedMail": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "replyToAll": "Reply to all",
+  "@replyToAll": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "deleteMessage": "Delete message",
+  "@deleteMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "moveFolderContent": "Move folder content",
+  "@moveFolderContent": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "moveFolderContentToastMessage": "Failed to move all emails from this folder to another folder.",
+  "@moveFolderContentToastMessage": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "favoriteMailboxDisplayName": "Starred",
+  "@favoriteMailboxDisplayName": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "insertLink": "Insert link",
+  "@insertLink": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "goTo": "Go to",
+  "@goTo": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "change": "Change",
+  "@change": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "removeLink": "Remove link",
+  "@removeLink": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "text": "Text",
+  "@text": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "typeOrPasteLink": "Type or paste a link",
+  "@typeOrPasteLink": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "apply": "Apply",
+  "@apply": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "manageYourTwakeAccount": "Manage your Twake account",
+  "@manageYourTwakeAccount": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "youDoNotHaveAnyFavoritesEmails": "You don’t have any favorites emails.",
+  "@youDoNotHaveAnyFavoritesEmails": {
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "startToAddFavoritesEmails": "Start to add favorites emails",
+  "@startToAddFavoritesEmails": {
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}

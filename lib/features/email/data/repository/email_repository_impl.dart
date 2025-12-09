@@ -1,13 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:core/data/model/source_type/data_source_type.dart';
-import 'package:core/data/network/download/downloaded_response.dart';
-import 'package:core/presentation/state/failure.dart';
-import 'package:core/presentation/state/success.dart';
 import 'package:core/presentation/utils/html_transformer/transform_configuration.dart';
 import 'package:core/utils/app_logger.dart';
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action_id.dart';
@@ -18,9 +13,6 @@ import 'package:jmap_dart_client/jmap/core/properties/properties.dart';
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
 import 'package:jmap_dart_client/jmap/core/state.dart' as jmap;
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
-import 'package:model/account/account_request.dart';
-import 'package:model/download/download_task_id.dart';
-import 'package:model/email/attachment.dart';
 import 'package:model/email/email_content.dart';
 import 'package:model/email/mark_star_action.dart';
 import 'package:model/email/read_actions.dart';
@@ -31,11 +23,9 @@ import 'package:tmail_ui_user/features/email/data/datasource/print_file_datasour
 import 'package:tmail_ui_user/features/email/domain/model/detailed_email.dart';
 import 'package:tmail_ui_user/features/email/domain/model/email_print.dart';
 import 'package:tmail_ui_user/features/email/domain/model/move_to_mailbox_request.dart';
-import 'package:tmail_ui_user/features/email/domain/model/preview_email_eml_request.dart';
 import 'package:tmail_ui_user/features/email/domain/model/restore_deleted_message_request.dart';
 import 'package:tmail_ui_user/features/email/domain/model/view_entire_message_request.dart';
 import 'package:tmail_ui_user/features/email/domain/repository/email_repository.dart';
-import 'package:tmail_ui_user/features/email/presentation/model/eml_previewer.dart';
 import 'package:tmail_ui_user/features/mailbox/data/datasource/state_datasource.dart';
 import 'package:tmail_ui_user/features/mailbox/data/model/state_type.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
@@ -140,32 +130,6 @@ class EmailRepositoryImpl extends EmailRepository {
     }
 
     return result;
-  }
-
-  @override
-  Future<List<DownloadTaskId>> downloadAttachments(
-      List<Attachment> attachments,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest
-  ) {
-    return emailDataSource[DataSourceType.network]!.downloadAttachments(attachments, accountId, baseDownloadUrl, accountRequest);
-  }
-
-  @override
-  Future<DownloadedResponse> exportAttachment(
-      Attachment attachment,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest,
-      CancelToken cancelToken
-  ) {
-    return emailDataSource[DataSourceType.network]!.exportAttachment(
-      attachment,
-      accountId,
-      baseDownloadUrl,
-      accountRequest,
-      cancelToken);
   }
 
   @override
@@ -337,23 +301,62 @@ class EmailRepositoryImpl extends EmailRepository {
   }
 
   @override
-  Future<Uint8List> downloadAttachmentForWeb(
-      DownloadTaskId taskId,
-      Attachment attachment,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest,
-      StreamController<Either<Failure, Success>> onReceiveController,
-      {CancelToken? cancelToken}
-  ) {
-    return emailDataSource[DataSourceType.network]!.downloadAttachmentForWeb(
-        taskId,
-        attachment,
+  Future<Email> saveEmailAsTemplate(
+    Session session,
+    AccountId accountId,
+    Email email,
+    {
+      CreateNewMailboxRequest? createNewMailboxRequest,
+      CancelToken? cancelToken,
+    }
+  ) async {
+    final result = await emailDataSource[DataSourceType.network]!.saveEmailAsTemplate(
+      session,
+      accountId,
+      email,
+      createNewMailboxRequest: createNewMailboxRequest,
+      cancelToken: cancelToken
+    );
+    try {
+      await emailDataSource[DataSourceType.hiveCache]!.saveEmailAsTemplate(
+        session,
         accountId,
-        baseDownloadUrl,
-        accountRequest,
-        onReceiveController,
-        cancelToken: cancelToken);
+        result,
+        createNewMailboxRequest: createNewMailboxRequest,
+        cancelToken: cancelToken
+      );
+    } catch (e) {
+      logError('EmailRepositoryImpl::saveEmailAsTemplate:exception $e');
+    }
+    return result;
+  }
+
+  @override
+  Future<Email> updateEmailTemplate(
+    Session session,
+    AccountId accountId,
+    Email newEmail,
+    EmailId oldEmailId,
+    {CancelToken? cancelToken}
+  ) async {
+    final result = await emailDataSource[DataSourceType.network]!.updateEmailTemplate(
+      session,
+      accountId,
+      newEmail,
+      oldEmailId,
+      cancelToken: cancelToken
+    );
+    try {
+      await emailDataSource[DataSourceType.hiveCache]!.updateEmailTemplate(
+        session,
+        accountId,
+        result,
+        oldEmailId,
+      );
+    } catch (e) {
+      logError('EmailRepositoryImpl::updateEmailTemplate:exception $e');
+    }
+    return result;
   }
 
   @override
@@ -471,88 +474,6 @@ class EmailRepositoryImpl extends EmailRepository {
   Future<void> printEmail(EmailPrint emailPrint) {
     return _printFileDataSource.printEmail(emailPrint);
   }
-
-  @override
-  Future<List<Email>> parseEmailByBlobIds(AccountId accountId, Set<Id> blobIds) {
-    return emailDataSource[DataSourceType.network]!.parseEmailByBlobIds(accountId, blobIds);
-  }
-
-  @override
-  Future<String> generatePreviewEmailEMLContent(PreviewEmailEMLRequest previewEmailEMLRequest) {
-    return emailDataSource[DataSourceType.network]!.generatePreviewEmailEMLContent(previewEmailEMLRequest);
-  }
-
-  @override
-  Future<void> sharePreviewEmailEMLContent(EMLPreviewer emlPreviewer) {
-    return emailDataSource[DataSourceType.local]!.sharePreviewEmailEMLContent(emlPreviewer);
-  }
-
-  @override
-  Future<EMLPreviewer> getPreviewEmailEMLContentShared(String keyStored) {
-    return emailDataSource[DataSourceType.local]!.getPreviewEmailEMLContentShared(keyStored);
-  }
-
-  @override
-  Future<void> removePreviewEmailEMLContentShared(String keyStored) {
-    return emailDataSource[DataSourceType.local]!.removePreviewEmailEMLContentShared(keyStored);
-  }
-
-  @override
-  Future<void> storePreviewEMLContentToSessionStorage(EMLPreviewer emlPreviewer) {
-    return emailDataSource[DataSourceType.session]!.storePreviewEMLContentToSessionStorage(emlPreviewer);
-  }
-
-  @override
-  Future<EMLPreviewer> getPreviewEMLContentInMemory(String keyStored) {
-    return emailDataSource[DataSourceType.session]!.getPreviewEMLContentInMemory(keyStored);
-  }
-
-  @override
-  Future<String> sanitizeHtmlContent(
-    String htmlContent,
-    TransformConfiguration configuration
-  ) {
-    return _htmlDataSource.transformHtmlEmailContent(
-      htmlContent,
-      configuration);
-  }
-  
-  @override
-  Future<void> downloadAllAttachmentsForWeb(
-    AccountId accountId,
-    EmailId emailId,
-    String baseDownloadAllUrl,
-    String outputFileName,
-    AccountRequest accountRequest, 
-    DownloadTaskId taskId,
-    StreamController<Either<Failure, Success>> onReceiveController,
-    {CancelToken? cancelToken}
-  ) => emailDataSource[DataSourceType.network]!.downloadAllAttachmentsForWeb(
-    accountId,
-    emailId,
-    baseDownloadAllUrl,
-    outputFileName,
-    accountRequest,
-    taskId,
-    onReceiveController,
-    cancelToken: cancelToken,
-  );
-  
-  @override
-  Future<DownloadedResponse> exportAllAttachments(
-    AccountId accountId,
-    EmailId emailId,
-    String baseDownloadAllUrl,
-    String outputFileName,
-    AccountRequest accountRequest, {
-    CancelToken? cancelToken,
-  }) => emailDataSource[DataSourceType.network]!.exportAllAttachments(
-    accountId,
-    emailId,
-    baseDownloadAllUrl,
-    outputFileName,
-    accountRequest,
-  );
 
   @override
   Future<String> generateEntireMessageAsDocument(ViewEntireMessageRequest entireMessageRequest) {

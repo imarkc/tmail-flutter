@@ -12,7 +12,7 @@ class ImagePaths {
   String get icDownload => _getImagePath('ic_download.svg');
   String get icMore => _getImagePath('ic_more.svg');
   String get icPhotoLibrary => _getImagePath('ic_photo_library.svg');
-  String get icEmptyEmail => _getImagePath('ic_empty_email.svg');
+  String get icEmptyFolder => _getImagePath('ic_empty_folder.svg');
   String get icStar => _getImagePath('ic_star.svg');
   String get icUnStar => _getImagePath('ic_unstar.svg');
   String get icAttachment => _getImagePath('ic_attachment.svg');
@@ -44,6 +44,7 @@ class ImagePaths {
   String get icMailboxArchived => _getImagePath('ic_mailbox_archived.svg');
   String get icMailboxSpam => _getImagePath('ic_mailbox_spam.svg');
   String get icMailboxTrash => _getImagePath('ic_mailbox_trash.svg');
+  String get icMailboxFavorite => _getImagePath('ic_mailbox_favorite.svg');
   String get icFilterSelected => _getImagePath('ic_filter_selected.svg');
   String get icFilterMessageAll => _getImagePath('ic_filter_message_all.svg');
   String get icFilterMessageAttachments => _getImagePath('ic_filter_message_attachments.svg');
@@ -101,13 +102,20 @@ class ImagePaths {
   String get icSelectedSB => _getImagePath('ic_selected_sb.svg');
   String get icUserSB => _getImagePath('ic_user_sb.svg');
   String get icComposeWeb => _getImagePath('ic_compose_web.svg');
-  String get icFileDocx => _getImagePath('ic_file_docx.svg');
+  String get icFileDoc => _getImagePath('ic_file_doc.svg');
   String get icFileZip => _getImagePath('ic_file_zip.svg');
-  String get icFileXlsx => _getImagePath('ic_file_xlsx.svg');
-  String get icFilePng => _getImagePath('ic_file_png.svg');
+  String get icFileExcel => _getImagePath('ic_file_excel.svg');
+  String get icFileImage => _getImagePath('ic_file_image.svg');
   String get icFilePdf => _getImagePath('ic_file_pdf.svg');
-  String get icFilePptx => _getImagePath('ic_file_pptx.svg');
-  String get icFileEPup => _getImagePath('ic_file_epup.svg');
+  String get icFilePowerPoint => _getImagePath('ic_file_power_point.svg');
+  String get icFileDefault => _getImagePath('ic_file_default.svg');
+  String get icFileAudio => _getImagePath('ic_file_audio.svg');
+  String get icFileCode => _getImagePath('ic_file_code.svg');
+  String get icFileODP => _getImagePath('ic_file_odp.svg');
+  String get icFileODS => _getImagePath('ic_file_ods.svg');
+  String get icFileODT => _getImagePath('ic_file_odt.svg');
+  String get icFileText => _getImagePath('ic_file_text.svg');
+  String get icFileVideo => _getImagePath('ic_file_video.svg');
   String get icLanguage => _getImagePath('ic_language.svg');
   String get icChecked => _getImagePath('ic_checked.svg');
   String get icStyleBold => _getImagePath('ic_style_bold.svg');
@@ -229,9 +237,41 @@ class ImagePaths {
   String get icCloseDialog => _getImagePath('ic_close_dialog.svg');
   String get icDoubleArrowUp => _getImagePath('ic_double_arrow_up.svg');
   String get icDoubleArrowDown => _getImagePath('ic_double_arrow_down.svg');
+  String get icRefreshQuotas => _getImagePath('ic_refresh_quotas.svg');
+  String get icCreateFilter => _getImagePath('ic_create_filter.svg');
+  String get icArrowBack => _getImagePath('ic_arrow_back.svg');
+  String get icRadio => _getImagePath('ic_radio.svg');
+  String get icRadioSelected => _getImagePath('ic_radio_selected.svg');
+  String get icCheck => _getImagePath('ic_check.svg');
+  String get icFileDownload => _getImagePath('ic_file_download.svg');
+  String get icTwakeWorkplace => _getIconPath('icon_twp.png');
+  String get animLottieTmail => _getAnimationPath('lottie-tmail.json');
+  String get icExpandArrows => _getImagePath('ic_expand_arrows.svg');
+  String get icPremium => _getImagePath('ic_premium.svg');
+  String get icCloud => _getImagePath('ic_cloud.svg');
+  String get icNoRules => _getImagePath('ic_no_rules.svg');
+  String get icStorage => _getImagePath('ic_storage.svg');
+  String get icWarning => _getImagePath('ic_warning.svg');
+  String get icKeyboard => _getImagePath('ic_keyboard.svg');
+  String get icMessage => _getImagePath('ic_message.svg');
+  String get icNavigation => _getImagePath('ic_navigation.svg');
+  String get icReading => _getImagePath('ic_reading.svg');
+  String get icMoveFolderContent => _getImagePath('ic_move_folder_content.svg');
+  String get icInsertLink => _getImagePath('ic_insert_link.svg');
+  String get icRemoveLink => _getImagePath('ic_remove_link.svg');
+  String get icText => _getImagePath('ic_text.svg');
+  String get icUser => _getImagePath('ic_user.svg');
 
   String _getImagePath(String imageName) {
     return AssetsPaths.images + imageName;
+  }
+
+  String _getIconPath(String iconName) {
+    return AssetsPaths.icons + iconName;
+  }
+
+  String _getAnimationPath(String animationName) {
+    return AssetsPaths.animations + animationName;
   }
 
   String getConfigurationImagePath(String imageName) {

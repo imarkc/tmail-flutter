@@ -2,6 +2,7 @@
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/style_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:core/presentation/views/avatar/gradient_circle_avatar_icon.dart';
 import 'package:core/utils/direction_utils.dart';
 import 'package:core/utils/platform_info.dart';
@@ -17,16 +18,14 @@ typedef DeleteContactCallbackAction = Function(EmailAddress contactDeleted);
 class ContactInputTagItem extends StatelessWidget {
 
   final EmailAddress contact;
-  final bool isLastContact;
-  final bool lastTagFocused;
+  final bool isTagFocused;
   final DeleteContactCallbackAction? deleteContactCallbackAction;
 
   const ContactInputTagItem(
     this.contact,
     {
       Key? key,
-      this.isLastContact = false,
-      this.lastTagFocused = false,
+      this.isTagFocused = false,
       this.deleteContactCallbackAction
     }
   ) : super(key: key);
@@ -53,10 +52,11 @@ class ContactInputTagItem extends StatelessWidget {
         maxLines: 1,
         softWrap: CommonTextStyle.defaultSoftWrap,
         overflow: CommonTextStyle.defaultTextOverFlow,
-        style: const TextStyle(
+        style: ThemeUtils.defaultTextStyleInterFont.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.normal,
-          color: Colors.black)
+          color: Colors.black,
+        ),
       ),
       deleteIcon: deleteContactCallbackAction != null
         ? SvgPicture.asset(
@@ -66,7 +66,11 @@ class ContactInputTagItem extends StatelessWidget {
             colorFilter: AppColor.colorDeleteContactIcon.asFilter(),
             fit: BoxFit.fill)
         : null,
-      labelStyle: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.normal),
+      labelStyle: ThemeUtils.defaultTextStyleInterFont.copyWith(
+        color: Colors.black,
+        fontSize: 14,
+        fontWeight: FontWeight.normal,
+      ),
       backgroundColor: _getTagBackgroundColor(),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -91,7 +95,7 @@ class ContactInputTagItem extends StatelessWidget {
   bool _isValidEmailAddress(String value) => value.isEmail || AppUtils.isEmailLocalhost(value);
 
   Color _getTagBackgroundColor() {
-    if (lastTagFocused && isLastContact) {
+    if (isTagFocused) {
       return AppColor.colorItemRecipientSelected;
     } else {
       return _isValidEmailAddress(contact.emailAddress)
@@ -101,7 +105,7 @@ class ContactInputTagItem extends StatelessWidget {
   }
 
   BorderSide _getTagBorderSide() {
-    if (lastTagFocused && isLastContact) {
+    if (isTagFocused) {
       return const BorderSide(
       width: 1,
       color: AppColor.primaryColor);

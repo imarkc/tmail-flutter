@@ -23,17 +23,19 @@ class GetTokenOIDCInteractor {
 
   GetTokenOIDCInteractor(this._credentialRepository, this.authenticationOIDCRepository, this._accountRepository);
 
-  Stream<Either<Failure, Success>> execute(Uri baseUrl, OIDCConfiguration config) async* {
+  Stream<Either<Failure, Success>> execute(Uri baseUri, OIDCConfiguration config) async* {
     try {
       yield Right<Failure, Success>(GetTokenOIDCLoading());
       final tokenOIDC = await authenticationOIDCRepository.getTokenOIDC(
-          config.clientId,
-          config.redirectUrl,
-          config.discoveryUrl,
-          config.scopes);
+        config.clientId,
+        config.redirectUrl,
+        config.discoveryUrl,
+        config.scopes,
+        loginHint: config.loginHint,
+      );
 
       await Future.wait([
-        _credentialRepository.saveBaseUrl(baseUrl),
+        _credentialRepository.saveBaseUrl(baseUri),
         authenticationOIDCRepository.persistTokenOIDC(tokenOIDC),
         authenticationOIDCRepository.persistOidcConfiguration(config),
       ]);
@@ -45,7 +47,11 @@ class GetTokenOIDCInteractor {
           isSelected: true
         )
       );
-      yield Right<Failure, Success>(GetTokenOIDCSuccess(tokenOIDC, config));
+      yield Right<Failure, Success>(GetTokenOIDCSuccess(
+        tokenOIDC,
+        config,
+        baseUri,
+      ));
     } on PlatformException catch (e) {
       logError('GetTokenOIDCInteractor::execute(): PlatformException ${e.message} - ${e.stacktrace}');
       if (NoSuitableBrowserForOIDCException.verifyException(e)) {

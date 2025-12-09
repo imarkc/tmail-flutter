@@ -35,6 +35,7 @@ import 'package:tmail_ui_user/features/email/data/repository/email_repository_im
 import 'package:tmail_ui_user/features/email/domain/repository/email_repository.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/get_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/print_email_interactor.dart';
+import 'package:tmail_ui_user/features/email/domain/usecases/save_template_email_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/transform_html_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/composer_arguments.dart';
 import 'package:tmail_ui_user/features/mailbox/data/datasource/mailbox_datasource.dart';
@@ -54,8 +55,8 @@ import 'package:tmail_ui_user/features/mailbox_dashboard/data/repository/compose
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/repository/composer_cache_repository.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/remove_composer_cache_by_id_on_web_interactor.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_identities_interactor.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/identities/identity_interactors_bindings.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/preferences/bindings/preferences_interactors_bindings.dart';
-import 'package:tmail_ui_user/features/manage_account/presentation/profiles/identities/identity_interactors_bindings.dart';
 import 'package:tmail_ui_user/features/offline_mode/manager/new_email_cache_manager.dart';
 import 'package:tmail_ui_user/features/offline_mode/manager/new_email_cache_worker_queue.dart';
 import 'package:tmail_ui_user/features/offline_mode/manager/opened_email_cache_manager.dart';
@@ -303,6 +304,11 @@ class ComposerBindings extends BaseBindings {
 
     IdentityInteractorsBindings(composerId: composerId).dependencies();
     PreferencesInteractorsBindings(composerId: composerId).dependencies();
+
+    Get.lazyPut(() => SaveTemplateEmailInteractor(
+      Get.find<ComposerRepository>(tag: composerId),
+      Get.find<EmailRepository>(tag: composerId),
+    ), tag: composerId);
   }
 
   @override
@@ -331,6 +337,7 @@ class ComposerBindings extends BaseBindings {
       Get.find<CreateNewAndSaveEmailToDraftsInteractor>(tag: composerId),
       Get.find<PrintEmailInteractor>(tag: composerId),
       Get.find<ComposerRepository>(tag: composerId),
+      Get.find<SaveTemplateEmailInteractor>(tag: composerId),
       composerId: composerId,
       composerArgs: composerArguments,
     ), tag: composerId);
@@ -393,6 +400,7 @@ class ComposerBindings extends BaseBindings {
     Get.delete<CreateNewAndSaveEmailToDraftsInteractor>(tag: composerId);
     Get.delete<RestoreEmailInlineImagesInteractor>(tag: composerId);
     Get.delete<PrintEmailInteractor>(tag: composerId);
+    Get.delete<SaveTemplateEmailInteractor>(tag: composerId);
 
     IdentityInteractorsBindings(composerId: composerId).dispose();
     PreferencesInteractorsBindings(composerId: composerId).dispose();

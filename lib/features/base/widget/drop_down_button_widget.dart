@@ -2,6 +2,7 @@
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/style_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -14,6 +15,7 @@ import 'package:rule_filter/rule_filter/rule_condition_group.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/font_name_type.dart';
 import 'package:tmail_ui_user/features/rules_filter_creator/presentation/extensions/rule_condition_extensions.dart';
 import 'package:tmail_ui_user/features/rules_filter_creator/presentation/model/email_rule_filter_action.dart';
+import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 
 class DropDownButtonWidget<T> extends StatelessWidget {
 
@@ -33,6 +35,8 @@ class DropDownButtonWidget<T> extends StatelessWidget {
   final double? dropdownWidth;
   final double? dropdownMaxHeight;
   final String? hintText;
+  final TextStyle? labelTextStyle;
+  final TextStyle? hintTextStyle;
 
   const DropDownButtonWidget({
     Key? key,
@@ -52,6 +56,8 @@ class DropDownButtonWidget<T> extends StatelessWidget {
     this.colorButton = Colors.white,
     this.tooltip = '',
     this.hintText,
+    this.labelTextStyle,
+    this.hintTextStyle,
   }) : super(key: key);
 
   @override
@@ -66,9 +72,9 @@ class DropDownButtonWidget<T> extends StatelessWidget {
               ? Row(children: [
                   Expanded(child: Text(
                     _getTextItemDropdown(context, item: itemSelected),
-                    style: TextStyle(fontSize: 16,
+                    style: hintTextStyle ?? ThemeUtils.defaultTextStyleInterFont.copyWith(fontSize: 16,
                         fontWeight: FontWeight.normal,
-                        color: Colors.black.withOpacity(opacity)),
+                        color: Colors.black.withValues(alpha: opacity)),
                     maxLines: 1,
                     softWrap: CommonTextStyle.defaultSoftWrap,
                     overflow: CommonTextStyle.defaultTextOverFlow,
@@ -84,7 +90,7 @@ class DropDownButtonWidget<T> extends StatelessWidget {
                         height: heightItem,
                         child: Row(children: [
                           Expanded(child: Text(_getTextItemDropdown(context, item: item),
-                            style: const TextStyle(
+                            style: labelTextStyle ?? ThemeUtils.defaultTextStyleInterFont.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.normal,
                                 color: Colors.black),
@@ -120,9 +126,9 @@ class DropDownButtonWidget<T> extends StatelessWidget {
                   child: Row(children: [
                     Expanded(child: Text(
                       _getTextItemDropdown(context, item: itemSelected),
-                      style: TextStyle(fontSize: 16,
+                      style: labelTextStyle ?? ThemeUtils.defaultTextStyleInterFont.copyWith(fontSize: 16,
                           fontWeight: FontWeight.normal,
-                          color: itemSelected != null ? Colors.black.withOpacity(opacity) : AppColor.textFieldHintColor),
+                          color: itemSelected != null ? Colors.black.withValues(alpha: opacity) : AppColor.textFieldHintColor),
                       maxLines: 1,
                       softWrap: CommonTextStyle.defaultSoftWrap,
                       overflow: CommonTextStyle.defaultTextOverFlow,
@@ -173,6 +179,8 @@ class DropDownButtonWidget<T> extends StatelessWidget {
   }
 
   String _getTextItemDropdown(BuildContext context, {required T? item}) {
+    final appLocalizations = AppLocalizations.of(context);
+
     if (item is Identity) {
       return item.name ?? '';
     }
@@ -183,16 +191,16 @@ class DropDownButtonWidget<T> extends StatelessWidget {
       return item.name;
     }
     if (item is rule_condition.Field) {
-      return item.getTitle(context);
+      return item.getTitle(appLocalizations);
     }
     if (item is rule_condition.Comparator) {
-      return item.getTitle(context);
+      return item.getTitle(appLocalizations);
     }
     if (item is EmailRuleFilterAction) {
-      return item.getTitle(context);
+      return item.getTitle(appLocalizations);
     }
     if (item is ConditionCombiner) {
-      return item.getTitle(context);
+      return item.getTitle(appLocalizations);
     }
     return hintText ?? '';
   }

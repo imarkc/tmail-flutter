@@ -1,13 +1,15 @@
 import 'package:core/presentation/action/action_callback_define.dart';
+import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
-import 'package:core/presentation/views/button/tmail_button_widget.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
+import 'package:core/presentation/views/dialog/confirm_dialog_button.dart';
+import 'package:core/utils/app_logger.dart';
 import 'package:core/utils/platform_info.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
 import 'package:model/email/attachment.dart';
 import 'package:model/extensions/list_attachment_extension.dart';
-import 'package:tmail_ui_user/features/email/presentation/styles/email_attachments_styles.dart';
 import 'package:tmail_ui_user/features/email/presentation/utils/email_utils.dart';
 import 'package:tmail_ui_user/features/email/presentation/widgets/attachment_item_widget.dart';
 import 'package:tmail_ui_user/features/email/presentation/widgets/attachments_info.dart';
@@ -24,8 +26,11 @@ class EmailAttachmentsWidget extends StatelessWidget {
   final ResponsiveUtils responsiveUtils;
   final ImagePaths imagePaths;
   final OnTapActionCallback? onTapShowAllAttachmentFile;
+  final OnTapActionCallback? onTapHideAllAttachments;
   final bool showDownloadAllAttachmentsButton;
+  final bool isDisplayAllAttachments;
   final OnTapActionCallback? onTapDownloadAllButton;
+  final String? singleEmailControllerTag;
 
   const EmailAttachmentsWidget({
     super.key,
@@ -37,137 +42,252 @@ class EmailAttachmentsWidget extends StatelessWidget {
     this.downloadAttachmentAction,
     this.viewAttachmentAction,
     this.onTapShowAllAttachmentFile,
+    this.onTapHideAllAttachments,
     this.showDownloadAllAttachmentsButton = false,
+    this.isDisplayAllAttachments = false,
     this.onTapDownloadAllButton,
+    this.singleEmailControllerTag,
   });
-
-  Widget _buildMoreAttachmentButton(
-    BuildContext context,
-    int hideItemsCount, {
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-  }) {
-    return TMailButtonWidget(
-      text: AppLocalizations.of(context).moreAttachments(hideItemsCount),
-      backgroundColor: Colors.transparent,
-      borderRadius: EmailAttachmentsStyles.buttonBorderRadius,
-      padding: padding,
-      maxWidth: EmailAttachmentsStyles.buttonMoreMaxWidth,
-      margin: margin,
-      textStyle: const TextStyle(
-        fontSize: EmailAttachmentsStyles.buttonMoreAttachmentsTextSize,
-        color: EmailAttachmentsStyles.buttonMoreAttachmentsTextColor,
-        fontWeight: EmailAttachmentsStyles.buttonMoreAttachmentsFontWeight,
-      ),
-      maxLines: 1,
-      onTapActionCallback: onTapShowAllAttachmentFile,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final attachmentDisplayed = EmailUtils.getAttachmentDisplayed(
-        context: context,
-        maxWidth: constraints.maxWidth
-          - EmailAttachmentsStyles.padding.horizontal
-          - EmailAttachmentsStyles.listSpace * 2,
-        platformIsMobile: PlatformInfo.isMobile,
-        attachments: attachments,
-        responsiveUtils: responsiveUtils,
+    final attachmentHeader = AttachmentsInfo(
+      imagePaths: imagePaths,
+      numberOfAttachments: attachments.length,
+      totalSizeInfo: filesize(attachments.totalSize, 1),
+      responsiveUtils: responsiveUtils,
+      onTapShowAllAttachmentFile: onTapShowAllAttachmentFile,
+      onTapDownloadAllButton: showDownloadAllAttachmentsButton
+          ? onTapDownloadAllButton
+          : null,
+    );
+
+    bool isMobileResponsive = responsiveUtils.isMobile(context);
+
+    if (isMobileResponsive) {
+      final attachmentRecord = _getDisplayedAndHiddenAttachment(
+        context,
+        isMobileResponsive,
+        responsiveUtils.getDeviceWidth(context),
       );
-      int hideItemsCount = attachments.length - attachmentDisplayed.length;
-      if (hideItemsCount > 999) {
-        hideItemsCount = 999;
-      }
+
+      final displayedAttachments = isDisplayAllAttachments
+          ? attachments
+          : attachmentRecord.displayedAttachments;
+      final hiddenItemsCount = isDisplayAllAttachments
+          ? 0
+          : attachmentRecord.hiddenItemsCount;
+
       return Padding(
-        padding: EmailAttachmentsStyles.padding,
+        padding: const EdgeInsetsDirectional.only(
+          start: 16,
+          end: 16,
+          bottom: 24,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AttachmentsInfo(
-              imagePaths: imagePaths,
-              numberOfAttachments: attachments.length,
-              totalSizeInfo: filesize(attachments.totalSize, 1),
-              responsiveUtils: responsiveUtils,
-              onTapShowAllAttachmentFile: onTapShowAllAttachmentFile,
-              downloadAllEnabled: showDownloadAllAttachmentsButton,
-              onTapDownloadAllButton: onTapDownloadAllButton,
+            attachmentHeader,
+            Padding(
+              padding: const EdgeInsetsDirectional.only(top: 4),
+              child: Column(
+                children: displayedAttachments.map((attachment) {
+                  return AttachmentItemWidget(
+                    attachment: attachment,
+                    imagePaths: imagePaths,
+                    margin: const EdgeInsets.only(
+                      top: EmailUtils.attachmentItemSpacing,
+                    ),
+                    width: EmailUtils.desktopItemMaxWidth,
+                    downloadAttachmentAction: downloadAttachmentAction,
+                    viewAttachmentAction: viewAttachmentAction,
+                    singleEmailControllerTag: singleEmailControllerTag,
+                  );
+                }).toList(),
+              ),
             ),
-            const SizedBox(height: EmailAttachmentsStyles.marginHeader),
-            Row(
-              crossAxisAlignment: responsiveUtils.isMobile(context)
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Wrap(
-                    spacing: EmailAttachmentsStyles.listSpace,
-                    runSpacing: EmailAttachmentsStyles.listSpace,
-                    children: attachmentDisplayed.map((attachment) {
-                      if (PlatformInfo.isWeb) {
-                        return DraggableAttachmentItemWidget(
-                            attachment: attachment,
-                            onDragStarted: onDragStarted,
-                            onDragEnd: onDragEnd,
-                            downloadAttachmentAction: downloadAttachmentAction,
-                            viewAttachmentAction: viewAttachmentAction,
-                        );
-                      } else {
-                        return AttachmentItemWidget(
-                            attachment: attachment,
-                            downloadAttachmentAction: downloadAttachmentAction,
-                            viewAttachmentAction: viewAttachmentAction,
-                        );
-                      }
-                    }).toList(),
+            const SizedBox(height: EmailUtils.attachmentItemSpacing),
+            if (hiddenItemsCount > 0)
+              SizedBox(
+                height: EmailUtils.attachmentItemHeight,
+                child: ConfirmDialogButton(
+                  icon: imagePaths.icAttachment,
+                  iconSize: 16,
+                  iconColor: AppColor.steelGrayA540,
+                  label: AppLocalizations.of(context).showMoreAttachmentButton(
+                    hiddenItemsCount,
                   ),
+                  textStyle: ThemeUtils.textStyleBodyBody1(
+                    color: AppColor.steelGray400,
+                  ),
+                  radius: 5,
+                  onTapAction: onTapShowAllAttachmentFile,
                 ),
-                if (hideItemsCount > 0 && !responsiveUtils.isMobile(context))
-                  _buildMoreAttachmentButton(
-                    context,
-                    hideItemsCount,
-                    padding: EmailAttachmentsStyles.buttonPadding,
-                    margin: EmailAttachmentsStyles.moreButtonMargin,
+              ),
+            if (isDisplayAllAttachments)
+              SizedBox(
+                height: EmailUtils.attachmentItemHeight,
+                child: ConfirmDialogButton(
+                  icon: imagePaths.icAttachment,
+                  iconSize: 16,
+                  iconColor: AppColor.steelGrayA540,
+                  label: AppLocalizations.of(context).hideAttachmentButton(
+                    attachmentRecord.hiddenItemsCount,
                   ),
-              ]
-            ),
-            const SizedBox(height: EmailAttachmentsStyles.marginHeader),
-            if (responsiveUtils.isMobile(context))
-              Row(
-                children: [
-                  if (hideItemsCount > 0)
-                    _buildMoreAttachmentButton(
-                      context,
-                      hideItemsCount,
-                      padding: EmailAttachmentsStyles.mobileButtonPadding,
-                      margin: EmailAttachmentsStyles.mobileMoreButtonMargin,
-                    ),
-                  const Spacer(),
-                  if (showDownloadAllAttachmentsButton)
-                    TMailButtonWidget(
-                      text: AppLocalizations.of(context).downloadAll,
-                      icon: imagePaths.icDownloadAll,
-                      iconAlignment: TextDirection.rtl,
-                      backgroundColor: Colors.transparent,
-                      borderRadius: EmailAttachmentsStyles.buttonBorderRadius,
-                      padding: EmailAttachmentsStyles.mobileButtonPadding,
-                      textStyle: const TextStyle(
-                        fontSize: EmailAttachmentsStyles.buttonTextSize,
-                        color: EmailAttachmentsStyles.buttonTextColor,
-                        fontWeight: EmailAttachmentsStyles.buttonFontWeight
-                      ),
-                      maxWidth: EmailAttachmentsStyles.buttonDownloadAllMaxWidth,
-                      maxLines: 1,
-                      mainAxisSize: MainAxisSize.min,
-                      flexibleText: true,
-                      onTapActionCallback: onTapDownloadAllButton,
-                    ),
-                ]
+                  textStyle: ThemeUtils.textStyleBodyBody1(
+                    color: AppColor.steelGray400,
+                  ),
+                  radius: 5,
+                  onTapAction: onTapHideAllAttachments,
+                ),
               ),
           ],
         ),
       );
-    });
+    } else {
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(
+          start: 8,
+          end: 8,
+          top: 12,
+          bottom: 16,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.symmetric(horizontal: 12),
+              child: attachmentHeader,
+            ),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: 12,
+                end: 12,
+                top: 12,
+              ),
+              child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final attachmentRecord = _getDisplayedAndHiddenAttachment(
+                      context,
+                      isMobileResponsive,
+                      constraints.maxWidth,
+                    );
+                    final displayedAttachments = isDisplayAllAttachments
+                        ? attachments
+                        : attachmentRecord.displayedAttachments;
+                    final hiddenItemsCount = isDisplayAllAttachments
+                        ? 0
+                        : attachmentRecord.hiddenItemsCount;
+
+                    return Wrap(
+                      spacing: EmailUtils.attachmentItemSpacing,
+                      runSpacing: isDisplayAllAttachments
+                          ? EmailUtils.attachmentItemSpacing
+                          : 0,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ...displayedAttachments.map((attachment) {
+                          if (PlatformInfo.isWeb &&
+                              responsiveUtils.isDesktop(context)) {
+                            return DraggableAttachmentItemWidget(
+                              attachment: attachment,
+                              imagePaths: imagePaths,
+                              width: EmailUtils.desktopItemMaxWidth,
+                              onDragStarted: onDragStarted,
+                              onDragEnd: onDragEnd,
+                              downloadAttachmentAction: downloadAttachmentAction,
+                              viewAttachmentAction: viewAttachmentAction,
+                              singleEmailControllerTag: singleEmailControllerTag,
+                            );
+                          } else {
+                            return AttachmentItemWidget(
+                              attachment: attachment,
+                              imagePaths: imagePaths,
+                              width: EmailUtils.desktopItemMaxWidth,
+                              downloadAttachmentAction: downloadAttachmentAction,
+                              viewAttachmentAction: viewAttachmentAction,
+                              singleEmailControllerTag: singleEmailControllerTag,
+                            );
+                          }
+                        }).toList(),
+                        if (hiddenItemsCount > 0)
+                          SizedBox(
+                            height: EmailUtils.attachmentItemHeight,
+                            child: ConfirmDialogButton(
+                              icon: imagePaths.icAttachment,
+                              iconSize: 16,
+                              iconColor: AppColor.steelGrayA540,
+                              label: AppLocalizations.of(context).showMoreAttachmentButton(
+                                hiddenItemsCount,
+                              ),
+                              textStyle: ThemeUtils.textStyleBodyBody1(
+                                color: AppColor.steelGray400,
+                              ),
+                              radius: 5,
+                              onTapAction: onTapShowAllAttachmentFile,
+                            ),
+                          ),
+                        if (isDisplayAllAttachments)
+                          SizedBox(
+                            height: EmailUtils.attachmentItemHeight,
+                            child: ConfirmDialogButton(
+                              icon: imagePaths.icAttachment,
+                              iconSize: 16,
+                              iconColor: AppColor.steelGrayA540,
+                              label: AppLocalizations.of(context).hideAttachmentButton(
+                                attachmentRecord.hiddenItemsCount,
+                              ),
+                              textStyle: ThemeUtils.textStyleBodyBody1(
+                                color: AppColor.steelGray400,
+                              ),
+                              radius: 5,
+                              onTapAction: onTapHideAllAttachments,
+                            ),
+                          ),
+                      ],
+                    );
+                  }
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  ({List<Attachment> displayedAttachments, int hiddenItemsCount})
+      _getDisplayedAndHiddenAttachment(
+    BuildContext context,
+    bool isMobile,
+    double maxWidth,
+  ) {
+    final showMoreButtonMaxWidth = EmailUtils.estimateTextWidth(
+      context: context,
+      text: AppLocalizations.of(context).showMoreAttachmentButton(999),
+      textStyle: ThemeUtils.textStyleBodyBody1(
+        color: AppColor.steelGray400,
+      ),
+      locale: Localizations.localeOf(context),
+    );
+
+    final displayedAttachments = EmailUtils.getAttachmentDisplayed(
+      maxWidth: maxWidth,
+      attachments: attachments,
+      isMobile: isMobile,
+      showMoreButtonMaxWidth: showMoreButtonMaxWidth,
+    );
+
+    int hiddenItemsCount = attachments.length - displayedAttachments.length;
+    if (hiddenItemsCount > 999) {
+      hiddenItemsCount = 999;
+    } else if (hiddenItemsCount < 0) {
+      hiddenItemsCount = 0;
+    }
+
+    log('EmailAttachmentsWidget::_getDisplayedAndHiddenAttachment: Displayed: ${displayedAttachments.length}, Hidden: $hiddenItemsCount');
+    return (
+      displayedAttachments: displayedAttachments,
+      hiddenItemsCount: hiddenItemsCount,
+    );
   }
 }

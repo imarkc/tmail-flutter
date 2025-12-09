@@ -39,7 +39,7 @@ dependencies:
   ### Dependencies from pub.dev ###
   cupertino_icons: 1.0.6
 
-  flutter_svg: 2.0.9
+  flutter_svg: 2.1.0
 
   dio: 5.0.0
 
@@ -55,7 +55,7 @@ dependencies:
 
   device_info_plus: 9.0.1
 
-  flutter_inappwebview: 6.0.0
+  flutter_inappwebview: 6.1.0
 
   url_launcher: 6.3.1
 
@@ -75,9 +75,9 @@ dependencies:
 
   path_provider: 2.1.5
 
-  collection: 1.18.0
+  collection: 1.19.1
 
-  intl: 0.19.0
+  intl: 0.20.2
 
   flutter_typeahead: 5.0.2
 
@@ -85,24 +85,21 @@ dependencies:
 
   printing: 5.12.0
 
-  package_info_plus: 4.2.0
+  package_info_plus: 8.0.2
 
   fk_user_agent: 2.1.0
 
-  # flutter_charset_detector: 3.0.0
-  # TODO: Disable charset detector on IOS/MACOS to wait for migration status to complete.
-  # https://gitlab.freedesktop.org/uchardet/uchardet.git
-  flutter_charset_detector:
-    git:
-      url: https://github.com/dab246/flutter_charset_detector.git
-      ref: main
-      path: flutter_charset_detector
+  flutter_charset_detector: 3.0.0
 
   debounce_throttle: 2.0.0
 
-  win32: 5.5.1
+  win32: 5.9.0
 
   pull_to_refresh: 2.0.0
+
+  html_unescape: 2.0.0
+
+  web: 1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -114,7 +111,7 @@ dev_dependencies:
 
   plugin_platform_interface: 2.1.8
 
-  build_runner: 2.4.9
+  build_runner: 2.4.10
 
   mockito: 5.4.4
 # For information on the generic Dart part of this file, see the

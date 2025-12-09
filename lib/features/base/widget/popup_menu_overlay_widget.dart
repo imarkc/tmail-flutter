@@ -3,6 +3,8 @@ import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
+typedef OnMenuChanged = void Function(bool isShowing);
+
 class PopupMenuOverlayWidget extends StatelessWidget {
 
   final List<Widget> listButtonAction;
@@ -14,6 +16,7 @@ class PopupMenuOverlayWidget extends StatelessWidget {
   final bool arrangeAsList;
   final PreferredPosition? position;
   final EdgeInsetsGeometry? padding;
+  final OnMenuChanged? onMenuChanged;
 
   const PopupMenuOverlayWidget({
     Key? key,
@@ -26,6 +29,7 @@ class PopupMenuOverlayWidget extends StatelessWidget {
     this.position = PreferredPosition.bottom,
     this.arrangeAsList = false,
     this.padding,
+    this.onMenuChanged,
   }) : super(key: key);
 
   @override
@@ -34,15 +38,18 @@ class PopupMenuOverlayWidget extends StatelessWidget {
       controller: controller,
       menuBuilder: () {
         return Material(
-          elevation: elevation ?? 10,
-          borderRadius: BorderRadius.circular(borderRadius ?? 12),
+          elevation: elevation ?? 8,
+          borderRadius: BorderRadius.all(Radius.circular(borderRadius ?? 6)),
           color: backgroundColor ?? Colors.white,
           child: PointerInterceptor(
             child: Container(
               decoration: BoxDecoration(
-                  color: backgroundColor ?? Colors.white,
-                  borderRadius: BorderRadius.circular(borderRadius ?? 12)),
-              padding: padding,
+                color: backgroundColor ?? Colors.white,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(borderRadius ?? 6),
+                ),
+              ),
+              padding: padding ?? const EdgeInsets.symmetric(vertical: 8),
               clipBehavior: Clip.antiAlias,
               child: arrangeAsList
                 ? IntrinsicWidth(child: Column(children: listButtonAction))
@@ -55,7 +62,8 @@ class PopupMenuOverlayWidget extends StatelessWidget {
       position: position,
       barrierColor: Colors.transparent,
       arrowSize: 0.0,
-      verticalMargin: 8,
+      verticalMargin: 2.0,
+      menuOnChange: onMenuChanged,
       child: iconButton,
     );
   }

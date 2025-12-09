@@ -8,7 +8,13 @@ abstract class AuthenticationOIDCDataSource {
 
   Future<OIDCDiscoveryResponse> discoverOIDC(OIDCConfiguration oidcConfiguration);
 
-  Future<TokenOIDC> getTokenOIDC(String clientId, String redirectUrl, String discoveryUrl, List<String> scopes);
+  Future<TokenOIDC> getTokenOIDC(
+    String clientId,
+    String redirectUrl,
+    String discoveryUrl,
+    List<String> scopes, {
+    String? loginHint,
+  });
 
   Future<void> persistTokenOIDC(TokenOIDC tokenOidc);
 
@@ -38,4 +44,8 @@ abstract class AuthenticationOIDCDataSource {
       List<String> scopes);
 
   Future<String> getAuthenticationInfo();
+
+  Future<void> removeAuthDestinationUrl();
+
+  Future<OidcUserInfo> fetchUserInfo(String userInfoEndpoint);
 }

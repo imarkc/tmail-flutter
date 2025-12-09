@@ -22,7 +22,7 @@ import 'package:tmail_ui_user/features/thread/presentation/styles/item_email_til
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 
 typedef OnPressEmailActionClick = void Function(EmailActionType, PresentationEmail);
-typedef OnMoreActionClick = void Function(PresentationEmail, RelativeRect?);
+typedef OnMoreActionClick = Future<void> Function(PresentationEmail, RelativeRect?);
 
 mixin BaseEmailItemTile {
 
@@ -44,7 +44,7 @@ mixin BaseEmailItemTile {
               color: AppColor.backgroundCounterMailboxColor),
           child: TextOverflowBuilder(
             email.mailboxContain?.getDisplayName(context) ?? '',
-            style: const TextStyle(
+            style: ThemeUtils.defaultTextStyleInterFont.copyWith(
               fontFamily: ConstantsUI.fontApp,
               fontSize: 10,
               color: AppColor.emailMailboxContainColor,
@@ -208,6 +208,7 @@ mixin BaseEmailItemTile {
 
   Widget buildIconUnreadStatus() {
     return SvgPicture.asset(
+      key: const Key('unread_status_icon'),
       imagePaths.icUnreadStatus,
       width: 9,
       height: 9,

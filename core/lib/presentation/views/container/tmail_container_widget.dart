@@ -12,6 +12,7 @@ class TMailContainerWidget extends StatelessWidget {
   final Widget child;
   final double borderRadius;
   final double? width;
+  final double? height;
   final double maxWidth;
   final double maxHeight;
   final double minWidth;
@@ -22,6 +23,7 @@ class TMailContainerWidget extends StatelessWidget {
   final List<BoxShadow>? boxShadow;
   final BoxBorder? border;
   final Color? hoverColor;
+  final Alignment? alignment;
 
   const TMailContainerWidget({
     super.key,
@@ -31,6 +33,7 @@ class TMailContainerWidget extends StatelessWidget {
     this.onLongPressActionCallback,
     this.borderRadius = 20,
     this.width,
+    this.height,
     this.maxWidth = double.infinity,
     this.maxHeight = double.infinity,
     this.minWidth = 0,
@@ -41,10 +44,30 @@ class TMailContainerWidget extends StatelessWidget {
     this.margin,
     this.border,
     this.hoverColor,
+    this.alignment,
   });
 
   @override
   Widget build(BuildContext context) {
+    final item = Container(
+      decoration: BoxDecoration(
+        color: backgroundColor ?? AppColor.colorButtonHeaderThread,
+        borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+        border: border,
+        boxShadow: boxShadow,
+      ),
+      width: width,
+      height: height,
+      constraints: BoxConstraints(
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        minWidth: minWidth,
+      ),
+      alignment: alignment,
+      padding: padding ?? const EdgeInsetsDirectional.all(8),
+      child: child,
+    );
+
     final materialChild = Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -70,39 +93,9 @@ class TMailContainerWidget extends StatelessWidget {
         child: tooltipMessage != null
           ? Tooltip(
               message: tooltipMessage,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: backgroundColor ?? AppColor.colorButtonHeaderThread,
-                  borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
-                  border: border,
-                  boxShadow: boxShadow
-                ),
-                width: width,
-                constraints: BoxConstraints(
-                  maxWidth: maxWidth,
-                  maxHeight: maxHeight,
-                  minWidth: minWidth
-                ),
-                padding: padding ?? const EdgeInsetsDirectional.all(8),
-                child: child
-              )
+              child: item,
             )
-          : Container(
-              decoration: BoxDecoration(
-                color: backgroundColor ?? AppColor.colorButtonHeaderThread,
-                borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
-                border: border,
-                boxShadow: boxShadow
-              ),
-              width: width,
-              constraints: BoxConstraints(
-                maxWidth: maxWidth,
-                maxHeight: maxHeight,
-                minWidth: minWidth
-              ),
-              padding: padding ?? const EdgeInsetsDirectional.all(8),
-              child: child
-            )
+          : item
       ),
     );
 

@@ -16,6 +16,7 @@ class CreateEmailRequest with EquatableMixin {
   final Session session;
   final AccountId accountId;
   final EmailActionType emailActionType;
+  final String ownEmailAddress;
   final String subject;
   final String emailContent;
   final bool hasRequestReadReceipt;
@@ -31,7 +32,9 @@ class CreateEmailRequest with EquatableMixin {
   final MailboxId? outboxMailboxId;
   final MailboxId? sentMailboxId;
   final MailboxId? draftsMailboxId;
+  final MailboxId? templateMailboxId;
   final EmailId? draftsEmailId;
+  final EmailId? templateEmailId;
   final EmailId? answerForwardEmailId;
   final EmailId? unsubscribeEmailId;
   final MessageIdsHeaderValue? messageId;
@@ -49,6 +52,7 @@ class CreateEmailRequest with EquatableMixin {
     required this.session,
     required this.accountId,
     required this.emailActionType,
+    required this.ownEmailAddress,
     required this.subject,
     required this.emailContent,
     this.fromSender,
@@ -64,7 +68,9 @@ class CreateEmailRequest with EquatableMixin {
     this.outboxMailboxId,
     this.sentMailboxId,
     this.draftsMailboxId,
+    this.templateMailboxId,
     this.draftsEmailId,
+    this.templateEmailId,
     this.answerForwardEmailId,
     this.unsubscribeEmailId,
     this.messageId,
@@ -84,6 +90,7 @@ class CreateEmailRequest with EquatableMixin {
     session,
     accountId,
     emailActionType,
+    ownEmailAddress,
     subject,
     emailContent,
     fromSender,
@@ -99,7 +106,9 @@ class CreateEmailRequest with EquatableMixin {
     outboxMailboxId,
     sentMailboxId,
     draftsMailboxId,
+    templateMailboxId,
     draftsEmailId,
+    templateEmailId,
     answerForwardEmailId,
     unsubscribeEmailId,
     references,

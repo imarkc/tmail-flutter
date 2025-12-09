@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:tmail_ui_user/features/thread/presentation/widgets/empty_emails_widget.dart';
+import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations_delegate.dart';
 import 'package:tmail_ui_user/main/localizations/localization_service.dart';
 
@@ -42,7 +43,6 @@ void main() {
         child: EmptyEmailsWidget(
           isSearchActive: false,
           isFilterMessageActive: false,
-          onCreateFiltersActionCallback: () {},
         ),
       );
 
@@ -51,14 +51,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
+        find.byKey(const Key('empty_email_sub_message')),
         findsOneWidget);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
       final emptyEmailMessageWidget = tester.widget<Text>(emptyEmailMessageWidgetFinder);
       expect(
         emptyEmailMessageWidget.data,
-        'We\'re sorry, there are no emails in your current folder');
+        'You don’t have any emails\n in this folder.');
     });
 
     testWidgets(
@@ -77,14 +77,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
+        find.byKey(const Key('empty_email_sub_message')),
         findsNothing);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
       final emptyEmailMessageWidget = tester.widget<Text>(emptyEmailMessageWidgetFinder);
       expect(
         emptyEmailMessageWidget.data,
-        'We\'re sorry, there are no emails that match your current filter.');
+        AppLocalizations().noEmailMatchYourCurrentFilter,
+      );
     });
 
     testWidgets(
@@ -102,7 +103,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
+        find.byKey(const Key('empty_email_sub_message')),
         findsNothing);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
@@ -126,7 +127,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
+        find.byKey(const Key('empty_email_sub_message')),
         findsNothing);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
@@ -151,7 +152,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
+        find.byKey(const Key('empty_email_sub_message')),
         findsNothing);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
@@ -176,7 +177,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
+        find.byKey(const Key('empty_email_sub_message')),
         findsNothing);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
@@ -199,10 +200,6 @@ void main() {
       await tester.pumpWidget(widget);
 
       await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const Key('create_filter_rule_button_within_empty_email')),
-        findsNothing);
 
       final emptyEmailMessageWidgetFinder = find.byKey(const Key('empty_email_message'));
       final emptyEmailMessageWidget = tester.widget<Text>(emptyEmailMessageWidgetFinder);

@@ -1,19 +1,15 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:core/data/model/preview_attachment.dart';
 import 'package:core/data/network/download/downloaded_response.dart';
 import 'package:core/domain/extensions/datetime_extension.dart';
 import 'package:core/presentation/extensions/html_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
-import 'package:core/presentation/state/failure.dart';
-import 'package:core/presentation/state/success.dart';
 import 'package:core/presentation/utils/html_transformer/transform_configuration.dart';
 import 'package:core/utils/app_logger.dart';
 import 'package:core/utils/file_utils.dart';
 import 'package:core/utils/platform_info.dart';
 import 'package:core/utils/preview_eml_file_utils.dart';
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action.dart';
 import 'package:email_recovery/email_recovery/email_recovery_action_id.dart';
@@ -106,18 +102,6 @@ class EmailDataSourceImpl extends EmailDataSource {
   ) {
     return Future.sync(() async {
       return await emailAPI.markAsRead(session, accountId, emailIds, readActions);
-    }).catchError(_exceptionThrower.throwException);
-  }
-
-  @override
-  Future<List<DownloadTaskId>> downloadAttachments(
-      List<Attachment> attachments,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest
-  ) {
-    return Future.sync(() async {
-      return await emailAPI.downloadAttachments(attachments, accountId, baseDownloadUrl, accountRequest);
     }).catchError(_exceptionThrower.throwException);
   }
 
@@ -222,24 +206,42 @@ class EmailDataSourceImpl extends EmailDataSource {
   }
 
   @override
-  Future<Uint8List> downloadAttachmentForWeb(
-      DownloadTaskId taskId,
-      Attachment attachment,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest,
-      StreamController<Either<Failure, Success>> onReceiveController,
-      {CancelToken? cancelToken}
+  Future<Email> saveEmailAsTemplate(
+    Session session,
+    AccountId accountId,
+    Email email,
+    {
+      CreateNewMailboxRequest? createNewMailboxRequest,
+      CancelToken? cancelToken
+    }
   ) {
     return Future.sync(() async {
-      return await emailAPI.downloadAttachmentForWeb(
-          taskId,
-          attachment,
-          accountId,
-          baseDownloadUrl,
-          accountRequest,
-          onReceiveController,
-          cancelToken: cancelToken);
+      return await emailAPI.saveEmailAsTemplate(
+        session,
+        accountId,
+        email,
+        createNewMailboxRequest: createNewMailboxRequest,
+        cancelToken: cancelToken
+      );
+    }).catchError(_exceptionThrower.throwException);
+  }
+
+  @override
+  Future<Email> updateEmailTemplate(
+    Session session,
+    AccountId accountId,
+    Email newEmail,
+    EmailId oldEmailId,
+    {CancelToken? cancelToken}
+  ) {
+    return Future.sync(() async {
+      return await emailAPI.updateEmailTemplate(
+        session,
+        accountId,
+        newEmail,
+        oldEmailId,
+        cancelToken: cancelToken
+      );
     }).catchError(_exceptionThrower.throwException);
   }
 
@@ -451,7 +453,7 @@ class EmailDataSourceImpl extends EmailDataSource {
 
       final previewEmlHtmlDocument = _previewEmailUtils.generatePreviewEml(
         appName: appLocalizations.app_name,
-        userName: previewEmailEMLRequest.userName.value,
+        ownEmailAddress: previewEmailEMLRequest.ownEmailAddress,
         subjectPrefix: appLocalizations.subject,
         subject: previewEmailEMLRequest.email.subject?.escapeLtGtHtmlString() ?? '',
         emailContent: emailContentEscaped,
@@ -463,7 +465,9 @@ class EmailDataSourceImpl extends EmailDataSource {
         ccPrefix: appLocalizations.cc_email_address_prefix,
         bccPrefix: appLocalizations.bcc_email_address_prefix,
         replyToPrefix: appLocalizations.replyToEmailAddressPrefix,
-        titleAttachment: appLocalizations.attachments.toLowerCase(),
+        titleAttachment: listPreviewAttachment.length > 1
+          ? appLocalizations.attachments.toLowerCase()
+          : appLocalizations.attachment.toLowerCase(),
         attachmentIcon: attachmentIconBase64Data,
         toAddress: email.to?.listEmailAddressToString(isFullEmailAddress: true),
         ccAddress: email.cc?.listEmailAddressToString(isFullEmailAddress: true),
@@ -524,29 +528,6 @@ class EmailDataSourceImpl extends EmailDataSource {
   Future<EMLPreviewer> getPreviewEMLContentInMemory(String keyStored) {
     throw UnimplementedError();
   }
-  
-  @override
-  Future<void> downloadAllAttachmentsForWeb(
-    AccountId accountId,
-    EmailId emailId,
-    String baseDownloadAllUrl,
-    String outputFileName,
-    AccountRequest accountRequest,
-    DownloadTaskId taskId,
-    StreamController<Either<Failure, Success>> onReceiveController,
-    {CancelToken? cancelToken}
-  ) => Future.sync(() async {
-    return await emailAPI.downloadAllAttachmentsForWeb(
-      accountId,
-      emailId,
-      baseDownloadAllUrl,
-      outputFileName,
-      accountRequest,
-      taskId,
-      onReceiveController,
-      cancelToken: cancelToken,
-    );
-  }).catchError(_exceptionThrower.throwException);
   
   @override
   Future<DownloadedResponse> exportAllAttachments(

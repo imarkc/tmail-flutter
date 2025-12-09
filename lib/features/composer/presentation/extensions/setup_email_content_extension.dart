@@ -1,5 +1,4 @@
 
-import 'package:core/presentation/state/success.dart';
 import 'package:core/presentation/utils/html_transformer/transform_configuration.dart';
 import 'package:core/utils/platform_info.dart';
 import 'package:dartz/dartz.dart';
@@ -28,73 +27,13 @@ extension SetupEmailContentExtension on ComposerController {
     switch(currentEmailActionType) {
       case EmailActionType.editAsNewEmail:
       case EmailActionType.editDraft:
-        final session = mailboxDashBoardController.sessionCurrent;
-        final accountId = mailboxDashBoardController.accountId.value;
-        final emailId = arguments.presentationEmail?.id;
-
-        if (session == null) {
-          emailContentsViewState.value = Left(GetEmailContentFailure(NotFoundSessionException()));
-          return;
-        }
-
-        if (accountId == null) {
-          emailContentsViewState.value = Left(GetEmailContentFailure(NotFoundAccountIdException()));
-          return;
-        }
-
-        if (emailId == null) {
-          emailContentsViewState.value = Left(GetEmailContentFailure(NotFoundEmailException()));
-          return;
-        }
-
-        final resultState = await getEmailContentInteractor.execute(
-          session,
-          accountId,
-          emailId,
-          mailboxDashBoardController.baseDownloadUrl,
-          TransformConfiguration.forEditDraftsEmail(),
+        await _getEmailContent(
+          arguments,
+          transformConfiguration: TransformConfiguration.forEditDraftsEmail(),
           additionalProperties: Properties({
             IndividualHeaderIdentifier.identityHeader.value,
           }),
-        ).last;
-
-        final uiState = resultState.fold((failure) => failure, (success) => success);
-
-        if (uiState is GetEmailContentSuccess) {
-          initAttachmentsAndInlineImages(
-            attachments: uiState.attachments,
-            inlineImages: uiState.inlineImages,
-          );
-
-          if (currentEmailActionType == EmailActionType.editDraft) {
-            setupEmailRequestReadReceiptFlagForEditDraft(
-              uiState.emailCurrent!.hasRequestReadReceipt,
-            );
-            setupSelectedIdentityForEditDraft(
-              uiState.emailCurrent!.identityIdFromHeader,
-            );
-          }
-
-          emailContentsViewState.value = Right(uiState);
-        } else if (uiState is GetEmailContentFromCacheSuccess) {
-          initAttachmentsAndInlineImages(
-            attachments: uiState.attachments,
-            inlineImages: uiState.inlineImages,
-          );
-
-          if (currentEmailActionType == EmailActionType.editDraft) {
-            setupEmailRequestReadReceiptFlagForEditDraft(
-              uiState.emailCurrent.hasRequestReadReceipt,
-            );
-          }
-
-          emailContentsViewState.value = Right(uiState);
-        } else if (uiState is GetEmailContentFailure) {
-          emailContentsViewState.value = Left(uiState);
-          consumeState(Stream.value(Left(uiState)));
-        } else {
-          emailContentsViewState.value = Right(UIState.idle);
-        }
+        );
         break;
       case EmailActionType.editSendingEmail:
         final sendingEmail = arguments.sendingEmail;
@@ -126,7 +65,10 @@ extension SetupEmailContentExtension on ComposerController {
       case EmailActionType.replyAll:
       case EmailActionType.forward:
         if (arguments.emailContents?.trim().isNotEmpty != true) {
-          emailContentsViewState.value = Left(GetEmailContentFailure(EmptyEmailContentException()));
+          await _getEmailContent(
+            arguments,
+            transformConfiguration: TransformConfiguration.forReplyForwardEmptyEmail(),
+          );
         } else {
           final resultState = await transformHtmlEmailContentInteractor.execute(
             arguments.emailContents ?? '',
@@ -158,7 +100,7 @@ extension SetupEmailContentExtension on ComposerController {
             emailContentsViewState.value = Left(GetEmailContentFailure(uiState.exception));
             consumeState(Stream.value(Left(GetEmailContentFailure(uiState.exception))));
           } else {
-            emailContentsViewState.value = Right(UIState.idle);
+            emailContentsViewState.value = Right(LoadEmailContentCompleted());
           }
         }
         break;
@@ -204,7 +146,7 @@ extension SetupEmailContentExtension on ComposerController {
             emailContentsViewState.value = Left(GetEmailContentFailure(uiState.exception));
             consumeState(Stream.value(Left(GetEmailContentFailure(uiState.exception))));
           } else {
-            emailContentsViewState.value = Right(UIState.idle);
+            emailContentsViewState.value = Right(LoadEmailContentCompleted());
           }
         }
         break;
@@ -216,8 +158,85 @@ extension SetupEmailContentExtension on ComposerController {
         emailContentsViewState.value = Right(successState);
         break;
       default:
-        emailContentsViewState.value = Right(UIState.idle);
+        emailContentsViewState.value = Right(LoadEmailContentCompleted());
         break;
+    }
+  }
+
+  Future<void> _getEmailContent(
+    ComposerArguments arguments, {
+    required TransformConfiguration transformConfiguration,
+    Properties? additionalProperties,
+  }) async {
+    final session = mailboxDashBoardController.sessionCurrent;
+    final accountId = mailboxDashBoardController.accountId.value;
+    final emailId = arguments.presentationEmail?.id;
+
+    if (session == null) {
+      emailContentsViewState.value = Left(GetEmailContentFailure(NotFoundSessionException()));
+      return;
+    }
+
+    if (accountId == null) {
+      emailContentsViewState.value = Left(GetEmailContentFailure(NotFoundAccountIdException()));
+      return;
+    }
+
+    if (emailId == null) {
+      emailContentsViewState.value = Left(GetEmailContentFailure(NotFoundEmailException()));
+      return;
+    }
+
+    final resultState = await getEmailContentInteractor.execute(
+      session,
+      accountId,
+      emailId,
+      mailboxDashBoardController.baseDownloadUrl,
+      transformConfiguration,
+      additionalProperties: additionalProperties,
+    ).last;
+
+    final uiState = resultState.fold((failure) => failure, (success) => success);
+
+    if (uiState is GetEmailContentSuccess) {
+      initAttachmentsAndInlineImages(
+        attachments: uiState.attachments,
+        inlineImages: uiState.inlineImages,
+      );
+
+      if (currentEmailActionType == EmailActionType.editDraft ||
+          currentEmailActionType == EmailActionType.editAsNewEmail) {
+        setupEmailRequestReadReceiptFlag(
+          uiState.emailCurrent!.hasRequestReadReceipt,
+        );
+        setupSelectedIdentityForEditDraft(
+          uiState.emailCurrent!.identityIdFromHeader,
+        );
+      }
+
+      emailContentsViewState.value = Right(uiState);
+    } else if (uiState is GetEmailContentFromCacheSuccess) {
+      initAttachmentsAndInlineImages(
+        attachments: uiState.attachments,
+        inlineImages: uiState.inlineImages,
+      );
+
+      if (currentEmailActionType == EmailActionType.editDraft
+          || currentEmailActionType == EmailActionType.editAsNewEmail) {
+        setupEmailRequestReadReceiptFlag(
+          uiState.emailCurrent.hasRequestReadReceipt,
+        );
+        setupSelectedIdentityForEditDraft(
+          uiState.emailCurrent.identityIdFromHeader,
+        );
+      }
+
+      emailContentsViewState.value = Right(uiState);
+    } else if (uiState is GetEmailContentFailure) {
+      emailContentsViewState.value = Left(uiState);
+      consumeState(Stream.value(Left(uiState)));
+    } else {
+      emailContentsViewState.value = Right(LoadEmailContentCompleted());
     }
   }
 }

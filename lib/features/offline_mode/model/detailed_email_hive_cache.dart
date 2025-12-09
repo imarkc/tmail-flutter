@@ -1,6 +1,6 @@
 
 import 'package:equatable/equatable.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:tmail_ui_user/features/caching/utils/caching_constants.dart';
 import 'package:tmail_ui_user/features/offline_mode/model/email_header_hive_cache.dart';
 
@@ -41,6 +41,9 @@ class DetailedEmailHiveCache extends HiveObject with EquatableMixin {
   @HiveField(9)
   Map<String, String?>? sMimeStatusHeader;
 
+  @HiveField(10)
+  Map<String, String?>? identityHeader;
+
   DetailedEmailHiveCache({
     required this.emailId,
     required this.timeSaved,
@@ -52,6 +55,7 @@ class DetailedEmailHiveCache extends HiveObject with EquatableMixin {
     this.references,
     this.inlineImages,
     this.sMimeStatusHeader,
+    this.identityHeader,
   });
 
   @override
@@ -66,5 +70,6 @@ class DetailedEmailHiveCache extends HiveObject with EquatableMixin {
     references,
     inlineImages,
     sMimeStatusHeader,
+    identityHeader,
   ];
 }

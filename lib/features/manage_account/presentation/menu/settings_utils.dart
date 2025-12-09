@@ -22,16 +22,6 @@ class SettingsUtils {
     }
   }
 
-  static EdgeInsets getPaddingAppBar(BuildContext context, ResponsiveUtils responsiveUtils) {
-    if (responsiveUtils.isPortraitMobile(context)) {
-      return const EdgeInsets.symmetric(horizontal: 16);
-    } else if (responsiveUtils.isLandscapeMobile(context)) {
-      return const EdgeInsets.symmetric(horizontal: 12);
-    } else {
-      return const EdgeInsets.symmetric(horizontal: 32);
-    }
-  }
-
   static EdgeInsets getMarginViewForSettingDetails(BuildContext context, ResponsiveUtils responsiveUtils) {
     if (PlatformInfo.isWeb) {
       if (responsiveUtils.isDesktop(context)) {
@@ -64,7 +54,7 @@ class SettingsUtils {
   ) {
     if (responsiveUtils.isWebDesktop(context)) {
       return BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
         color: backgroundColor,
       );
     } else {
@@ -124,11 +114,28 @@ class SettingsUtils {
     }
   }
 
-  static EdgeInsets getMarginSettingDetailsView(BuildContext context, ResponsiveUtils responsiveUtils) {
+  static EdgeInsetsGeometry getSettingProgressBarPadding(
+    BuildContext context,
+    ResponsiveUtils responsiveUtils,
+  ) {
     if (responsiveUtils.isWebDesktop(context)) {
-      return const EdgeInsets.all(16);
+      return const EdgeInsetsDirectional.only(end: 16, top: 16);
+    } else if (responsiveUtils.isTablet(context) ||
+        responsiveUtils.isTabletLarge(context)) {
+      return const EdgeInsetsDirectional.only(start: 32, end: 32, top: 16);
     } else {
-      return EdgeInsets.zero;
+      return const EdgeInsetsDirectional.only(start: 16, end: 16, top: 16);
+    }
+  }
+
+  static EdgeInsetsGeometry? getMarginSettingDetailsView(
+    BuildContext context,
+    ResponsiveUtils responsiveUtils,
+  ) {
+    if (responsiveUtils.isWebDesktop(context)) {
+      return const EdgeInsetsDirectional.only(end: 16, top: 16, bottom: 16);
+    } else {
+      return null;
     }
   }
 
@@ -143,18 +150,16 @@ class SettingsUtils {
     }
   }
 
-  static EdgeInsetsGeometry getForwardBannerPadding(
+  static EdgeInsetsGeometry getBodyPadding(
     BuildContext context,
     ResponsiveUtils responsiveUtils,
   ) {
-    if (responsiveUtils.isWebDesktop(context)) {
-      return const EdgeInsetsDirectional.only(start: 16, end: 16, top: 16);
-    } else if (responsiveUtils.isPortraitMobile(context)) {
-      return const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
-    } else if (responsiveUtils.isLandscapeMobile(context)) {
-      return const EdgeInsets.all(12);
+    if (responsiveUtils.isMobile(context)) {
+      return const EdgeInsetsDirectional.only(top: 16, start: 24, end: 24);
+    } else if (responsiveUtils.isDesktop(context)) {
+      return const EdgeInsetsDirectional.only(top: 36);
     } else {
-      return const EdgeInsets.symmetric(horizontal: 32, vertical: 12);
+      return const EdgeInsetsDirectional.only(top: 16, start: 44, end: 44);
     }
   }
 }

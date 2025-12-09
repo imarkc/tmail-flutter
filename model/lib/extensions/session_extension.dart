@@ -2,15 +2,18 @@
 import 'dart:ui';
 
 import 'package:core/presentation/extensions/uri_extension.dart';
+import 'package:core/utils/app_logger.dart';
 import 'package:get/get_utils/src/extensions/string_extensions.dart';
 import 'package:jmap_dart_client/jmap/account_id.dart';
 import 'package:jmap_dart_client/jmap/core/capability/calendar_event_capability.dart';
 import 'package:jmap_dart_client/jmap/core/capability/capability_identifier.dart';
 import 'package:jmap_dart_client/jmap/core/capability/capability_properties.dart';
+import 'package:jmap_dart_client/jmap/core/capability/core_capability.dart';
 import 'package:jmap_dart_client/jmap/core/capability/default_capability.dart';
 import 'package:jmap_dart_client/jmap/core/capability/empty_capability.dart';
 import 'package:jmap_dart_client/jmap/core/id.dart';
 import 'package:jmap_dart_client/jmap/core/session/session.dart';
+import 'package:jmap_dart_client/jmap/core/unsigned_int.dart';
 import 'package:model/error_type_handler/account_exception.dart';
 import 'package:model/error_type_handler/unknown_address_exception.dart';
 import 'package:model/error_type_handler/unknown_uri_exception.dart';
@@ -19,7 +22,6 @@ import 'package:model/principals/capability_principals.dart';
 import 'package:uri/uri.dart';
 
 extension SessionExtension on Session {
-
   String getDownloadUrl({String? jmapUrl}) {
     final Uri downloadUrlValid;
     if (jmapUrl != null) {
@@ -36,6 +38,14 @@ extension SessionExtension on Session {
     }
     final downloadUrlDecode = Uri.decodeFull(baseUrl);
     return downloadUrlDecode;
+  }
+
+  String getSafetyDownloadUrl({String? jmapUrl}) {
+    try {
+      return getDownloadUrl(jmapUrl: jmapUrl);
+    } catch(_) {
+      return '';
+    }
   }
 
   Uri getUploadUri(AccountId accountId, {String? jmapUrl}) {
@@ -71,6 +81,29 @@ extension SessionExtension on Session {
     }
   }
 
+  String getUserDisplayName() {
+    try {
+      final accountDisplayName = personalAccount.name.value;
+      if (accountDisplayName.isNotEmpty) {
+        return accountDisplayName;
+      } else {
+        return username.value;
+      }
+    } catch (e) {
+      logError('SessionExtension::getUserDisplayName:Exception: $e');
+      return '';
+    }
+  }
+
+  String getOwnEmailAddressOrEmpty() {
+    try {
+      return getOwnEmailAddress();
+    } catch (e) {
+      logError('SessionExtension::getOwnEmailAddressOrEmpty:Exception: $e');
+      return '';
+    }
+  }
+
   String getOwnEmailAddress() {
     return username.value.isEmail ? username.value
         : _getOwnEmailAddressFromPersonalAccount()
@@ -101,6 +134,26 @@ extension SessionExtension on Session {
       return null;
     }
     return null;
+  }
+
+  String generateOwnEmailAddressFromDomain(String domain) {
+    try {
+      final userName = username.value;
+      if (domain.trim().isEmpty || userName.trim().isEmpty) return '';
+
+      if (userName.endsWith(domain)) return userName;
+
+      return '$userName@$domain';
+    } catch (e) {
+      logError('$runtimeType::generateOwnEmailAddressFromDomain: Exception: $e');
+      return '';
+    }
+  }
+
+  String getOwnEmailAddressOrUsername() {
+    final emailAddress = getOwnEmailAddressOrEmpty();
+    if (emailAddress.isNotEmpty) return emailAddress;
+    return getUserDisplayName();
   }
 
   JmapAccount get personalAccount {
@@ -155,6 +208,18 @@ extension SessionExtension on Session {
       return 'en';
     } else {
       return supportedLanguages.firstOrNull;
+    }
+  }
+
+  UnsignedInt? getMaxObjectsInGet(AccountId accountId) {
+    try {
+      return getCapabilityProperties<CoreCapability>(
+        accountId,
+        CapabilityIdentifier.jmapCore
+      )?.maxObjectsInGet;
+    } catch (e) {
+      logError('SessionExtensions::getMaxObjectsInGet():Exception: $e');
+      return null;
     }
   }
 }

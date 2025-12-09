@@ -3,12 +3,13 @@ import 'package:jmap_dart_client/jmap/core/state.dart';
 import 'package:jmap_dart_client/jmap/core/user_name.dart';
 import 'package:model/extensions/account_id_extensions.dart';
 import 'package:tmail_ui_user/features/caching/clients/state_cache_client.dart';
+import 'package:tmail_ui_user/features/caching/interaction/cache_manager_interaction.dart';
 import 'package:tmail_ui_user/features/caching/utils/cache_utils.dart';
 import 'package:tmail_ui_user/features/mailbox/data/extensions/state_cache_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/data/model/state_cache.dart';
 import 'package:tmail_ui_user/features/mailbox/data/model/state_type.dart';
 
-class StateCacheManager {
+class StateCacheManager extends CacheManagerInteraction {
 
   final StateCacheClient _stateCacheClient;
 
@@ -30,5 +31,10 @@ class StateCacheManager {
     return await _stateCacheClient.deleteItem(stateKey);
   }
 
-  Future<void> closeStateHiveCacheBox() => _stateCacheClient.closeBox();
+  Future<void> deleteByKey(String key) => _stateCacheClient.deleteItem(key);
+
+  Future<void> clear() => _stateCacheClient.clearAllData();
+
+  @override
+  Future<void> migrateHiveToIsolatedHive() async {}
 }

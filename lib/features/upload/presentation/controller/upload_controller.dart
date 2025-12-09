@@ -2,7 +2,6 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:collection/collection.dart';
 import 'package:core/presentation/state/failure.dart';
 import 'package:core/presentation/state/success.dart';
 import 'package:core/utils/app_logger.dart';
@@ -16,6 +15,7 @@ import 'package:model/email/attachment.dart';
 import 'package:model/extensions/attachment_extension.dart';
 import 'package:model/upload/file_info.dart';
 import 'package:tmail_ui_user/features/base/base_controller.dart';
+import 'package:tmail_ui_user/features/base/mixin/message_dialog_action_manager.dart';
 import 'package:tmail_ui_user/features/base/state/base_ui_state.dart';
 import 'package:tmail_ui_user/features/composer/domain/state/upload_attachment_state.dart';
 import 'package:tmail_ui_user/features/composer/domain/usecases/upload_attachment_interactor.dart';
@@ -243,7 +243,7 @@ class UploadController extends BaseController {
 
   void _refreshListUploadAttachmentState() {
     listUploadAttachments.value =
-        _uploadingStateFiles.uploadingStateFiles.whereNotNull().toList();
+        _uploadingStateFiles.uploadingStateFiles.nonNulls.toList();
     listUploadAttachments.refresh();
   }
 
@@ -253,7 +253,7 @@ class UploadController extends BaseController {
     }
     return listUploadAttachments
         .map((fileState) => fileState.attachment)
-        .whereNotNull()
+        .nonNulls
         .toList();
   }
 
@@ -263,8 +263,13 @@ class UploadController extends BaseController {
     }
     return listUploadAttachments
       .map((fileState) => fileState.file)
-      .whereNotNull()
+      .nonNulls
       .toList();
+  }
+
+  UploadFileState? getUploadFileId(UploadTaskId id) {
+    return listUploadAttachments
+        .firstWhereOrNull((fileState) => fileState.uploadTaskId == id);
   }
 
   Set<EmailBodyPart>? generateAttachments() {
@@ -370,7 +375,7 @@ class UploadController extends BaseController {
 
   void _showConfirmDialogWhenExceededMaxSizeAttachmentsPerEmail({required BuildContext context}) {
     final maxSizeAttachmentsPerEmail = filesize(_mailboxDashBoardController.maxSizeAttachmentsPerEmail?.value ?? 0, 0);
-    showConfirmDialogAction(
+    MessageDialogActionManager().showConfirmDialogAction(
       context,
       AppLocalizations.of(context).message_dialog_upload_attachments_exceeds_maximum_size(maxSizeAttachmentsPerEmail),
       AppLocalizations.of(context).got_it,
@@ -382,14 +387,15 @@ class UploadController extends BaseController {
     required BuildContext context,
     VoidCallback? confirmAction,
   }) {
-    showConfirmDialogAction(
+    final appLocalizations = AppLocalizations.of(context);
+    MessageDialogActionManager().showConfirmDialogAction(
       context,
       title: '',
-      AppLocalizations.of(context).warningMessageWhenExceedGenerallySizeInComposer,
-      AppLocalizations.of(context).cancel,
-      cancelTitle: AppLocalizations.of(context).continueAction,
+      appLocalizations.warningMessageWhenExceedGenerallySizeInComposer,
+      appLocalizations.continueAction,
+      cancelTitle: appLocalizations.cancel,
       alignCenter: true,
-      onCancelAction: confirmAction,
+      onConfirmAction: confirmAction,
     );
   }
 

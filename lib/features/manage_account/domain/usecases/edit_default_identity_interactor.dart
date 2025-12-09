@@ -10,7 +10,7 @@ import 'package:tmail_ui_user/features/manage_account/domain/model/edit_default_
 import 'package:tmail_ui_user/features/manage_account/domain/model/edit_identity_request.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/repository/identity_repository.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/state/edit_default_identity_state.dart';
-import 'package:tmail_ui_user/features/manage_account/presentation/profiles/identities/utils/identity_utils.dart';
+import 'package:tmail_ui_user/features/manage_account/presentation/identities/utils/identity_utils.dart';
 
 class EditDefaultIdentityInteractor {
   final IdentityRepository _identityRepository;
@@ -27,7 +27,11 @@ class EditDefaultIdentityInteractor {
     EditIdentityRequest editIdentityRequest
   ) async* {
     try {
-      yield Right(EditDefaultIdentityLoading());
+      yield Right(
+        EditDefaultIdentityLoading(
+          isSetAsDefault: editIdentityRequest.isSetAsDefault,
+        ),
+      );
 
       final defaultIdentities = await _getDefaultIdentities(session, accountId);
       _removeEditIdentityFromDefaultIdentities(defaultIdentities, editIdentityRequest.identityId);
@@ -36,6 +40,7 @@ class EditDefaultIdentityInteractor {
         identityId: editIdentityRequest.identityId, 
         identityRequest: editIdentityRequest.identityRequest,
         isDefaultIdentity: editIdentityRequest.isDefaultIdentity,
+        isSetAsDefault: editIdentityRequest.isSetAsDefault,
         publicAssetsInIdentityArguments: editIdentityRequest.publicAssetsInIdentityArguments,
         oldDefaultIdentityIds: defaultIdentities
             ?.map((identity) => identity.id!)
@@ -45,7 +50,9 @@ class EditDefaultIdentityInteractor {
       yield result
         ? Right(EditDefaultIdentitySuccess(
             editDefaultRequest.identityId,
-            publicAssetsInIdentityArguments: editDefaultRequest.publicAssetsInIdentityArguments))
+            publicAssetsInIdentityArguments: editDefaultRequest.publicAssetsInIdentityArguments,
+            isSetAsDefault: editDefaultRequest.isSetAsDefault,
+          ))
         : Left(EditDefaultIdentityFailure(null));
     } catch (exception) {
       yield Left(EditDefaultIdentityFailure(exception));

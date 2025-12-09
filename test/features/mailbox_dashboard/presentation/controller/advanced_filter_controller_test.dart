@@ -20,10 +20,11 @@ import 'package:tmail_ui_user/features/login/domain/usecases/delete_credential_i
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/get_all_recent_search_latest_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/quick_search_email_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/save_recent_search_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/domain/usecases/store_email_sort_order_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/advanced_filter_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/search_controller.dart';
-import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/advanced_search_filter.dart';
+import 'package:tmail_ui_user/features/base/model/filter_filter.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_receive_time_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/email_sort_order_type.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/model/search/search_email_filter.dart';
@@ -67,6 +68,7 @@ const fallbackGenerators = {
   MockSpec<QuickSearchEmailInteractor>(),
   MockSpec<SaveRecentSearchInteractor>(),
   MockSpec<GetAllRecentSearchLatestInteractor>(),
+  MockSpec<StoreEmailSortOrderInteractor>(),
 ])
 void main() {
   // Declaration advanced filter controller
@@ -80,6 +82,7 @@ void main() {
   late MockQuickSearchEmailInteractor mockQuickSearchEmailInteractor;
   late MockSaveRecentSearchInteractor mockSaveRecentSearchInteractor;
   late MockGetAllRecentSearchLatestInteractor mockGetAllRecentSearchLatestInteractor;
+  late MockStoreEmailSortOrderInteractor mockStoreEmailSortOrderInteractor;
 
   // Declaration base controller
   late MockCachingManager mockCachingManager;
@@ -138,6 +141,7 @@ void main() {
     mockQuickSearchEmailInteractor = MockQuickSearchEmailInteractor();
     mockSaveRecentSearchInteractor = MockSaveRecentSearchInteractor();
     mockGetAllRecentSearchLatestInteractor = MockGetAllRecentSearchLatestInteractor();
+    mockStoreEmailSortOrderInteractor = MockStoreEmailSortOrderInteractor();
 
     searchController = SearchController(
       mockQuickSearchEmailInteractor,
@@ -152,6 +156,7 @@ void main() {
 
     Get.put<MailboxDashBoardController>(mockMailboxDashBoardController);
     Get.put<GetAutoCompleteInteractor>(mockGetAutoCompleteInteractor);
+    Get.put<StoreEmailSortOrderInteractor>(mockStoreEmailSortOrderInteractor);
 
     advancedFilterController = AdvancedFilterController();
   });
@@ -160,6 +165,7 @@ void main() {
     group('applyAdvancedSearchFilter::test', () {
       test('SHOULD make sure memory search filter and search filter should be the same after applying', () async {
         // Arrange
+        advancedFilterController.setMemorySearchFilter(SearchEmailFilter.initial());
         advancedFilterController.hasKeyWordFilterInputController.text = 'Hello';
         advancedFilterController.notKeyWordFilterInputController.text = 'dab';
         advancedFilterController.listFromEmailAddress = [EmailAddress(null, 'user1@example.com')];
@@ -215,7 +221,6 @@ void main() {
         expect(advancedFilterController.notKeyWordFilterInputController.text, equals('hello,nice'));
         expect(advancedFilterController.receiveTimeType.value, equals(EmailReceiveTimeType.last7Days));
         expect(advancedFilterController.sortOrderType.value, equals(EmailSortOrderType.oldest));
-        expect(advancedFilterController.mailBoxFilterInputController.text, equals('mailbox1'));
         expect(advancedFilterController.hasAttachment.value, equals(true));
         expect(advancedFilterController.listFromEmailAddress, equals([EmailAddress(null, 'user1@example.com')]));
         expect(advancedFilterController.listToEmailAddress, equals([EmailAddress(null, 'user2@example.com')]));
@@ -225,10 +230,10 @@ void main() {
     group('onTextChanged::test', () {
       test(
         'SHOULD update memory search filter for subject\n'
-        'WHEN onTextChanged called with AdvancedSearchFilterField is Subject',
+        'WHEN onTextChanged called with FilterField is Subject',
       () {
         // Arrange
-        const filterField = AdvancedSearchFilterField.subject;
+        const filterField = FilterField.subject;
         const value = 'Subject';
 
         // Act
@@ -242,10 +247,10 @@ void main() {
 
       test(
         'SHOULD update memory search filter for text\n'
-        'WHEN onTextChanged called with AdvancedSearchFilterField is hasKeyword',
+        'WHEN onTextChanged called with FilterField is hasKeyword',
       () {
         // Arrange
-        const filterField = AdvancedSearchFilterField.hasKeyword;
+        const filterField = FilterField.hasKeyword;
         const value = 'keyword';
 
         // Act
@@ -259,10 +264,10 @@ void main() {
 
       test(
         'SHOULD update memory search filter for notKeyword\n'
-        'WHEN onTextChanged called with AdvancedSearchFilterField is notKeyword',
+        'WHEN onTextChanged called with FilterField is notKeyword',
       () {
         // Arrange
-        const filterField = AdvancedSearchFilterField.notKeyword;
+        const filterField = FilterField.notKeyword;
         const value = 'keyword1,keyword2';
 
         // Act
@@ -276,10 +281,10 @@ void main() {
 
       test(
         'SHOULD update memory search filter for subject is null\n'
-        'WHEN onTextChanged called with AdvancedSearchFilterField is subject',
+        'WHEN onTextChanged called with FilterField is subject',
       () {
         // Arrange
-        const filterField = AdvancedSearchFilterField.subject;
+        const filterField = FilterField.subject;
         const value = '   ';
 
         // Act
@@ -293,10 +298,10 @@ void main() {
 
       test(
         'SHOULD update memory search filter for notKeyword is empty values\n'
-        'WHEN onTextChanged called with AdvancedSearchFilterField is notKeyword',
+        'WHEN onTextChanged called with FilterField is notKeyword',
       () {
         // Arrange
-        const filterField = AdvancedSearchFilterField.notKeyword;
+        const filterField = FilterField.notKeyword;
         const value = '    ';
 
         // Act
@@ -310,11 +315,11 @@ void main() {
 
       test(
         'SHOULD update memory search filter for subject and notKeyword is empty values\n'
-        'WHEN onTextChanged called with AdvancedSearchFilterField are subject and notKeyword',
+        'WHEN onTextChanged called with FilterField are subject and notKeyword',
       () {
         // Arrange
-        const filterFieldSubject = AdvancedSearchFilterField.subject;
-        const filterFieldNotKeyword = AdvancedSearchFilterField.notKeyword;
+        const filterFieldSubject = FilterField.subject;
+        const filterFieldNotKeyword = FilterField.notKeyword;
         const validSubject = 'Subject';
         const emptyNotKeyword = '    ';
 

@@ -10,6 +10,7 @@ class PopupItemWidget extends StatelessWidget {
   final String nameAction;
   final Color? colorIcon;
   final double? iconSize;
+  final double? iconSpace;
   final TextStyle? styleName;
   final bool? isSelected;
   final String? selectedIcon;
@@ -25,6 +26,7 @@ class PopupItemWidget extends StatelessWidget {
     this.styleName,
     this.isSelected,
     this.padding,
+    this.iconSpace,
     this.selectedIcon,
     this.onCallbackAction,
   }) : super(key: key);
@@ -38,32 +40,37 @@ class PopupItemWidget extends StatelessWidget {
           onTap: onCallbackAction,
           child: Container(
             height: PopupItemWidgetStyle.height,
-            constraints: const BoxConstraints(minWidth: PopupItemWidgetStyle.minWidth),
+            constraints: const BoxConstraints(
+              maxWidth: PopupItemWidgetStyle.maxWidth,
+            ),
             padding: padding,
-            child: Row(children: [
-              SvgPicture.asset(
-                iconAction,
-                width: iconSize ?? PopupItemWidgetStyle.iconSize,
-                height: iconSize ?? PopupItemWidgetStyle.iconSize,
-                fit: BoxFit.fill,
-                colorFilter: colorIcon?.asFilter()
-              ),
-              const SizedBox(width: PopupItemWidgetStyle.space),
-              Expanded(child: Text(
-                nameAction,
-                style: styleName ?? PopupItemWidgetStyle.labelTextStyle
-              )),
-              if (isSelected == true && selectedIcon != null)
-                Padding(
-                  padding: PopupItemWidgetStyle.iconSelectedPadding,
-                  child: SvgPicture.asset(
-                    selectedIcon!,
-                    width: PopupItemWidgetStyle.selectedIconSize,
-                    height: PopupItemWidgetStyle.selectedIconSize,
-                    fit: BoxFit.fill
-                  ),
-                )
-            ]),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  iconAction,
+                  width: iconSize ?? PopupItemWidgetStyle.iconSize,
+                  height: iconSize ?? PopupItemWidgetStyle.iconSize,
+                  fit: BoxFit.fill,
+                  colorFilter: colorIcon?.asFilter()
+                ),
+                SizedBox(width: iconSpace ?? PopupItemWidgetStyle.space),
+                Expanded(child: Text(
+                  nameAction,
+                  style: styleName ?? PopupItemWidgetStyle.labelTextStyle
+                )),
+                if (isSelected == true && selectedIcon != null)
+                  Padding(
+                    padding: PopupItemWidgetStyle.iconSelectedPadding,
+                    child: SvgPicture.asset(
+                      selectedIcon!,
+                      width: PopupItemWidgetStyle.selectedIconSize,
+                      height: PopupItemWidgetStyle.selectedIconSize,
+                      fit: BoxFit.fill,
+                    ),
+                  )
+              ],
+            ),
           )
         ),
       ),

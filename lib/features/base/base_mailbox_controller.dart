@@ -1,9 +1,6 @@
-import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
 import 'package:core/presentation/views/bottom_popup/confirmation_dialog_action_sheet_builder.dart';
-import 'package:core/presentation/views/dialog/confirmation_dialog_builder.dart';
-import 'package:core/presentation/views/dialog/edit_text_dialog_builder.dart';
 import 'package:core/presentation/views/modal_sheets/edit_text_modal_sheet_builder.dart';
 import 'package:core/utils/app_logger.dart';
 import 'package:core/utils/platform_info.dart';
@@ -18,11 +15,12 @@ import 'package:model/extensions/presentation_mailbox_extension.dart';
 import 'package:model/mailbox/expand_mode.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:model/mailbox/select_mode.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:tmail_ui_user/features/base/action/update_mailbox_properties_action/update_mailbox_name_action.dart';
 import 'package:tmail_ui_user/features/base/action/update_mailbox_properties_action/update_mailbox_total_emails_count_action.dart';
 import 'package:tmail_ui_user/features/base/action/update_mailbox_properties_action/update_mailbox_unread_count_action.dart';
 import 'package:tmail_ui_user/features/base/base_controller.dart';
+import 'package:tmail_ui_user/features/base/mixin/expand_folder_trigger_scrollable_mixin.dart';
+import 'package:tmail_ui_user/features/base/mixin/message_dialog_action_manager.dart';
 import 'package:tmail_ui_user/features/destination_picker/presentation/model/destination_picker_arguments.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subscribe_action_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/mailbox_subscribe_state.dart';
@@ -31,9 +29,11 @@ import 'package:tmail_ui_user/features/mailbox/domain/model/subscribe_multiple_m
 import 'package:tmail_ui_user/features/mailbox/domain/model/subscribe_request.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/get_all_mailbox_interactor.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/usecases/refresh_all_mailbox_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/extensions/expand_mode_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/extensions/list_mailbox_node_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/extensions/presentation_mailbox_extension.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_actions.dart';
+import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_categories.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_categories_expand_mode.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_node.dart';
 import 'package:tmail_ui_user/features/mailbox/presentation/model/mailbox_tree.dart';
@@ -53,10 +53,16 @@ import 'package:tmail_ui_user/main/routes/route_navigation.dart';
 
 typedef RenameMailboxActionCallback = void Function(PresentationMailbox mailbox, MailboxName newMailboxName);
 typedef MovingMailboxActionCallback = void Function(PresentationMailbox mailboxSelected, PresentationMailbox? destinationMailbox);
+typedef OnMoveFolderContentActionCallback = void Function(
+  PresentationMailbox currentMailbox,
+  PresentationMailbox destinationMailbox,
+  String destinationMailboxName,
+);
 typedef DeleteMailboxActionCallback = void Function(PresentationMailbox mailbox);
 typedef AllowSubaddressingActionCallback = void Function(MailboxId, Map<String, List<String>?>?, MailboxActions);
 
-abstract class BaseMailboxController extends BaseController {
+abstract class BaseMailboxController extends BaseController
+    with ExpandFolderTriggerScrollableMixin {
   final TreeBuilder _treeBuilder;
   final VerifyNameInteractor verifyNameInteractor;
   final GetAllMailboxInteractor? getAllMailboxInteractor;
@@ -122,58 +128,41 @@ abstract class BaseMailboxController extends BaseController {
     allMailboxes = syncedMailbox;
   }
 
-  void toggleMailboxFolder(MailboxNode selectedMailboxNode, ScrollController scrollController) {
-    final newExpandMode = selectedMailboxNode.expandMode == ExpandMode.COLLAPSE
-        ? ExpandMode.EXPAND
-        : ExpandMode.COLLAPSE;
+  void toggleMailboxFolder(
+    MailboxNode selectedMailboxNode,
+    ScrollController scrollController,
+    GlobalKey itemKey,
+  ) {
+    final newExpandMode = selectedMailboxNode.expandMode.toggle();
 
     if (defaultMailboxTree.value.updateExpandedNode(selectedMailboxNode, newExpandMode) != null) {
       log('toggleMailboxFolder() refresh defaultMailboxTree');
       defaultMailboxTree.refresh();
+      triggerScrollWhenExpandFolder(
+        selectedMailboxNode.expandMode,
+        itemKey,
+        scrollController,
+      );
     }
 
     if (personalMailboxTree.value.updateExpandedNode(selectedMailboxNode, newExpandMode) != null) {
       log('toggleMailboxFolder() refresh folderMailboxTree');
       personalMailboxTree.refresh();
-      final childrenItems = personalMailboxTree.value.root.childrenItems ?? [];
-      _triggerScrollWhenExpandMailboxFolder(
-        childrenItems,
-        selectedMailboxNode,
-        scrollController);
+      triggerScrollWhenExpandFolder(
+        selectedMailboxNode.expandMode,
+        itemKey,
+        scrollController,
+      );
     }
 
     if (teamMailboxesTree.value.updateExpandedNode(selectedMailboxNode, newExpandMode) != null) {
       log('toggleMailboxFolder() refresh teamMailboxesTree');
       teamMailboxesTree.refresh();
-      final childrenItems = teamMailboxesTree.value.root.childrenItems ?? [];
-      _triggerScrollWhenExpandMailboxFolder(
-          childrenItems,
-          selectedMailboxNode,
-          scrollController);
-    }
-  }
-
-  void _triggerScrollWhenExpandMailboxFolder(
-      List<MailboxNode> childrenItems,
-      MailboxNode selectedMailboxNode,
-      ScrollController scrollController) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final lastItem = childrenItems.last;
-
-    if (selectedMailboxNode.expandMode == ExpandMode.COLLAPSE) {
-      return;
-    }
-
-    if (lastItem.mailboxNameAsString.contains(selectedMailboxNode.mailboxNameAsString)) {
-      scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInToLinear);
-    } else {
-      scrollController.animateTo(
-          scrollController.offset + 100,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInToLinear);
+      triggerScrollWhenExpandFolder(
+        selectedMailboxNode.expandMode,
+        itemKey,
+        scrollController,
+      );
     }
   }
 
@@ -356,34 +345,28 @@ abstract class BaseMailboxController extends BaseController {
             )))
       ).show(context);
     } else {
-      Get.dialog(
-        PointerInterceptor(child: (EditTextDialogBuilder()
-          ..key(const Key('rename_mailbox_dialog'))
-          ..title(AppLocalizations.of(context).renameFolder)
-          ..cancelText(AppLocalizations.of(context).cancel)
-          ..setErrorString((value) {
-            return verifyMailboxNameAction(
-              context,
-              value,
-              listMailboxName,
-              MailboxActions.rename
-            );
-          })
-          ..setTextController(TextEditingController.fromValue(
-              TextEditingValue(
-                text: presentationMailbox.name?.name ?? '',
-                selection: TextSelection(
-                  baseOffset: 0,
-                  extentOffset: presentationMailbox.name?.name.length ?? 0
-                )
-              ))
-          )
-          ..onConfirmButtonAction(
-              AppLocalizations.of(context).rename,
-              (value) => onRenameMailboxAction(presentationMailbox, MailboxName(value))
-          )
-        ).build()),
-        barrierColor: AppColor.colorDefaultCupertinoActionSheet,
+      MessageDialogActionManager().showInputDialogAction(
+        key: const Key('rename_mailbox_dialog'),
+        context: context,
+        outsideDismissible: true,
+        title: AppLocalizations.of(context).renameFolder,
+        value: presentationMailbox.name?.name ?? '',
+        negativeText: AppLocalizations.of(context).cancel,
+        positiveText: AppLocalizations.of(context).rename,
+        closeIcon: imagePaths.icComposerClose,
+        onPositiveButtonAction: (value) {
+          onRenameMailboxAction(presentationMailbox, MailboxName(value));
+          popBack();
+        },
+        onNegativeButtonAction: popBack,
+        onInputErrorChanged: (value) {
+          return verifyMailboxNameAction(
+            context,
+            value,
+            listMailboxName,
+            MailboxActions.rename,
+          );
+        },
       );
     }
   }
@@ -434,21 +417,15 @@ abstract class BaseMailboxController extends BaseController {
         ..onConfirmAction(AppLocalizations.of(context).delete, () => onDeleteMailboxAction(presentationMailbox))
       ).show();
     } else {
-      Get.dialog(
-        PointerInterceptor(
-          child: ConfirmationDialogBuilder(
-            key: const Key('confirm_dialog_delete_mailbox'),
-            imagePath: imagePaths,
-            title: AppLocalizations.of(context).deleteFolders,
-            textContent: AppLocalizations.of(context).message_confirmation_dialog_delete_folder(presentationMailbox.getDisplayName(context)),
-            confirmText: AppLocalizations.of(context).cancel,
-            cancelText: AppLocalizations.of(context).delete,
-            onCancelButtonAction: () => onDeleteMailboxAction(presentationMailbox),
-            onConfirmButtonAction: popBack,
-            onCloseButtonAction: popBack,
-          ),
-        ),
-        barrierColor: AppColor.colorDefaultCupertinoActionSheet,
+      MessageDialogActionManager().showConfirmDialogAction(
+        context,
+        AppLocalizations.of(context).message_confirmation_dialog_delete_folder(presentationMailbox.getDisplayName(context)),
+        AppLocalizations.of(context).delete,
+        key: const Key('confirm_dialog_delete_mailbox'),
+        title: AppLocalizations.of(context).deleteFolders,
+        cancelTitle: AppLocalizations.of(context).cancel,
+        onConfirmAction: () => onDeleteMailboxAction(presentationMailbox),
+        onCloseButtonAction: popBack,
       );
     }
   }
@@ -610,5 +587,89 @@ abstract class BaseMailboxController extends BaseController {
       mailboxId: mailboxId,
       totalEmailsCountChanged: totalEmails,
     ).execute();
+  }
+
+  void toggleMailboxCategories(
+    MailboxCategories category,
+    ScrollController scrollController,
+    GlobalKey itemKey,
+  ) {
+    switch (category) {
+      case MailboxCategories.exchange:
+        _toggleAndScroll(
+          currentExpandMode: mailboxCategoriesExpandMode.value.defaultMailbox,
+          updateExpandMode: (mode) => mailboxCategoriesExpandMode.value.defaultMailbox = mode,
+          hasChildren: defaultMailboxTree.value.root.hasChildren(),
+          itemKey: itemKey,
+          scrollController: scrollController,
+        );
+        break;
+
+      case MailboxCategories.personalFolders:
+        _toggleAndScroll(
+          currentExpandMode: mailboxCategoriesExpandMode.value.personalFolders,
+          updateExpandMode: (mode) => mailboxCategoriesExpandMode.value.personalFolders = mode,
+          hasChildren: personalMailboxTree.value.root.hasChildren(),
+          itemKey: itemKey,
+          scrollController: scrollController,
+        );
+        break;
+
+      case MailboxCategories.teamMailboxes:
+        _toggleAndScroll(
+          currentExpandMode: mailboxCategoriesExpandMode.value.teamMailboxes,
+          updateExpandMode: (mode) => mailboxCategoriesExpandMode.value.teamMailboxes = mode,
+          hasChildren: teamMailboxesTree.value.root.hasChildren(),
+          itemKey: itemKey,
+          scrollController: scrollController,
+        );
+        break;
+    }
+  }
+
+  void _toggleAndScroll({
+    required ExpandMode currentExpandMode,
+    required void Function(ExpandMode) updateExpandMode,
+    required bool hasChildren,
+    required GlobalKey itemKey,
+    required ScrollController scrollController,
+  }) {
+    final newExpandMode = currentExpandMode.toggle();
+    updateExpandMode(newExpandMode);
+    mailboxCategoriesExpandMode.refresh();
+
+    if (hasChildren) {
+      triggerScrollWhenExpandFolder(newExpandMode, itemKey, scrollController);
+    }
+  }
+
+  void moveFolderContentAction({
+    required AppLocalizations appLocalizations,
+    required AccountId accountId,
+    required Session session,
+    required PresentationMailbox mailboxSelected,
+    required OnMoveFolderContentActionCallback onMoveFolderContentAction,
+  }) async {
+    final arguments = DestinationPickerArguments(
+      accountId,
+      MailboxActions.moveFolderContent,
+      session,
+      mailboxIdSelected: mailboxSelected.id,
+    );
+
+    final destinationMailbox = PlatformInfo.isWeb
+        ? await DialogRouter.pushGeneralDialog(
+            routeName: AppRoutes.destinationPicker,
+            arguments: arguments,
+          )
+        : await push(AppRoutes.destinationPicker, arguments: arguments);
+    if (destinationMailbox is PresentationMailbox) {
+      log('$runtimeType::moveFolderContentAction: DestinationMailbox is ${destinationMailbox.name?.name}');
+      onMoveFolderContentAction(
+        mailboxSelected,
+        destinationMailbox,
+        destinationMailbox.getDisplayNameWithoutContext(appLocalizations),
+      );
+    }
   }
 }

@@ -12,12 +12,8 @@ import 'package:email_recovery/email_recovery/get/get_email_recovery_action_meth
 import 'package:email_recovery/email_recovery/get/get_email_recovery_action_response.dart';
 import 'package:email_recovery/email_recovery/set/set_email_recovery_action_method.dart';
 import 'package:email_recovery/email_recovery/set/set_email_recovery_action_response.dart';
-import 'package:external_path/external_path.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:jmap_dart_client/http/http_client.dart';
 import 'package:jmap_dart_client/jmap/account_id.dart';
-import 'package:jmap_dart_client/jmap/core/capability/capability_identifier.dart';
-import 'package:jmap_dart_client/jmap/core/capability/core_capability.dart';
 import 'package:jmap_dart_client/jmap/core/error/set_error.dart';
 import 'package:jmap_dart_client/jmap/core/id.dart';
 import 'package:jmap_dart_client/jmap/core/patch_object.dart';
@@ -56,25 +52,24 @@ import 'package:model/extensions/keyword_identifier_extension.dart';
 import 'package:model/extensions/list_email_id_extension.dart';
 import 'package:model/extensions/list_id_extension.dart';
 import 'package:model/extensions/mailbox_id_extension.dart';
-import 'package:model/extensions/session_extension.dart';
-import 'package:model/oidc/token_oidc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tmail_ui_user/features/base/mixin/handle_error_mixin.dart';
+import 'package:tmail_ui_user/features/base/mixin/mail_api_mixin.dart';
 import 'package:tmail_ui_user/features/composer/domain/exceptions/set_method_exception.dart';
 import 'package:tmail_ui_user/features/composer/domain/model/email_request.dart';
+import 'package:tmail_ui_user/features/download/domain/model/download_source_view.dart';
 import 'package:tmail_ui_user/features/email/domain/exceptions/email_exceptions.dart';
 import 'package:tmail_ui_user/features/email/domain/model/move_to_mailbox_request.dart';
 import 'package:tmail_ui_user/features/email/domain/model/restore_deleted_message_request.dart';
-import 'package:tmail_ui_user/features/email/domain/state/download_all_attachments_for_web_state.dart';
-import 'package:tmail_ui_user/features/email/domain/state/download_attachment_for_web_state.dart';
-import 'package:tmail_ui_user/features/login/domain/exceptions/authentication_exception.dart';
+import 'package:tmail_ui_user/features/download/domain/state/download_all_attachments_for_web_state.dart';
+import 'package:tmail_ui_user/features/download/domain/state/download_attachment_for_web_state.dart';
 import 'package:tmail_ui_user/features/mailbox/domain/model/create_new_mailbox_request.dart';
 import 'package:tmail_ui_user/features/thread/domain/constants/thread_constants.dart';
 import 'package:tmail_ui_user/main/error/capability_validator.dart';
 import 'package:uri/uri.dart';
 import 'package:uuid/uuid.dart';
 
-class EmailAPI with HandleSetErrorMixin {
+class EmailAPI with HandleSetErrorMixin, MailAPIMixin {
 
   final HttpClient _httpClient;
   final DownloadManager _downloadManager;
@@ -251,7 +246,7 @@ class EmailAPI with HandleSetErrorMixin {
     List<EmailId> emailIds,
     ReadActions readActions,
   ) async {
-    final maxObjects = _getMaxObjectsInSetMethod(session, accountId);
+    final maxObjects = getMaxObjectsInSetMethod(session, accountId);
     final totalEmails = emailIds.length;
     final maxBatches = min(totalEmails, maxObjects);
 
@@ -298,49 +293,6 @@ class EmailAPI with HandleSetErrorMixin {
     return (emailIdsSuccess: updatedEmailIds, mapErrors: mapErrors);
   }
 
-  Future<List<DownloadTaskId>> downloadAttachments(
-      List<Attachment> attachments,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest
-  ) async {
-    if (accountRequest.authenticationType == AuthenticationType.oidc &&
-        accountRequest.token?.isExpired == true &&
-        accountRequest.token?.refreshToken.isNotEmpty == true) {
-      throw DownloadAttachmentHasTokenExpiredException(accountRequest.token!.refreshToken);
-    }
-
-    String externalStorageDirPath;
-    if (Platform.isAndroid) {
-      externalStorageDirPath = await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS);
-    } else if (Platform.isIOS) {
-      externalStorageDirPath = (await getApplicationDocumentsDirectory()).absolute.path;
-    } else {
-      throw DeviceNotSupportedException();
-    }
-
-    final authentication = accountRequest.authenticationType == AuthenticationType.oidc
-        ? accountRequest.bearerToken
-        : accountRequest.basicAuth;
-
-    final taskIds = await Future.wait(
-      attachments.map((attachment) async => await FlutterDownloader.enqueue(
-        url: attachment.getDownloadUrl(baseDownloadUrl, accountId),
-        savedDir: externalStorageDirPath,
-        headers: {
-          HttpHeaders.authorizationHeader: authentication,
-          HttpHeaders.acceptHeader: DioClient.jmapHeader
-        },
-        fileName: attachment.name,
-        showNotification: true,
-        openFileFromNotification: true)));
-
-    return taskIds
-      .where((taskId) => taskId != null)
-      .map((taskId) => DownloadTaskId(taskId!))
-      .toList();
-  }
-
   Future<DownloadedResponse> exportAttachment(
       Attachment attachment,
       AccountId accountId,
@@ -361,14 +313,14 @@ class EmailAPI with HandleSetErrorMixin {
   }
 
   Future<Uint8List> downloadAttachmentForWeb(
-      DownloadTaskId taskId,
-      Attachment attachment,
-      AccountId accountId,
-      String baseDownloadUrl,
-      AccountRequest accountRequest,
-      StreamController<Either<Failure, Success>> onReceiveController,
-      {CancelToken? cancelToken}
-  ) async {
+    DownloadTaskId taskId,
+    Attachment attachment,
+    AccountId accountId,
+    String baseDownloadUrl,
+    AccountRequest accountRequest, {
+    StreamController<Either<Failure, Success>>? onReceiveController,
+    CancelToken? cancelToken,
+  }) async {
     final authentication = accountRequest.authenticationType == AuthenticationType.oidc
         ? accountRequest.bearerToken
         : accountRequest.basicAuth;
@@ -392,12 +344,18 @@ class EmailAPI with HandleSetErrorMixin {
             progress = (downloaded / total) * 100;
           }
           log('EmailAPI::downloadFileForWeb(): progress = ${progress.round()}%');
-          onReceiveController.add(Right(DownloadingAttachmentForWeb(
-              taskId,
-              attachment,
-              progress,
-              downloaded,
-              total)));
+          onReceiveController?.add(
+            Right(
+              DownloadingAttachmentForWeb(
+                taskId,
+                attachment,
+                progress,
+                downloaded,
+                total,
+                DownloadSourceView.emailView,
+              ),
+            ),
+          );
         }
     );
 
@@ -410,10 +368,10 @@ class EmailAPI with HandleSetErrorMixin {
     String baseDownloadAllUrl,
     String outputFileName,
     AccountRequest accountRequest,
-    DownloadTaskId taskId,
-    StreamController<Either<Failure, Success>> onReceiveController,
-    {CancelToken? cancelToken}
-  ) async {
+    DownloadTaskId taskId, {
+    StreamController<Either<Failure, Success>>? onReceiveController,
+    CancelToken? cancelToken,
+  }) async {
     final authentication = accountRequest.authenticationType == AuthenticationType.oidc
         ? accountRequest.bearerToken
         : accountRequest.basicAuth;
@@ -441,7 +399,7 @@ class EmailAPI with HandleSetErrorMixin {
           progress = (downloaded / total) * 100;
         }
         log('EmailAPI::downloadFileForWeb(): progress = ${progress.round()}%');
-        onReceiveController.add(Right(DownloadingAllAttachmentsForWeb(
+        onReceiveController?.add(Right(DownloadingAllAttachmentsForWeb(
           taskId,
           downloadFileName,
           progress,
@@ -502,13 +460,14 @@ class EmailAPI with HandleSetErrorMixin {
       final currentMailboxId = listMailboxIds[i];
       final listEmailIds = moveRequest.currentMailboxes[currentMailboxId]!;
       log('EmailAPI::moveToMailbox:from mailbox ${currentMailboxId.asString} with ${listEmailIds.length} emails to mailbox ${moveRequest.destinationMailboxId.asString}');
-      final resultRecords = await _moveEmailsBetweenMailboxes(
+      final resultRecords = await moveEmailsBetweenMailboxes(
+        httpClient: _httpClient,
         session: session,
         accountId: accountId,
         emailIds: listEmailIds,
         currentMailboxId: currentMailboxId,
         destinationMailboxId: moveRequest.destinationMailboxId,
-        isMovingToSpam: moveRequest.isMovingToSpam,
+        markAsRead: moveRequest.isMovingToSpam,
       );
 
       listEmailIdResult.addAll(resultRecords.emailIdsSuccess);
@@ -521,95 +480,13 @@ class EmailAPI with HandleSetErrorMixin {
   Future<({
     List<EmailId> emailIdsSuccess,
     Map<Id, SetError> mapErrors,
-  })> _moveEmailsBetweenMailboxes({
-    required Session session,
-    required AccountId accountId,
-    required List<EmailId> emailIds,
-    required MailboxId currentMailboxId,
-    required MailboxId destinationMailboxId,
-    bool isMovingToSpam = false,
-  }) async {
-    final maxObjects = _getMaxObjectsInSetMethod(session, accountId);
-    final totalEmails = emailIds.length;
-    final maxBatches = min(totalEmails, maxObjects);
-
-    final List<EmailId> updatedEmailIds = List.empty(growable: true);
-    final Map<Id, SetError> mapErrors = <Id, SetError>{};
-
-    for (int start = 0; start < totalEmails; start += maxBatches) {
-      int end = (start + maxBatches < totalEmails)
-          ? start + maxBatches
-          : totalEmails;
-      log('EmailAPI::_moveEmailsBetweenMailboxes:emails from ${start + 1} to $end');
-
-      final currentEmailIds = emailIds.sublist(start, end);
-
-      final moveProperties = isMovingToSpam
-          ? currentEmailIds.generateMapUpdateObjectMoveToSpam(
-              currentMailboxId,
-              destinationMailboxId,
-            )
-          : currentEmailIds.generateMapUpdateObjectMoveToMailbox(
-              currentMailboxId,
-              destinationMailboxId,
-            );
-
-      final setEmailMethod = SetEmailMethod(accountId)
-        ..addUpdates(moveProperties);
-
-      final requestBuilder = JmapRequestBuilder(_httpClient, ProcessingInvocation());
-
-      final setEmailInvocation = requestBuilder.invocation(setEmailMethod);
-
-      final capabilities = setEmailMethod.requiredCapabilities
-          .toCapabilitiesSupportTeamMailboxes(session, accountId);
-
-      final response = await (requestBuilder
-          ..usings(capabilities))
-        .build()
-        .execute();
-
-      final setEmailResponse = response.parse(
-        setEmailInvocation.methodCallId,
-        SetEmailResponse.deserialize,
-      );
-
-      final listEmailIds = setEmailResponse?.updated?.keys.toEmailIds() ?? [];
-      final mapErrors = handleSetResponse([setEmailResponse]);
-
-      updatedEmailIds.addAll(listEmailIds);
-      mapErrors.addAll(mapErrors);
-    }
-
-    return (emailIdsSuccess: updatedEmailIds, mapErrors: mapErrors);
-  }
-
-  int _getMaxObjectsInSetMethod(Session session, AccountId accountId) {
-    final coreCapability = session.getCapabilityProperties<CoreCapability>(
-      accountId,
-      CapabilityIdentifier.jmapCore,
-    );
-    final maxObjectsInSetMethod = coreCapability?.maxObjectsInSet?.value.toInt()
-        ?? CapabilityIdentifierExtension.defaultMaxObjectsInSet;
-
-    final minOfMaxObjectsInSetMethod = min(
-      maxObjectsInSetMethod,
-      CapabilityIdentifierExtension.defaultMaxObjectsInSet,
-    );
-    log('EmailAPI::_getMaxObjectsInSetMethod:minOfMaxObjectsInSetMethod = $minOfMaxObjectsInSetMethod');
-    return minOfMaxObjectsInSetMethod;
-  }
-
-  Future<({
-    List<EmailId> emailIdsSuccess,
-    Map<Id, SetError> mapErrors,
   })> markAsStar(
     Session session,
     AccountId accountId,
     List<EmailId> emailIds,
     MarkStarAction markStarAction
   ) async {
-    final maxObjects = _getMaxObjectsInSetMethod(session, accountId);
+    final maxObjects = getMaxObjectsInSetMethod(session, accountId);
     final totalEmails = emailIds.length;
     final maxBatches = min(totalEmails, maxObjects);
 
@@ -656,17 +533,44 @@ class EmailAPI with HandleSetErrorMixin {
     return (emailIdsSuccess: updatedEmailIds, mapErrors: mapErrors);
   }
 
-  Future<Email> saveEmailAsDrafts(
+  Future<Email> _emailSetCreateMethod(
     Session session,
     AccountId accountId,
     Email email,
-    {CancelToken? cancelToken}
+    {
+      CreateNewMailboxRequest? createNewMailboxRequest,
+      CancelToken? cancelToken
+    }
   ) async {
+    final requestBuilder = JmapRequestBuilder(_httpClient, ProcessingInvocation());
+
+    MailboxId? mailboxId;
+    if (createNewMailboxRequest != null) {
+      final generateCreateId = Id(_uuid.v1());
+      final setMailboxMethod = SetMailboxMethod(accountId)
+        ..addCreate(
+            generateCreateId,
+            Mailbox(
+              name: createNewMailboxRequest.newName,
+              parentId: createNewMailboxRequest.parentId,
+              isSubscribed: IsSubscribed(createNewMailboxRequest.isSubscribed)
+            )
+        );
+
+      requestBuilder.invocation(setMailboxMethod);
+
+      mailboxId = MailboxId(ReferenceId(
+          ReferencePrefix.defaultPrefix,
+          generateCreateId));
+    } else {
+      mailboxId = email.mailboxIds?.keys.first;
+    }
+    if (mailboxId != null) {
+      email.mailboxIds?.addAll({mailboxId: true});
+    }
     final idCreateMethod = Id(_uuid.v1());
     final setEmailMethod = SetEmailMethod(accountId)
       ..addCreate(idCreateMethod, email);
-
-    final requestBuilder = JmapRequestBuilder(_httpClient, ProcessingInvocation());
 
     final setEmailInvocation = requestBuilder.invocation(setEmailMethod);
 
@@ -693,7 +597,7 @@ class EmailAPI with HandleSetErrorMixin {
     }
   }
 
-  Future<bool> removeEmailDrafts(
+  Future<bool> _emailSetDestroyMethod(
     Session session,
     AccountId accountId,
     EmailId emailId,
@@ -728,6 +632,20 @@ class EmailAPI with HandleSetErrorMixin {
     }
   }
 
+  Future<Email> saveEmailAsDrafts(
+    Session session,
+    AccountId accountId,
+    Email email,
+    {CancelToken? cancelToken}
+  ) => _emailSetCreateMethod(session, accountId, email, cancelToken: cancelToken);
+
+  Future<bool> removeEmailDrafts(
+    Session session,
+    AccountId accountId,
+    EmailId emailId,
+    {CancelToken? cancelToken}
+  ) => _emailSetDestroyMethod(session, accountId, emailId, cancelToken: cancelToken);
+
   Future<Email> updateEmailDrafts(
     Session session,
     AccountId accountId,
@@ -756,6 +674,51 @@ class EmailAPI with HandleSetErrorMixin {
     return emailCreated;
   }
 
+  Future<Email> saveEmailAsTemplate(
+    Session session,
+    AccountId accountId,
+    Email email,
+    {
+      CreateNewMailboxRequest? createNewMailboxRequest,
+      CancelToken? cancelToken
+    }
+  ) => _emailSetCreateMethod(session, accountId, email, createNewMailboxRequest: createNewMailboxRequest, cancelToken: cancelToken);
+
+  Future<bool> removeEmailTemplate(
+    Session session,
+    AccountId accountId,
+    EmailId emailId,
+    {CancelToken? cancelToken}
+  ) => _emailSetDestroyMethod(session, accountId, emailId, cancelToken: cancelToken);
+
+  Future<Email> updateEmailTemplate(
+    Session session,
+    AccountId accountId,
+    Email newEmail,
+    EmailId oldEmailId,
+    {CancelToken? cancelToken}
+  ) async {
+    final emailCreated = await saveEmailAsTemplate(
+      session,
+      accountId,
+      newEmail,
+      cancelToken: cancelToken
+    );
+
+    try {
+      await removeEmailTemplate(
+        session,
+        accountId,
+        oldEmailId,
+        cancelToken: cancelToken
+      );
+    } catch (e) {
+      logError('EmailAPI::updateEmailTemplate: Exception = $e');
+    }
+
+    return emailCreated;
+  }
+
   Future<({
     List<EmailId> emailIdsSuccess,
     Map<Id, SetError> mapErrors,
@@ -764,7 +727,7 @@ class EmailAPI with HandleSetErrorMixin {
     AccountId accountId,
     List<EmailId> emailIds
   ) async {
-    final maxObjects = _getMaxObjectsInSetMethod(session, accountId);
+    final maxObjects = getMaxObjectsInSetMethod(session, accountId);
     final totalEmails = emailIds.length;
     final maxBatches = min(totalEmails, maxObjects);
 

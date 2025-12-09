@@ -78,7 +78,7 @@ class HtmlAnalyzer {
             }
             return null;
           })
-          .whereNotNull()
+          .nonNulls
           .toList();
         log('HtmlAnalyzer::getListEventAction:OPEN_PAAS::listEventAction: $listEventAction');
         return listEventAction;
@@ -98,7 +98,7 @@ class HtmlAnalyzer {
             }
             return null;
           })
-          .whereNotNull()
+          .nonNulls
           .toList();
         log('HtmlAnalyzer::getListEventAction:GOOGLE::listEventAction: $listEventAction');
         return listEventAction;
@@ -192,7 +192,7 @@ class HtmlAnalyzer {
   Future<String> removeCollapsedExpandedSignatureEffect({required String emailContent}) async {
     try {
       final document = parse(emailContent);
-      final signatureElements = document.querySelectorAll('div.tmail-signature');
+      final signatureElements = document.querySelectorAll('.tmail-signature');
       await Future.wait(signatureElements.map((signatureTag) async {
         final signatureChildren = signatureTag.children;
         for (var child in signatureChildren) {

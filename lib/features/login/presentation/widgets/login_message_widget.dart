@@ -3,6 +3,7 @@ import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/state/failure.dart';
 import 'package:core/presentation/state/success.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,6 +12,7 @@ import 'package:tmail_ui_user/features/login/domain/state/dns_lookup_to_get_jmap
 import 'package:tmail_ui_user/features/login/domain/state/get_oidc_configuration_state.dart';
 import 'package:tmail_ui_user/features/login/domain/state/get_token_oidc_state.dart';
 import 'package:tmail_ui_user/features/login/presentation/login_form_type.dart';
+import 'package:tmail_ui_user/main/exceptions/remote_exception.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 import 'package:tmail_ui_user/main/routes/route_navigation.dart';
 import 'package:tmail_ui_user/main/utils/toast_manager.dart';
@@ -33,6 +35,7 @@ class LoginMessageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appLocalizations = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.only(
         top: 11,
@@ -47,35 +50,42 @@ class LoginMessageWidget extends StatelessWidget {
         child: Text(
           viewState.fold(
             (failure) {
+              if (failure is FeatureFailure && failure.exception is NoNetworkError) {
+                return appLocalizations.youAreOffline;
+              }
+
               if (failure is GetOIDCConfigurationFailure) {
-                return AppLocalizations.of(context).canNotVerifySSOConfiguration;
+                return appLocalizations.canNotVerifySSOConfiguration;
               } else if (failure is DNSLookupToGetJmapUrlFailure) {
-                return AppLocalizations.of(context).dnsLookupLoginMessage;
+                return appLocalizations.dnsLookupLoginMessage;
               } else if (failure is GetTokenOIDCFailure && failure.exception is NoSuitableBrowserForOIDCException) {
-                return AppLocalizations.of(context).noSuitableBrowserForOIDC;
+                return appLocalizations.noSuitableBrowserForOIDC;
               } else if (failure is FeatureFailure) {
-                return _toastManager?.getMessageByException(context, failure.exception)
-                  ?? AppLocalizations.of(context).unknownError;
+                return _toastManager?.getMessageByException(
+                  appLocalizations,
+                  failure.exception,
+                  useDefaultMessage: true,
+                ) ?? appLocalizations.unknownError;
               } else {
-                return AppLocalizations.of(context).unknownError;
+                return appLocalizations.unknownError;
               }
             },
             (success) {
               if (formType == LoginFormType.credentialForm) {
-                return AppLocalizations.of(context).loginInputCredentialMessage;
+                return appLocalizations.loginInputCredentialMessage;
               } else if (formType == LoginFormType.dnsLookupForm) {
-                return AppLocalizations.of(context).dnsLookupLoginMessage;
+                return appLocalizations.dnsLookupLoginMessage;
               } else if (formType == LoginFormType.passwordForm) {
-                return AppLocalizations.of(context).enterYourPasswordToSignIn;
+                return appLocalizations.enterYourPasswordToSignIn;
               } else if (formType == LoginFormType.baseUrlForm) {
-                return AppLocalizations.of(context).loginInputUrlMessage;
+                return appLocalizations.loginInputUrlMessage;
               } else {
                 return '';
               }
             }
           ),
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: ThemeUtils.defaultTextStyleInterFont.copyWith(
             fontSize: 15,
             fontWeight: FontWeight.w400,
             color: viewState.fold(

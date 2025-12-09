@@ -12,6 +12,8 @@ enum AccountMenuItem {
   mailboxVisibility,
   notification,
   contactSupport,
+  storage,
+  keyboardShortcuts,
   signOut,
   none;
 
@@ -35,6 +37,10 @@ enum AccountMenuItem {
         return imagePaths.icNotification;
       case AccountMenuItem.contactSupport:
         return imagePaths.icHelp;
+      case AccountMenuItem.storage:
+        return imagePaths.icStorage;
+      case AccountMenuItem.keyboardShortcuts:
+        return imagePaths.icKeyboard;
       case AccountMenuItem.signOut:
         return imagePaths.icSignOut;
       case AccountMenuItem.none:
@@ -62,6 +68,10 @@ enum AccountMenuItem {
         return appLocalizations.notification;
       case AccountMenuItem.contactSupport:
         return appLocalizations.contactSupport;
+      case AccountMenuItem.storage:
+        return appLocalizations.storageQuotas;
+      case AccountMenuItem.keyboardShortcuts:
+        return appLocalizations.keyboardShortcuts;
       case AccountMenuItem.signOut:
         return appLocalizations.sign_out;
       case AccountMenuItem.none:
@@ -72,7 +82,7 @@ enum AccountMenuItem {
   String getExplanation(AppLocalizations appLocalizations) {
     switch(this) {
       case AccountMenuItem.profiles:
-        return appLocalizations.profilesSettingExplanation;
+        return appLocalizations.identitiesSettingExplanation;
       case AccountMenuItem.languageAndRegion:
         return appLocalizations.languageSubtitle;
       case AccountMenuItem.emailRules:
@@ -83,6 +93,12 @@ enum AccountMenuItem {
         return appLocalizations.vacationSettingExplanation;
       case AccountMenuItem.mailboxVisibility:
         return appLocalizations.folderVisibilitySubtitle;
+      case AccountMenuItem.storage:
+        return appLocalizations.storageSettingExplanation;
+      case AccountMenuItem.notification:
+        return appLocalizations.allowsTwakeMailToNotifyYouWhenANewMessageArrivesOnYourPhone;
+      case AccountMenuItem.keyboardShortcuts:
+        return appLocalizations.keyboardShortcutsSettingExplanation;
       default:
         return '';
     }
@@ -108,6 +124,10 @@ enum AccountMenuItem {
         return 'notification';
       case AccountMenuItem.contactSupport:
         return 'contact-support';
+      case AccountMenuItem.storage:
+        return 'storage';
+      case AccountMenuItem.keyboardShortcuts:
+        return 'keyboard-shortcuts';
       case AccountMenuItem.signOut:
         return 'sign-out';
       case AccountMenuItem.none:

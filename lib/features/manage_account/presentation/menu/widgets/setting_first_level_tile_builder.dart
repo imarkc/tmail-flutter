@@ -2,6 +2,8 @@ import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/resources/image_paths.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
 import 'package:core/presentation/utils/style_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
+import 'package:core/presentation/views/button/icon_button_web.dart';
 import 'package:core/utils/direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -18,7 +20,7 @@ class SettingFirstLevelTileBuilder extends StatelessWidget {
     this.clickAction,
     {
       Key? key,
-      this.subtitle
+      this.subtitle = '',
     }
   ) : super(key: key);
 
@@ -27,7 +29,7 @@ class SettingFirstLevelTileBuilder extends StatelessWidget {
 
   final String settingIcon;
   final String title;
-  final String? subtitle;
+  final String subtitle;
   final SettingFirstLevelTileClickAction clickAction;
 
   @override
@@ -59,7 +61,7 @@ class SettingFirstLevelTileBuilder extends StatelessWidget {
                           maxLines: 1,
                           softWrap: CommonTextStyle.defaultSoftWrap,
                           overflow: CommonTextStyle.defaultTextOverFlow,
-                          style: const TextStyle(
+                          style: ThemeUtils.defaultTextStyleInterFont.copyWith(
                             fontSize: 16,
                             color: AppColor.colorNameEmail,
                             fontWeight: FontWeight.w400,
@@ -68,7 +70,7 @@ class SettingFirstLevelTileBuilder extends StatelessWidget {
                       ))
                     ],
                   ),
-                  subtitle != null
+                  subtitle.isNotEmpty
                     ? Padding(
                         padding: EdgeInsets.only(
                           left: AppUtils.isDirectionRTL(context) ? 12 : _getSubtitleLeftPadding(context),
@@ -76,26 +78,31 @@ class SettingFirstLevelTileBuilder extends StatelessWidget {
                           top: 12
                         ),
                         child: Text(
-                          subtitle!,
-                          style: const TextStyle(
+                          subtitle,
+                          style: ThemeUtils.defaultTextStyleInterFont.copyWith(
                             fontSize: 13,
                             color: AppColor.colorContentEmail,
                             fontWeight: FontWeight.w400)))
                     : const SizedBox.shrink()
                 ]
               )),
-              IconButton(
-               padding: EdgeInsets.only(
-                 right: AppUtils.isDirectionRTL(context) ? 0 : SettingsUtils.getHorizontalPadding(context, _responsiveUtils),
-                 left: AppUtils.isDirectionRTL(context) ? SettingsUtils.getHorizontalPadding(context, _responsiveUtils) : 0,
-               ),
-               icon: SvgPicture.asset(
-                 DirectionUtils.isDirectionRTLByLanguage(context) ? _imagePath.icBack : _imagePath.icCollapseFolder,
-                 fit: BoxFit.fill,
-                 colorFilter: AppColor.colorCollapseMailbox.asFilter()),
-               onPressed: clickAction
-            )
-          ])),
+              buildIconWeb(
+                margin: EdgeInsetsDirectional.only(
+                  end: SettingsUtils.getHorizontalPadding(
+                    context,
+                    _responsiveUtils,
+                  ),
+                ),
+                icon: SvgPicture.asset(
+                  DirectionUtils.isDirectionRTLByLanguage(context)
+                      ? _imagePath.icBack
+                      : _imagePath.icCollapseFolder,
+                  colorFilter: AppColor.colorCollapseMailbox.asFilter(),
+                  fit: BoxFit.fill,
+                ),
+                onTap: clickAction,
+              ),
+            ])),
       ),
     );
   }

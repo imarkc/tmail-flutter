@@ -93,7 +93,6 @@ extension AppColor on Color {
   static const colorDividerEmailView = Color(0xFFD7D8D9);
   static const colorButton = Color(0xFF959DAD);
   static const colorTime = Color(0xFF92A1B4);
-  static const colorEmailAddressPrefix = Color(0xFF9AA7B6);
   static const colorEmailAddressTag = Color(0xFFF4F4F4);
   static const colorLineLeftEmailView = Color(0x2999A2AD);
   static const colorShadowComposer = Color(0x1F000000);
@@ -117,21 +116,14 @@ extension AppColor on Color {
   static const colorShadowComposerButton = Color(0x99007AFF);
   static const colorBackgroundTagFilter = Color(0xFF6D7885);
   static const colorDefaultRichTextButton = Color(0xFF99A2AD);
-  static const colorFocusRichTextButton = Color(0x146D7885);
   static const colorStyleBlockQuote = Color(0xFFEEEEEE);
   static const colorBorderStyleCode = Color(0xFFCCCCCC);
   static const colorBackgroundStyleCode = Color(0xFFF5F5F5);
   static const colorBorderWrapIconStyleCode = Color(0xFFE4E4E4);
   static const colorBackgroundWrapIconStyleCode = Color(0xFFF2F3F5);
-  static const colorSelectedRichTextButton = Color(0x99EBEDF0);
-  static const colorShadowDestinationPicker = Color(0x33000000);
   static const colorBackgroundSnackBar = Color(0xFF343438);
-  static const colorBackgroundHeaderListRuleFilter = Color(0xFFFAF7F7);
-  static const colorBorderListRuleFilter = Color(0xFFE7E8EC);
   static const colorBackgroundFieldConditionRulesFilter = Color(0xFFF2F3F5);
   static const colorDeletePermanentlyButton = Color(0xffE64646);
-  static const colorVacationSettingExplanation = Color(0xFF686E76);
-  static const colorBackgroundVacationSettingField = Color(0xFFF2F3F5);
   static const colorBackgroundNotificationVacationSetting= Color(0xFFFFF5C2);
   static const colorDivider = Color(0xFFE7E8EC);
   static const colorCloseButton = Color(0xFF818C99);
@@ -142,8 +134,6 @@ extension AppColor on Color {
   static const colorShadowLayerTop = Color(0x1F000000);
   static const colorDividerHorizontal = Color(0x1F000000);
   static const colorEmailAddressFull = Color(0xFF818C99);
-  static const colorTitleHeaderAttachment = Color(0xFF818C99);
-  static const colorAttachmentIcon = Color(0xFFAEB7C2);
   static const colorDividerDestinationPicker = Color(0x1F000000);
   static const colorItemAlreadySelected = Color(0xFF818C99);
   static const colorItemSelected = Color(0xFFF2F3F5);
@@ -162,7 +152,7 @@ extension AppColor on Color {
   static const colorSpamReportBannerLabelColor = Color(0xFF626D7A);
   static const colorSpamReportBannerButtonBackground = Color(0xFFEBEDF0);
   static const colorSubtitle = Color(0xFF6D7885);
-  static const colorBackgroundSearchMailboxInput = Color(0xFFEBEDF0);
+  static const searchInputBackground = Color(0xFFE0E9F1);
   static const colorMailboxHovered = Color(0xFFEBEDF0);
   static const colorMailboxPath = Color(0xFF818C99);
   static const colorIconUnSubscribedMailbox = Color(0xFFAEB7C2);
@@ -233,21 +223,69 @@ extension AppColor on Color {
   static const colorFilterMessageButton = Color(0xFFEBEDF0);
   static const colorFilterMessageIcon = Color(0xFF686E76);
   static const colorFilterMessageTitle = Color(0xFF686E76);
-  static const colorStarredSearchFilterIcon = Color(0xFFFFCC00);
   static const colorMobileSearchFilterButton = Color(0xFFEBEDF0);
   static const colorContactViewClearFilterButton = Color(0x001C3D0D);
   static const steelGrayA540 = Color(0xFF55687D);
   static const steelGray200 = Color(0xFFAEB7C2);
+  static const steelGray80 = Color(0xFFE7E8EC);
   static const blue700 = Color(0xFF208BFF);
   static const steelGray400 = Color(0xFF818C99);
   static const steelGray600 = Color(0xFF4E5966);
   static const blue100 = Color(0xFFDFEEFF);
   static const blue400 = Color(0xFF80BDFF);
+  static const blue900 = Color(0xFF0F76E7);
   static const m3Tertiary = Color(0xFF8C9CAF);
+  static const m3Tertiary60 = Color(0xFFD8E1EB);
+  static const m3Tertiary70 = Color(0xFFE5ECF3);
+  static const m3Tertiary20 = Color(0xFF71767C);
   static const m3Neutral70 = Color(0xFFAEAAAE);
+  static const m3Neutral90 = Color(0xFFE6E1E5);
+  static const m3Neutral40 = Color(0xFF605D62);
+  static const m3SysLightSecondaryBlue = Color(0xFF5C9CE6);
+  static const m3SysLight = Color(0xFF0157AD);
+  static const m3SysOutline = Color(0xFFAEAEC0);
   static const grayBackgroundColor = Color(0xFFF3F6F9);
   static const m3SurfaceBackground = Color(0xFF1C1B1F);
   static const warningColor = Color(0xFFFFC107);
+  static const primaryMain = Color(0xFF0A84FF);
+  static const m3LayerDarkOutline = Color(0xFF938F99);
+  static const blackAlpha40 = Color.fromRGBO(0, 0, 0, 0.4);
+  static const blackAlpha20 = Color.fromRGBO(0, 0, 0, 0.2);
+  static const textPrimary = Color(0xFF424244);
+  static const iconFolder = Color(0xFF297EF2);
+  static const folderDivider = Color(0xFFE4E8EC);
+  static const gray424244 = Color(0xFF424244);
+  static const gray200 = Color(0xFFCCCCCC);
+  static const lightGrayF4F4F4 = Color(0xFFF4F4F4);
+  static const gray959DAD = Color(0xFF959DAD);
+  static const gray9AA7B6 = Color(0xFF9AA7B6);
+  static const redFF3347 = Color(0xFFFF3347);
+  static const gray686E76 = Color(0xFF686E76);
+  static const gray900 = Color(0xFF222222);
+  static const gray400 = Color(0xFF939393);
+  static const lightGrayEBEDF0 = Color(0xFFEBEDF0);
+  static const gray99A2AD = Color(0xFF99A2AD);
+  static const textSecondary = Color(0xFF1C1B1F);
+  static const profileMenuDivider = Color(0xFF1D192B);
+  static const popupMenuItemHovered = Color(0xFFF8F8F8);
+  static const secondaryContrastText = Color(0xFFFFFFFF);
+  static const primaryLinShare = Color(0xFF007AFF);
+  static const lightGrayEAEDF2 = Color(0xFFEAEDF2);
+  static const lightIconTertiary = Color(0xFFB8C1CC);
+  static const gray6D7885 = Color(0xFF6D7885);
+  static const m3Primary = Color(0xFF0A84FF);
+  static const m3Primary95 = Color(0xFFE3F1FF);
+  static const gray49454F = Color(0xFF49454F);
+  static const lightGrayF9FAFB = Color(0xFFF9FAFB);
+  static const black4D4D4D = Color(0xFF4D4D4D);
+  static const green166534 = Color(0xFF166534);
+  static const lightGreenF0FDF4 = Color(0xFFF0FDF4);
+  static const lightGreenBBF7D0 = Color(0xFFBBF7D0);
+  static const lightBlueEFF6FF = Color(0xFFEFF6FF);
+  static const lightBlueBFDBFE = Color(0xFFBFDBFE);
+  static const lightGrayF6FAFF = Color(0xFFF6FAFF);
+  static const lightGrayF7F6F9 = Color(0xFFF7F6F9);
+  static const blue25AEFE = Color(0xFF25AEFE);
 
   static const mapGradientColor = [
     [Color(0xFF21D4FD), Color(0xFFB721FF)],
@@ -262,7 +300,15 @@ extension AppColor on Color {
     [Color(0xFF87A6F8), Color(0xFF645FF6)],
   ];
 
-  String toHexTriplet() => '#${(value & 0xFFFFFF)
+  int toInt() {
+    final alpha = (a * 255).toInt();
+    final red = (r * 255).toInt();
+    final green = (g * 255).toInt();
+    final blue = (b * 255).toInt();
+    return (alpha << 24) | (red << 16) | (green << 8) | blue;
+  }
+
+  String toHexTriplet() => '#${(toInt() & 0xFFFFFF)
       .toRadixString(16)
       .padLeft(6, '0')
       .toUpperCase()}';

@@ -6,7 +6,7 @@ import 'package:jmap_dart_client/jmap/mail/vacation/vacation_response.dart';
 import 'package:tmail_ui_user/features/manage_account/presentation/extensions/vacation_response_extension.dart';
 import 'package:tmail_ui_user/main/localizations/app_localizations.dart';
 
-typedef EndNowVacationSettingAction = Function();
+typedef EndNowVacationSettingAction = Function(VacationResponse vacation);
 typedef GoToVacationSettingAction = Function();
 
 class VacationNotificationMessageWidget extends StatelessWidget {
@@ -70,7 +70,7 @@ class VacationNotificationMessageWidget extends StatelessWidget {
           message: vacationResponse.getNotificationMessage(context),
           child: Text(
             vacationResponse.getNotificationMessage(context),
-            style: TextStyle(
+            style: ThemeUtils.defaultTextStyleInterFont.copyWith(
               color: Colors.black,
               fontSize: 16,
               fontWeight: fontWeight ?? FontWeight.normal,
@@ -83,7 +83,7 @@ class VacationNotificationMessageWidget extends StatelessWidget {
       if (actionEndNow != null)
         TMailButtonWidget.fromText(
           text: AppLocalizations.of(context).endNow,
-          textStyle: const TextStyle(
+          textStyle: ThemeUtils.defaultTextStyleInterFont.copyWith(
             fontWeight: FontWeight.w500,
             fontSize: 16,
             color: AppColor.colorTextButton),
@@ -93,11 +93,12 @@ class VacationNotificationMessageWidget extends StatelessWidget {
           maxWidth: 180,
           maxLines: 1,
           tooltipMessage: AppLocalizations.of(context).endNow,
-          onTapActionCallback: actionEndNow),
+          onTapActionCallback: () => actionEndNow?.call(vacationResponse),
+        ),
       if (actionGotoVacationSetting != null)
         TMailButtonWidget.fromText(
           text: AppLocalizations.of(context).vacationSetting,
-          textStyle: const TextStyle(
+          textStyle: ThemeUtils.defaultTextStyleInterFont.copyWith(
             fontWeight: FontWeight.w500,
             fontSize: 16,
             color: AppColor.colorTextButton),
@@ -121,7 +122,7 @@ class VacationNotificationMessageWidget extends StatelessWidget {
           message: vacationResponse.getNotificationMessage(context),
           child: Text(
             vacationResponse.getNotificationMessage(context),
-            style: TextStyle(
+            style: ThemeUtils.defaultTextStyleInterFont.copyWith(
               color: Colors.black,
               fontSize: 16,
               fontWeight: fontWeight ?? FontWeight.normal,
@@ -138,7 +139,7 @@ class VacationNotificationMessageWidget extends StatelessWidget {
               Flexible(
                 child: TMailButtonWidget.fromText(
                   text: AppLocalizations.of(context).endNow,
-                  textStyle: const TextStyle(
+                  textStyle: ThemeUtils.defaultTextStyleInterFont.copyWith(
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
                     color: AppColor.colorTextButton),
@@ -148,14 +149,14 @@ class VacationNotificationMessageWidget extends StatelessWidget {
                   maxWidth: 180,
                   maxLines: 1,
                   tooltipMessage: AppLocalizations.of(context).endNow,
-                  onTapActionCallback: actionEndNow
+                  onTapActionCallback: () => actionEndNow?.call(vacationResponse),
                 ),
               ),
             if (actionGotoVacationSetting != null)
               Flexible(
                 child: TMailButtonWidget.fromText(
                   text: AppLocalizations.of(context).vacationSetting,
-                  textStyle: const TextStyle(
+                  textStyle: ThemeUtils.defaultTextStyleInterFont.copyWith(
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
                     color: AppColor.colorTextButton),

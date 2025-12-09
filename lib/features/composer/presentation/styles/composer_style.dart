@@ -1,13 +1,13 @@
 
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/presentation/utils/responsive_utils.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:core/utils/platform_info.dart';
 import 'package:flutter/material.dart';
 
 class ComposerStyle {
   static const double radius = 28;
   static const double keyboardToolBarHeight = 200;
-  static const double popupMenuRadius = 8;
   static const double suggestionItemHeight = 60;
   static const double normalWidth = 600;
   static const double normalHeight = 525;
@@ -43,7 +43,7 @@ class ComposerStyle {
   static const EdgeInsetsGeometry popupItemPadding = EdgeInsetsDirectional.symmetric(horizontal: 12);
   static const EdgeInsetsGeometry insertImageLoadingBarMargin = EdgeInsetsDirectional.only(top: 12);
 
-  static const TextStyle popupItemTextStyle = TextStyle(
+  static TextStyle popupItemTextStyle = ThemeUtils.defaultTextStyleInterFont.copyWith(
     color: Colors.black,
     fontSize: 16,
     fontWeight: FontWeight.w500

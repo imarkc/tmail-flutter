@@ -28,30 +28,22 @@ import 'package:tmail_ui_user/features/email/domain/model/event_action.dart';
 import 'package:tmail_ui_user/features/email/domain/state/get_email_content_state.dart';
 import 'package:tmail_ui_user/features/email/domain/state/parse_calendar_event_state.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/calendar_event_accept_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/download_all_attachments_for_web_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/export_all_attachments_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/get_html_content_from_attachment_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/maybe_calendar_event_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/calendar_event_reject_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/download_attachment_for_web_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/download_attachments_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/export_attachment_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/get_email_content_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/mark_as_email_read_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/mark_as_star_email_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/move_to_mailbox_interactor.dart';
+import 'package:tmail_ui_user/features/email/domain/usecases/maybe_calendar_event_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/parse_calendar_event_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/parse_email_by_blob_id_interactor.dart';
-import 'package:tmail_ui_user/features/email/domain/usecases/preview_email_from_eml_file_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/print_email_interactor.dart';
 import 'package:tmail_ui_user/features/email/domain/usecases/store_opened_email_interactor.dart';
 import 'package:tmail_ui_user/features/email/presentation/action/email_ui_action.dart';
-import 'package:tmail_ui_user/features/email/presentation/controller/email_supervisor_controller.dart';
 import 'package:tmail_ui_user/features/email/presentation/controller/single_email_controller.dart';
 import 'package:tmail_ui_user/features/email/presentation/model/blob_calendar_event.dart';
 import 'package:tmail_ui_user/features/login/data/network/interceptors/authorization_interceptors.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_authority_oidc_interactor.dart';
 import 'package:tmail_ui_user/features/login/domain/usecases/delete_credential_interactor.dart';
+import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/action/download_ui_action.dart';
+import 'package:tmail_ui_user/features/download/presentation/controllers/download_controller.dart';
 import 'package:tmail_ui_user/features/mailbox_dashboard/presentation/controller/mailbox_dashboard_controller.dart';
 import 'package:tmail_ui_user/features/manage_account/data/local/language_cache_manager.dart';
 import 'package:tmail_ui_user/features/manage_account/domain/usecases/get_all_identities_interactor.dart';
@@ -78,16 +70,11 @@ const fallbackGenerators = {
 @GenerateNiceMocks([
   MockSpec<GetEmailContentInteractor>(),
   MockSpec<MarkAsEmailReadInteractor>(),
-  MockSpec<DownloadAttachmentsInteractor>(),
-  MockSpec<DeviceManager>(),
-  MockSpec<ExportAttachmentInteractor>(),
-  MockSpec<MoveToMailboxInteractor>(),
   MockSpec<MarkAsStarEmailInteractor>(),
-  MockSpec<DownloadAttachmentForWebInteractor>(),
   MockSpec<GetAllIdentitiesInteractor>(),
   MockSpec<StoreOpenedEmailInteractor>(),
   MockSpec<MailboxDashBoardController>(fallbackGenerators: fallbackGenerators),
-  MockSpec<EmailSupervisorController>(fallbackGenerators: fallbackGenerators),
+  MockSpec<DownloadController>(fallbackGenerators: fallbackGenerators),
   MockSpec<DownloadManager>(fallbackGenerators: fallbackGenerators),
   MockSpec<CachingManager>(fallbackGenerators: fallbackGenerators),
   MockSpec<LanguageCacheManager>(fallbackGenerators: fallbackGenerators),
@@ -104,17 +91,12 @@ const fallbackGenerators = {
   MockSpec<AcceptCalendarEventInteractor>(),
   MockSpec<MaybeCalendarEventInteractor>(),
   MockSpec<RejectCalendarEventInteractor>(),
-  MockSpec<ParseEmailByBlobIdInteractor>(),
-  MockSpec<PreviewEmailFromEmlFileInteractor>(),
   MockSpec<PrintUtils>(),
   MockSpec<ApplicationManager>(),
   MockSpec<ToastManager>(),
   MockSpec<CalendarEventDataSource>(),
   MockSpec<DioClient>(),
-  MockSpec<GetHtmlContentFromAttachmentInteractor>(),
   MockSpec<TwakeAppManager>(),
-  MockSpec<DownloadAllAttachmentsForWebInteractor>(),
-  MockSpec<ExportAllAttachmentsInteractor>(),
   MockSpec<FileUploader>(),
 ])
 void main() {
@@ -122,17 +104,11 @@ void main() {
 
   final getEmailContentInteractor = MockGetEmailContentInteractor();
   final markAsEmailReadInteractor = MockMarkAsEmailReadInteractor();
-  final downloadAttachmentsInteractor = MockDownloadAttachmentsInteractor();
-  final deviceManager = MockDeviceManager();
-  final exportAttachmentInteractor = MockExportAttachmentInteractor();
-  final moveToMailboxInteractor = MockMoveToMailboxInteractor();
   final markAsStarEmailInteractor = MockMarkAsStarEmailInteractor();
-  final downloadAttachmentForWebInteractor =
-      MockDownloadAttachmentForWebInteractor();
   final getAllIdentitiesInteractor = MockGetAllIdentitiesInteractor();
   final storeOpenedEmailInteractor = MockStoreOpenedEmailInteractor();
   final mailboxDashboardController = MockMailboxDashBoardController();
-  final emailSupervisorController = MockEmailSupervisorController();
+  final downloadController = MockDownloadController();
   final downloadManager = MockDownloadManager();
   final cachingManager = MockCachingManager();
   final languageCacheManager = MockLanguageCacheManager();
@@ -146,16 +122,10 @@ void main() {
   final responsiveUtils = MockResponsiveUtils();
   final uuid = MockUuid();
   final printEmailInteractor = MockPrintEmailInteractor();
-  final parseEmailByBlobIdInteractor = MockParseEmailByBlobIdInteractor();
-  final previewEmailFromEmlFileInteractor = MockPreviewEmailFromEmlFileInteractor();
   final printUtils = MockPrintUtils();
   final applicationManager = MockApplicationManager();
   final mockToastManager = MockToastManager();
-  final getHtmlContentFromAttachmentInteractor = MockGetHtmlContentFromAttachmentInteractor();
   final mockTwakeAppManager = MockTwakeAppManager();
-
-  final downloadAllAttachmentsForWebInteractor = MockDownloadAllAttachmentsForWebInteractor();
-  final exportAllAttachmentsInteractor = MockExportAllAttachmentsInteractor();
 
   late SingleEmailController singleEmailController;
 
@@ -170,8 +140,8 @@ void main() {
   const testTaskId = 'taskId';
 
   setUpAll(() {
+    Get.put<DownloadController>(downloadController);
     Get.put<MailboxDashBoardController>(mailboxDashboardController);
-    Get.put<EmailSupervisorController>(emailSupervisorController);
     Get.put<DownloadManager>(downloadManager);
     Get.put<CachingManager>(cachingManager);
     Get.put<LanguageCacheManager>(languageCacheManager);
@@ -201,20 +171,10 @@ void main() {
     singleEmailController = SingleEmailController(
       getEmailContentInteractor,
       markAsEmailReadInteractor,
-      downloadAttachmentsInteractor,
-      deviceManager,
-      exportAttachmentInteractor,
-      moveToMailboxInteractor,
       markAsStarEmailInteractor,
-      downloadAttachmentForWebInteractor,
       getAllIdentitiesInteractor,
       storeOpenedEmailInteractor,
       printEmailInteractor,
-      parseEmailByBlobIdInteractor,
-      previewEmailFromEmlFileInteractor,
-      getHtmlContentFromAttachmentInteractor,
-      downloadAllAttachmentsForWebInteractor,
-      exportAllAttachmentsInteractor,
     );
   });
 
@@ -239,14 +199,16 @@ void main() {
         when(mailboxDashboardController.emailUIAction).thenReturn(Rxn(null));
         when(mailboxDashboardController.viewState).thenReturn(Rx(Right(UIState.idle)));
         when(mailboxDashboardController.sessionCurrent).thenReturn(testSession);
-        singleEmailController.onInit();
+        when(mailboxDashboardController.downloadController).thenReturn(downloadController);
+        when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
         Get.put<AcceptCalendarEventInteractor>(acceptCalendarEventInteractor);
-          mailboxDashboardController.accountId.refresh();
-          singleEmailController.handleSuccessViewState(
-            ParseCalendarEventSuccess([
-              BlobCalendarEvent(
-                blobId: blobId,
-                calendarEventList: [calendarEvent])]));
+        singleEmailController.onInit();
+        mailboxDashboardController.accountId.refresh();
+        singleEmailController.handleSuccessViewState(
+          ParseCalendarEventSuccess([
+            BlobCalendarEvent(
+              blobId: blobId,
+              calendarEventList: [calendarEvent])]));
 
         // act
         singleEmailController.onCalendarEventReplyAction(EventActionType.yes, emailId);
@@ -267,8 +229,10 @@ void main() {
         when(mailboxDashboardController.emailUIAction).thenReturn(Rxn(null));
         when(mailboxDashboardController.viewState).thenReturn(Rx(Right(UIState.idle)));
         when(mailboxDashboardController.sessionCurrent).thenReturn(testSession);
-        singleEmailController.onInit();
+        when(mailboxDashboardController.downloadController).thenReturn(downloadController);
+        when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
         Get.put<MaybeCalendarEventInteractor>(maybeCalendarEventInteractor);
+        singleEmailController.onInit();
         mailboxDashboardController.accountId.refresh();
         singleEmailController.handleSuccessViewState(
           ParseCalendarEventSuccess([
@@ -295,8 +259,10 @@ void main() {
         when(mailboxDashboardController.emailUIAction).thenReturn(Rxn(null));
         when(mailboxDashboardController.viewState).thenReturn(Rx(Right(UIState.idle)));
         when(mailboxDashboardController.sessionCurrent).thenReturn(testSession);
-        singleEmailController.onInit();
+        when(mailboxDashboardController.downloadController).thenReturn(downloadController);
+        when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
         Get.put<RejectCalendarEventInteractor>(rejectCalendarEventInteractor);
+        singleEmailController.onInit();
         mailboxDashboardController.accountId.refresh();
         singleEmailController.handleSuccessViewState(
           ParseCalendarEventSuccess([
@@ -372,7 +338,8 @@ void main() {
       when(mailboxDashboardController.emailUIAction).thenReturn(Rxn(EmailUIAction()));
       when(mailboxDashboardController.viewState).thenReturn(Rx(Right(UIState.idle)));
       when(mailboxDashboardController.accountId).thenReturn(Rxn(AccountFixtures.aliceAccountId));
-      when(emailSupervisorController.scrollPhysicsPageView).thenReturn(Rxn());
+      when(mailboxDashboardController.downloadController).thenReturn(downloadController);
+      when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
 
       singleEmailController.onInit();
       mailboxDashboardController.accountId.refresh();
@@ -431,7 +398,8 @@ void main() {
       when(mailboxDashboardController.emailUIAction).thenReturn(Rxn(EmailUIAction()));
       when(mailboxDashboardController.viewState).thenReturn(Rx(Right(UIState.idle)));
       when(mailboxDashboardController.accountId).thenReturn(Rxn(AccountFixtures.aliceAccountId));
-      when(emailSupervisorController.scrollPhysicsPageView).thenReturn(Rxn());
+      when(mailboxDashboardController.downloadController).thenReturn(downloadController);
+      when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
 
       singleEmailController.onInit();
       mailboxDashboardController.accountId.refresh();
@@ -476,6 +444,8 @@ void main() {
       when(mailboxDashboardController.selectedEmail).thenReturn(Rxn(PresentationEmail()));
       when(mailboxDashboardController.emailUIAction).thenReturn(Rxn(EmailUIAction()));
       when(mailboxDashboardController.viewState).thenReturn(Rx(Right(UIState.idle)));
+      when(mailboxDashboardController.downloadController).thenReturn(downloadController);
+      when(downloadController.downloadUIAction).thenAnswer((_) => Rxn(DownloadUIAction.idle));
       when(appToast.showToastMessageWithMultipleActions(
         any, 
         any,

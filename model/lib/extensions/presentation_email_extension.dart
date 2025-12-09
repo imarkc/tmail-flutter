@@ -1,9 +1,11 @@
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
 import 'package:core/data/constants/constant.dart';
 import 'package:core/domain/extensions/datetime_extension.dart';
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/utils/app_logger.dart';
+import 'package:core/utils/html/html_utils.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email.dart';
 import 'package:jmap_dart_client/jmap/mail/email/email_address.dart';
@@ -13,6 +15,7 @@ import 'package:model/email/eml_attachment.dart';
 import 'package:model/email/presentation_email.dart';
 import 'package:model/extensions/email_address_extension.dart';
 import 'package:model/extensions/list_email_address_extension.dart';
+import 'package:model/extensions/presentation_mailbox_extension.dart';
 import 'package:model/extensions/utc_date_extension.dart';
 import 'package:model/mailbox/presentation_mailbox.dart';
 import 'package:model/mailbox/select_mode.dart';
@@ -68,7 +71,7 @@ extension PresentationEmailExtension on PresentationEmail {
     return '';
   }
 
-  Set<EmailAddress> get listEmailAddressSender => from.asSet()..addAll(replyTo.asSet());
+  Set<EmailAddress> get listEmailAddressSender => {...?from, ...?replyTo};
 
   PresentationEmail toggleSelect() {
     return copyWith(
@@ -110,6 +113,11 @@ extension PresentationEmailExtension on PresentationEmail {
       xPriorityHeader: xPriorityHeader,
       importanceHeader: importanceHeader,
       priorityHeader: priorityHeader,
+      listPostHeader: listPostHeader,
+      listUnsubscribeHeader: listUnsubscribeHeader,
+      threadId: threadId,
+      messageId: messageId,
+      references: references,
     );
   }
 
@@ -185,10 +193,28 @@ extension PresentationEmailExtension on PresentationEmail {
     );
   }
 
-  String? _sanitizeSearchSnippet(String? searchSnippet) => searchSnippet
-    ?.replaceAll('\r', '')
-    .replaceAll('\n', '')
-    .replaceAll('\t', '');
+  String? _sanitizeSearchSnippet(String? searchSnippet) {
+    if (searchSnippet == null) return null;
+    return HtmlUtils.unescapeHtml(HtmlUtils.removeWhitespace(searchSnippet));
+  }
+
   String? get sanitizedSearchSnippetSubject => _sanitizeSearchSnippet(searchSnippetSubject);
   String? get sanitizedSearchSnippetPreview => _sanitizeSearchSnippet(searchSnippetPreview);
+
+  MailboxId? get firstMailboxIdAvailable =>
+      mailboxIds?.entries.firstWhereOrNull((element) => element.value)?.key;
+
+  void resyncKeywords(Map<KeyWordIdentifier, bool> newKeywords) {
+    keywords?.addAll(newKeywords);
+    keywords?.removeWhere((key, value) => !value);
+  }
+
+  bool get isDeletePermanentlyEnabled {
+    return mailboxContain?.isTrash ?? mailboxContain?.isSpam ?? false;
+  }
+
+  bool isReplyAllEnabled(String ownerEmailAddress) {
+    final countMailAddress = getCountMailAddressWithoutMe(ownerEmailAddress);
+    return countMailAddress > 1;
+  }
 }

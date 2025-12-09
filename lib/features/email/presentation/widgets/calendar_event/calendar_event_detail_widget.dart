@@ -1,3 +1,4 @@
+import 'package:core/presentation/views/html_viewer/html_content_viewer_on_web_widget.dart';
 import 'package:core/presentation/views/html_viewer/html_content_viewer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:jmap_dart_client/jmap/mail/calendar/calendar_event.dart';
@@ -14,17 +15,21 @@ class CalendarEventDetailWidget extends StatelessWidget {
 
   final CalendarEvent calendarEvent;
   final String emailContent;
-  final bool? isDraggableAppActive;
   final OnMailtoDelegateAction? onMailtoDelegateAction;
   final PresentationEmail? presentationEmail;
+  final ScrollController? scrollController;
+  final bool isInsideThreadDetailView;
+  final OnIFrameClickAction? onIFrameClickAction;
 
   const CalendarEventDetailWidget({
     super.key,
     required this.calendarEvent,
     required this.emailContent,
-    this.isDraggableAppActive,
     this.onMailtoDelegateAction,
     this.presentationEmail,
+    this.scrollController,
+    this.isInsideThreadDetailView = false,
+    this.onIFrameClickAction,
   });
 
   @override
@@ -60,8 +65,12 @@ class CalendarEventDetailWidget extends StatelessWidget {
               padding: const EdgeInsets.only(top: CalendarEventDetailWidgetStyles.fieldTopPadding),
               child: EventBodyContentWidget(
                 content: eventDesc,
-                isDraggableAppActive: isDraggableAppActive,
-                onMailtoDelegateAction: onMailtoDelegateAction)),
+                onMailtoDelegateAction: onMailtoDelegateAction,
+                scrollController: scrollController,
+                isInsideThreadDetailView: isInsideThreadDetailView,
+                onIFrameClickAction: onIFrameClickAction,
+              )
+            ),
         ],
       ),
     );

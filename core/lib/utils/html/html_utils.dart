@@ -1,27 +1,37 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:core/utils/html/html_template.dart';
+import 'package:html/dom.dart' as dom;
+import 'package:html/parser.dart' as parser;
+import 'package:html_unescape/html_unescape.dart';
+
 import 'js_interop_stub.dart' if (dart.library.html) 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:core/data/constants/constant.dart';
 import 'package:core/presentation/extensions/html_extension.dart';
 import 'package:core/utils/app_logger.dart';
-import 'package:core/utils/platform_info.dart';
 import 'package:flutter/material.dart';
 import 'package:universal_html/html.dart' as html;
 
 class HtmlUtils {
+  static const validTags = [
+    'html','head','body','div','span','p','b','i','u','strong','em','a',
+    'img','blockquote','ul','ol','li','table','tr','td','th','thead','tbody',
+    'br','hr','h1','h2','h3','h4','h5','h6','pre','code'
+  ];
   static final random = Random();
+  static final htmlUnescape = HtmlUnescape();
 
-  static const lineHeight100Percent = (
+  static const removeLineHeight1px = (
     script: '''
-      document.querySelectorAll("*")
-        .forEach((element) => {
-          if (element.style.lineHeight !== "normal")
-            element.style.lineHeight = "100%";
-        });''',
-    name: 'lineHeight100Percent');
+      document.querySelectorAll('[style*="line-height"]').forEach(el => {
+        if (el.style.lineHeight === "1px") {
+          el.style.removeProperty("line-height");
+        }
+      });''',
+    name: 'removeLineHeight1px');
 
   static const registerDropListener = (
     script: '''
@@ -38,72 +48,53 @@ class HtmlUtils {
       editor.parentNode.replaceChild(newEditor, editor);''',
     name: 'unregisterDropListener');
 
-  static String customCssStyleHtmlEditor({
+  static recalculateEditorHeight({double? maxHeight}) => (
+    script: '''
+      const editable = document.querySelector('.note-editable');
+      if (editable) {
+        editable.style.height = $maxHeight + 'px';
+      }
+    ''',
+    name: 'recalculateEditorHeight');
+
+  static String customInlineBodyCssStyleHtmlEditor({
     TextDirection direction = TextDirection.ltr,
-    bool useDefaultFont = false,
     double? horizontalPadding,
   }) {
-    if (PlatformInfo.isWeb) {
-      return '''
-        <style>
-          ${useDefaultFont ? '''
-            body {
-              font-family: Arial, 'Inter', sans-serif;
-              font-weight: 500;
-              font-size: 16px;
-              line-height: 24px;
-            }
-          ''' : ''}
+    return '''
+      <style>
+        .note-frame, .note-tooltip-content, .note-popover {
+          font-family: 'Inter', sans-serif;
+          color: #222222;
+        }
         
-          .note-editable {
-            direction: ${direction.name};
-          }
-          
-          .note-editable .tmail-signature {
-            text-align: ${direction == TextDirection.rtl ? 'right' : 'left'};
-          }
-          
-          ${horizontalPadding != null
-            ? '''
-                .note-codable {
-                  padding: 10px ${horizontalPadding}px 0px ${horizontalPadding > 3 ? horizontalPadding - 3 : horizontalPadding}px;
-                  margin-right: 3px;
-                }
-                
-                .note-editable {
-                  padding: 10px ${horizontalPadding}px 0px ${horizontalPadding > 3 ? horizontalPadding - 3 : horizontalPadding}px;
-                  margin-right: 3px;
-                }
-              '''
-            : '''
+        .note-editable {
+          direction: ${direction.name};
+        }
+        
+        .note-editable .tmail-signature {
+          text-align: ${direction == TextDirection.rtl ? 'right' : 'left'};
+        }
+        
+        ${horizontalPadding != null
+          ? '''
+              .note-codable {
+                padding: 10px ${horizontalPadding}px 0px ${horizontalPadding > 3 ? horizontalPadding - 3 : horizontalPadding}px;
+                margin-right: 3px;
+              }
+              
+              .note-editable {
+                padding: 10px ${horizontalPadding}px 0px ${horizontalPadding > 3 ? horizontalPadding - 3 : horizontalPadding}px;
+                margin-right: 3px;
+              }
+            '''
+          : '''
               .note-editable {
                 padding: 10px 10px 0px 10px;
               }
             '''}
-        </style>
-      ''';
-    } else if (PlatformInfo.isMobile) {
-      return '''
-        ${useDefaultFont ? '''
-          body {
-            font-family: Arial, 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 24px;
-          }
-        ''' : ''}
-        
-        #editor {
-          direction: ${direction.name};
-        }
-        
-        #editor .tmail-signature {
-          text-align: ${direction == TextDirection.rtl ? 'right' : 'left'};
-        }
-      ''';
-    } else {
-      return '';
-    }
+      </style>
+    ''';
   }
 
   static String validateHtmlImageResourceMimeType(String mimeType) {
@@ -131,7 +122,8 @@ class HtmlUtils {
     String? styleCSS,
     String? javaScripts,
     bool hideScrollBar = true,
-    bool useDefaultFont = false,
+    bool useDefaultFontStyle = false,
+    double fontSize = 14,
     TextDirection? direction,
     double? contentPadding,
   }) {
@@ -141,18 +133,11 @@ class HtmlUtils {
       <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-      ${useDefaultFont && PlatformInfo.isMobile
-        ? '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
-        : ''}
       <style>
-        ${useDefaultFont ? '''
-          body {
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 24px;
-          }
-        ''' : ''}
+        ${HtmlTemplate.fontFaceStyle}
+        
+        ${useDefaultFontStyle ? HtmlTemplate.defaultFontStyle(fontSize: fontSize) : ''}
+        
         .tmail-content {
           min-height: ${minHeight ?? 0}px;
           min-width: ${minWidth ?? 0}px;
@@ -169,6 +154,25 @@ class HtmlUtils {
             scrollbar-width: none;  /* Firefox */
           }
         ''' : ''}
+        
+        pre {
+          white-space: pre-wrap;
+        }
+        
+        table {
+          white-space: normal !important;
+        }
+              
+        @media only screen and (max-width: 600px) {
+          table {
+            width: 100% !important;
+          }
+          
+          a {
+            width: -webkit-fill-available !important;
+          }
+        }
+        
         ${styleCSS ?? ''}
       </style>
       </head>
@@ -528,6 +532,301 @@ class HtmlUtils {
       }
     } catch (e) {
       logError('AppUtils::setWindowBrowserTitle:Exception = $e');
+    }
+  }
+
+  static String unescapeHtml(String input) {
+    try {
+      return htmlUnescape.convert(input);
+    } catch (e) {
+      logError('HtmlUtils::unescapeHtml:Exception = $e');
+      return input;
+    }
+  }
+
+  static String removeWhitespace(String input) {
+    return input
+        .replaceAll('\r', '')
+        .replaceAll('\n', '')
+        .replaceAll('\t', '');
+  }
+
+  /// Returns true if the browser is Safari and its major version is less than 17.
+  static bool isSafariBelow17() {
+    try {
+      final userAgent = html.window.navigator.userAgent;
+      log('HtmlUtils::isOldSafari:UserAgent = $userAgent');
+      final isSafari = userAgent.contains('Safari') && !userAgent.contains('Chrome');
+      if (!isSafari) return false;
+
+      final match = RegExp(r'Version/(\d+)\.').firstMatch(userAgent);
+      if (match == null) return false;
+
+      final version = int.tryParse(match.group(1)!);
+      log('HtmlUtils::isOldSafari:Version = $version');
+      return version != null && version < 17;
+    } catch (e) {
+      logError('HtmlUtils::isOldSafari:Exception = $e');
+      return false;
+    }
+  }
+
+  static String addQuoteToggle(String htmlString) {
+    final likelyHtml = htmlString.contains(RegExp(r'<[a-zA-Z][^>]*>')) && // Contains a start tag
+      htmlString.contains(RegExp(r'</[a-zA-Z][^>]*>')); // Contains an end tag
+
+    if (!likelyHtml) {
+      return htmlString; // Not likely HTML, return original
+    }
+
+    try {
+      html.DomParser().parseFromString(htmlString, 'text/html');
+    } catch (e) {
+      return htmlString;
+    }
+
+    final containerElement = '<div class="quote-toggle-container" >$htmlString</div>';
+
+    final containerDom = html.DomParser().parseFromString(containerElement, 'text/html');
+    html.ElementList blockquotes = containerDom.querySelectorAll('.quote-toggle-container > blockquote');
+    int currentSearchLevel = 1;
+
+    while (blockquotes.isEmpty) {
+      // Finish searching at level [currentSearchLevel]
+      if (currentSearchLevel >= 3) return htmlString;
+      // No blockquote elements found on first level, try another level
+      blockquotes = containerDom.querySelectorAll('.quote-toggle-container${' > div' * currentSearchLevel} > blockquote');
+      currentSearchLevel++;
+    }
+
+    final lastBlockquote = blockquotes.last;
+
+    const buttonHtmlContent = '''
+      <button class="quote-toggle-button collapsed" title="Show trimmed content">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+      </button>''';
+
+    // Parse the button HTML content as a fragment
+    final tempDoc =
+        html.DomParser().parseFromString(buttonHtmlContent, 'text/html');
+
+    final buttonElement = tempDoc.querySelector('.quote-toggle-button');
+
+    // Insert the button before the last blockquote
+    if (lastBlockquote.parentNode != null && buttonElement != null) {
+      lastBlockquote.parentNode!.insertBefore(buttonElement, lastBlockquote);
+    }
+
+    // Return the modified HTML string
+    return containerDom.documentElement?.outerHtml ?? htmlString;
+  }
+
+  static String get quoteToggleStyle => '''
+    <style>
+      .quote-toggle-button + blockquote {
+        display: block; /* Default display */
+      }
+      .quote-toggle-button.collapsed + blockquote {
+        display: none;
+      }
+      .quote-toggle-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        gap: 2px;
+        background-color: #d7e2f5;
+        padding: 0;
+        margin: 8px 0;
+        border-radius: 50%;
+        transition: background-color 0.2s ease-in-out;
+        border: none;
+        cursor: pointer;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE 10+ */
+        user-select: none; /* Standard syntax */
+        -webkit-user-drag: none; /* Prevent dragging on WebKit browsers (e.g., Chrome, Safari) */
+      }
+      .quote-toggle-button:hover {
+        background-color: #cdcdcd !important;
+      }
+      .dot {
+        width: 3.75px;
+        height: 3.75px;
+        background-color: #55687d;
+        border-radius: 50%;
+      }
+    </style>''';
+
+  static String get quoteToggleScript => '''
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.quote-toggle-button');
+        buttons.forEach(button => {
+          button.onclick = function() {
+            const blockquote = this.nextElementSibling;
+            if (blockquote && blockquote.tagName === 'BLOCKQUOTE') {
+              this.classList.toggle('collapsed');
+              if (this.classList.contains('collapsed')) {
+                this.title = 'Show trimmed content';
+              } else {
+                this.title = 'Hide expanded content';
+              }
+            }
+          };
+        });
+      });
+    </script>''';
+
+  static String extractPlainText(
+    String html, {
+    bool removeQuotes = true,
+    bool removeStyle = true,
+    bool removeScript = true,
+  }) {
+    var cleaned = html;
+
+    if (cleaned.isEmpty) return '';
+
+    // Parse DOM
+    final doc = parser.parse(cleaned);
+
+    // Remove unwanted nodes by CSS selector
+    if (removeQuotes) {
+      doc.querySelectorAll('blockquote').forEach((e) => e.remove());
+    }
+    if (removeStyle) {
+      doc.querySelectorAll('style').forEach((e) => e.remove());
+    }
+    if (removeScript) {
+      doc.querySelectorAll('script').forEach((e) => e.remove());
+    }
+
+    cleaned = doc.outerHtml;
+
+    // Decode HTML entities up to 5 times (&amp; → &, &nbsp; → space, &lt;div&gt; → <div>, ...)
+    int iterations = 0;
+    const maxIterations = 5;
+    String decoded;
+    do {
+      decoded = cleaned;
+      cleaned = htmlUnescape.convert(cleaned);
+      iterations++;
+    } while (decoded != cleaned && iterations < maxIterations);
+
+    // Delete all remaining HTML tags → replace tag with space to avoid text sticking
+    final tagRegex = RegExp(
+      '</?(${validTags.join('|')})(\\s+[^>]*)?>',
+      caseSensitive: false,
+    );
+    cleaned = cleaned.replaceAll(tagRegex, ' ');
+
+    // Normalize whitespace
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    return cleaned;
+  }
+
+  static String wrapPlainTextLinks(String htmlString) {
+    try {
+      final document = parser.parse(htmlString);
+      final container = document.body;
+
+      if (container == null) return htmlString;
+
+      final urlRegex = RegExp(
+        r'''(?:(?:https?:\/\/)|(?:ftp:\/\/)|(?:mailto:)|(?:file:\/\/)|(?:www\.))(?!\.)(?!.*\.\.)([^\s<]+[^<.,:;\"\'\)\]\s!?])''',
+        caseSensitive: false,
+        multiLine: true,
+        dotAll: true,
+      );
+
+      _processNode(container, urlRegex);
+
+      return container.innerHtml;
+    } catch (e) {
+      logError('HtmlUtils::wrapPlainTextLinks:Exception = $e');
+      return htmlString;
+    }
+  }
+
+  static final _skipTags = {
+    'a',
+    'img',
+    'video',
+    'audio',
+    'source',
+    'link',
+    'script',
+    'iframe',
+    'code',
+    'pre',
+  };
+
+  static void _processNode(dom.Node node, RegExp urlRegex) {
+    for (var child in node.nodes.toList()) {
+      // Skip if node or parent node is in tag to skip
+      final parentTag = child.parent?.localName;
+      if (parentTag != null && _skipTags.contains(parentTag.toLowerCase())) {
+        continue;
+      }
+
+      if (child.nodeType == dom.Node.TEXT_NODE) {
+        final text = child.text ?? '';
+        final matches = urlRegex.allMatches(text);
+
+        if (matches.isEmpty) continue;
+
+        final nodes = <dom.Node>[];
+        int lastIndex = 0;
+
+        for (final match in matches) {
+          final url = match.group(0)!;
+          final start = match.start;
+
+          if (start > lastIndex) {
+            nodes.add(dom.Text(text.substring(lastIndex, start)));
+          }
+
+          // ignore unsafe URLs
+          if (url.toLowerCase().startsWith('javascript:') ||
+              url.toLowerCase().startsWith('data:')) {
+            nodes.add(dom.Text(url));
+          } else {
+            // Normalize href
+            final href = url.startsWith(RegExp(r'https?|ftp|mailto|file'))
+                ? url
+                : 'https://$url';
+
+            final link = dom.Element.tag('a')
+              ..attributes['href'] = href
+              ..text = url;
+
+            nodes.add(link);
+          }
+
+          lastIndex = match.end;
+        }
+
+        if (lastIndex < text.length) {
+          nodes.add(dom.Text(text.substring(lastIndex)));
+        }
+
+        final parent = child.parent!;
+        final index = parent.nodes.indexOf(child);
+
+        parent.nodes.removeAt(index);
+        parent.nodes.insertAll(index, nodes);
+      } else {
+        _processNode(child, urlRegex);
+      }
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:core/presentation/extensions/color_extension.dart';
+import 'package:core/presentation/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
 
 typedef OnTapAvatarActionClick = void Function();
@@ -17,6 +18,7 @@ class AvatarBuilder {
   List<Color>? _avatarColors;
   List<BoxShadow>? _boxShadows;
   TextStyle? _textStyle;
+  EdgeInsetsGeometry? _padding;
 
   void key(Key key) {
     _key = key;
@@ -54,6 +56,10 @@ class AvatarBuilder {
     _textStyle = textStyle;
   }
 
+  void addPadding(EdgeInsetsGeometry? padding) {
+    _padding = padding;
+  }
+
   void addOnTapActionClick(OnTapAvatarActionClick onTapAvatarActionClick) {
     _onTapAvatarActionClick = onTapAvatarActionClick;
   }
@@ -63,7 +69,7 @@ class AvatarBuilder {
   }
 
   Widget build() {
-    return InkWell(
+    final bodyWidget = InkWell(
       onTap: _onTapAvatarActionClick,
       onTapDown: (detail) {
         if (_onTapAvatarActionWithPositionClick != null && _context != null) {
@@ -97,9 +103,15 @@ class AvatarBuilder {
           ),
           child: Text(
               _text ?? '',
-              style: _textStyle ?? TextStyle(fontSize: 20, color: _textColor ?? AppColor.avatarTextColor, fontWeight: FontWeight.w500)
+              style: _textStyle ?? ThemeUtils.defaultTextStyleInterFont.copyWith(fontSize: 20, color: _textColor ?? AppColor.avatarTextColor, fontWeight: FontWeight.w500)
           )
       ),
     );
+
+    if (_padding != null) {
+      return Padding(padding: _padding!, child: bodyWidget);
+    } else {
+      return bodyWidget;
+    }
   }
 }

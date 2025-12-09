@@ -4,12 +4,13 @@ import 'dart:convert';
 import 'package:core/presentation/extensions/color_extension.dart';
 import 'package:core/utils/app_logger.dart';
 import 'package:core/utils/html/html_utils.dart';
+import 'package:core/utils/platform_info.dart';
 import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
-import 'package:tmail_ui_user/features/composer/presentation/controller/base_rich_text_controller.dart';
+import 'package:tmail_ui_user/features/base/widget/dialog_picker/color_dialog_picker.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/code_view_state.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/dropdown_menu_font_status.dart';
 import 'package:tmail_ui_user/features/composer/presentation/model/font_name_type.dart';
@@ -21,7 +22,7 @@ import 'package:tmail_ui_user/features/composer/presentation/model/paragraph_typ
 import 'package:tmail_ui_user/features/composer/presentation/model/rich_text_style_type.dart';
 import 'package:tmail_ui_user/main/routes/route_navigation.dart';
 
-class RichTextWebController extends BaseRichTextController {
+class RichTextWebController extends GetxController {
 
   static const List<int> fontSizeList = [10, 12, 14, 15, 16, 18, 24, 36, 48, 64];
   static const int fontSizeDefault = 16;
@@ -63,10 +64,12 @@ class RichTextWebController extends BaseRichTextController {
     _updateBackgroundTextColor(settings);
     _updateOrderList(settings);
     _updateParagraph(settings);
+    editorController.setFocus();
   }
 
   void onEditorTextSizeChanged(int? size) {
     _updateFontSize(size);
+    editorController.setFocus();
   }
 
   void _updateTextStyle(EditorSettings settings) {
@@ -140,7 +143,7 @@ class RichTextWebController extends BaseRichTextController {
   void applyRichTextStyle(BuildContext context, RichTextStyleType textStyleType) {
     switch(textStyleType) {
       case RichTextStyleType.textColor:
-        openMenuSelectColor(
+        ColorDialogPicker().showTwakeColorPicker(
           context,
           selectedTextColor.value,
           onResetToDefault: () => _applyForegroundColor(Colors.black),
@@ -148,7 +151,7 @@ class RichTextWebController extends BaseRichTextController {
         );
         break;
       case RichTextStyleType.textBackgroundColor:
-        openMenuSelectColor(
+        ColorDialogPicker().showTwakeColorPicker(
           context,
           selectedTextBackgroundColor.value,
           onResetToDefault: () => applyBackgroundColor(Colors.white),
@@ -194,7 +197,9 @@ class RichTextWebController extends BaseRichTextController {
       listTextStyleApply.contains(richTextStyleType);
 
   void insertImage(InlineImage inlineImage) {
-    editorController.insertHtml("<div>${inlineImage.base64Uri ?? ''}</div><br>");
+    editorController.insertImage(
+      "<div>${inlineImage.base64Uri ?? ''}</div><br>",
+    );
   }
 
   void applyNewFontStyle(FontNameType? newFont) {
@@ -238,6 +243,14 @@ class RichTextWebController extends BaseRichTextController {
     final newCodeViewState = isActivated ? CodeViewState.disabled : CodeViewState.enabled;
     codeViewState.value = newCodeViewState;
     editorController.toggleCodeView();
+
+    if (codeViewEnabled) {
+      formattingOptionsState.value = FormattingOptionsState.disabled;
+    } else {
+      editorController.evaluateJavascriptWeb(
+        HtmlUtils.recalculateEditorHeight().name,
+      );
+    }
   }
 
   void applyHeaderStyle(HeaderStyleType? newStyle) {
@@ -304,13 +317,27 @@ class RichTextWebController extends BaseRichTextController {
     }
   }
 
+  void updateFormattingOptions(bool isDisplayed) {
+    formattingOptionsState.value = isDisplayed
+        ? FormattingOptionsState.enabled
+        : FormattingOptionsState.disabled;
+  }
+
   bool get isFormattingOptionsEnabled => formattingOptionsState.value == FormattingOptionsState.enabled;
+
+  void openInsertLink() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    editorController.setFocus();
+    editorController.openInsertLinkDialog();
+  }
 
   @override
   void onClose() {
     menuParagraphController.dispose();
     menuOrderListController.dispose();
-    editorController.clear();
+    if (PlatformInfo.isWeb || editorController.editorController != null) {
+      editorController.clear();
+    }
     super.onClose();
   }
 }
